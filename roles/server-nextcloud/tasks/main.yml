@@ -278,5 +278,6 @@
     - nextcloud-watchstorage
   notify:
     - restart_nginx
+    - restart_nextcloud_watchstorage
   tags:
     - config

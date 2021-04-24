@@ -2,3 +2,8 @@
   systemd:
     name: nextcloud-cron.timer
     state: restarted
+    
+- name: 'restart_nextcloud_watchstorage'
+  systemd:
+    name: nextcloud-watchstorage
+    state: restarted
