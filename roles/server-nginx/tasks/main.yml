@@ -1,0 +1,88 @@
+- name: Configure directories
+  file:
+    path: "{{ item }}"
+    mode: '0755'
+    state: directory
+  loop:
+    - "/usr/local/share/webapps/"
+    - "/usr/local/share/webapps/default"
+    - "/usr/local/share/webapps/default/.well-known"
+    - "/usr/local/share/webapps/default/.well-known/autoconfig"
+  tags:
+    - config
+
+- name: 'Create default content'
+  template:
+    src: "{{ item.filename }}.j2"
+    dest: "/usr/local/share/webapps/default/{{ item.path}}{{ item.filename }}"
+    mode: '0644'
+  loop:
+    - { filename: "index.html", path: "" }
+    - { filename: "host-meta", path: ".well-known/" }
+  tags:
+    - config
+
+- name: 'Create config'
+  template:
+    src: nginx.conf.j2
+    dest: '/etc/nginx/nginx.conf'
+    mode: '0700'
+  tags:
+    - config
+
+- name: 'Enable mime type for wasm'
+  ansible.builtin.lineinfile:
+    path: /etc/nginx/mime.types
+    state: present
+    regexp: "^application/wasm"
+    insertafter: '^types'
+    line: "application/wasm		wasm;"
+  tags:
+    - config
+
+- community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto}}"
+  loop:
+    - { port: "{{ server_nginx_port_http }}", proto: "tcp" }
+    - { port: "{{ server_nginx_port_tls }}", proto: "tcp" }
+  when: ufw_enabled is defined
+  tags:
+    - config
+
+- name: "Check letsencrypt state"
+  stat:
+    path: /etc/letsencrypt/live/{{ domain }}/privkey.pem
+  register: privkey_file
+  tags:
+    - config
+
+- name: 'Create initial certificate'
+  block:
+    - name: 'Stop services'
+      systemd:
+        name: nginx
+        state: stopped
+    - name: "Get initial certificate on port 80"
+      command: certbot certonly --standalone {{ letsencrypt_additional_options | default('') }} --http-01-port 80 -d {{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+    - name: 'Restart services'
+      systemd:
+        name: nginx
+        state: restarted
+  when: not privkey_file.stat.exists
+  tags:
+    - config
+
+- name: "Get certs for all default domains"
+  command: certbot certonly --standalone {{ letsencrypt_additional_options | default('') }} --http-01-port {{ letsencrypt_port }} -d {{ item }} -m {{ letsencrypt_mail }} --agree-tos -n
+  loop: "{{ server_nginx_default_domains }}"
+
+- name: 'Enable services'
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
+  notify: restart_nginx
+  tags:
+    - config

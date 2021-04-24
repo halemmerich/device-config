@@ -1,0 +1,32 @@
+- user:
+    name: aur_builder
+    create_home: yes
+  tags:
+    - config
+
+- lineinfile:
+    path: /etc/sudoers
+    line: 'aur_builder ALL=(ALL) NOPASSWD: {{ item }}'
+    create: yes
+    validate: 'visudo -cf %s'
+  loop:
+    - /usr/bin/pacman
+  tags:
+    - config
+
+- name: Install dependencies
+  package:
+    name:
+      - git
+      - go
+      - base-devel
+  tags:
+    - install
+
+- name: Install yay
+  aur:
+    name: yay
+  become: yes
+  become_user: aur_builder
+  tags:
+    - install

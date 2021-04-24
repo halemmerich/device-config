@@ -1,0 +1,12 @@
+jitsi_config_jvb: /etc/jitsi/videobridge
+jitsi_config_jicofo: /etc/jitsi/jicofo
+jitsi_config_webapp: /etc/jitsi/meet
+jitsi_service_jvb: jitsi-videobridge2
+jitsi_data_static: /usr/share/jitsi-meet
+jitsi_config_jvb_home: /etc/jitsi
+jitsi_config_jvb_name: videobridge
+jitsi_config_jicofo_home: /etc/jitsi
+jitsi_config_jicofo_name: jicofo
+jitsi_home_jvb: /usr/share/jitsi-videobridge/
+jitsi_home_jicofo: /usr/share/jicofo/
+jitsi_prosody_plugin_path: /usr/share/jitsi-meet/prosody-plugins

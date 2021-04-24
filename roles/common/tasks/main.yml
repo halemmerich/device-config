@@ -1,0 +1,75 @@
+- name: Time settings
+  timezone:
+    name: Europe/Berlin
+    hwclock: UTC
+
+- name: Set locale
+  locale_gen:
+    name: de_DE.UTF-8
+    state: present
+
+- name: Set locale
+  locale_gen:
+    name: en_US.UTF-8
+    state: present
+
+- name: create locale.conf
+  file:
+    path: /etc/locale.conf
+    state: touch
+
+- name: locale.conf file
+  lineinfile:
+    path: /etc/locale.conf
+    line: "LANG=de_DE.UTF-8"
+
+- name: create vconsole.conf
+  file:
+    path: /etc/vconsole.conf
+    state: touch
+
+- name: vconsole.conf file
+  lineinfile:
+    path: /etc/vconsole.conf
+    line: "KEYMAP=de-latin1-nodeadkeys"
+
+- name: Utilites
+  package:
+    name:
+      - bash-completion
+      - btrfs-progs
+      - exfat-utils
+  tags:
+    - install
+
+- name: Install console utilities
+  package:
+    name:
+      - tmux
+      - mosh
+      - wget
+      - htop
+      - iotop
+      - rsync
+      - time
+  tags:
+    - install
+
+- name: Put a .local/bin/ folder in each home on the path
+  copy:
+    src: files/homebin/homebin.sh
+    dest: /etc/profile.d/homebin.sh
+  tags:
+    - config
+
+- name: Config editor
+  lineinfile:
+    path: /etc/environment
+    line: EDITOR={{ environment_editor | default('nano') }}
+
+- name: Configure tmux
+  copy:
+    src: files/tmux/tmux.conf
+    dest: /etc/tmux.conf
+  tags:
+    - config

@@ -1,0 +1,136 @@
+videobridge {
+  entity-expiration {
+    timeout=1 minute
+    check-interval=${videobridge.entity-expiration.timeout}
+  }
+  health {
+    interval=10 seconds
+    timeout=30 seconds
+    max-check-duration=3 seconds
+    sticky-failures=false
+  }
+  ep-connection-status {
+    first-transfer-timeout=15 seconds
+    max-inactivity-limit=3 seconds
+    check-interval=500 milliseconds
+  }
+  cc {
+    bwe-change-threshold=0.15
+    thumbnail-max-height-px=180
+    onstage-ideal-height-px=1080
+    onstage-preferred-height-px=360
+    onstage-preferred-framerate=30
+    enable-onstage-video-suspend=false
+    trust-bwe=true
+
+    padding-period=15ms
+    max-time-between-calculations = 15 seconds
+    jvb-last-n = -1
+  }
+  apis {
+    xmpp-client {
+      presence-interval = ${videobridge.stats.interval}
+
+      configs {
+      }
+    }
+    rest {
+      enabled = false
+    }
+    jvb-api {
+      enabled = false
+    }
+  }
+  rest {
+    debug {
+      enabled = true
+    }
+    health {
+      enabled = true
+    }
+    shutdown {
+      enabled = false
+    }
+    version {
+      enabled = true
+    }
+  }
+  http-servers {
+    public {
+      port = 9000
+      tls-port = -1
+    }
+    private {
+      host = 127.0.0.1
+    }
+  }
+  octo {
+    enabled=false
+    bind-port=4096
+    recv-queue-size=1024
+    send-queue-size=1024
+  }
+  load-management {
+    reducer-enabled = false
+    load-measurements {
+      packet-rate {
+        load-threshold = 50000
+        recovery-threshold = 40000
+      }
+    }
+    load-reducers {
+      last-n {
+        reduction-scale = .75
+        recover-scale = 1.25
+        impact-time = 1 minute
+        minimum-last-n-value = 0
+        maximum-enforced-last-n-value = 40
+      }
+    }
+  }
+  sctp {
+    enabled=true
+  }
+  stats {
+    enabled = false
+    interval = 5 seconds
+    callstats {
+      app-id = 0
+      bridge-id = "jitsi"
+      interval = ${videobridge.stats.interval}
+    }
+  }
+  websockets {
+    enabled=true
+    server-id="jvb"
+    tls=true
+    domain="meet.{{ domain }}:{{ server_nginx_port_tls }}"
+  }
+  ice {
+    tcp {
+      enabled = false
+      port = {{ server_nginx_port_tls }}
+      ssltcp = true
+    }
+
+    udp {
+        port = 10000
+    }
+
+    keep-alive-strategy = "selected_and_tcp"
+    use-component-socket = true
+    resolve-remote-candidates = false
+    nomination-strategy = "NominateFirstValid"
+  }
+
+  transport {
+    send {
+      queue-size=1024
+    }
+  }
+
+  version {
+    announce = false
+  }
+}
+

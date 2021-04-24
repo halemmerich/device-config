@@ -1,0 +1,36 @@
+#!/bin/bash
+CN=""
+
+while [ ! "$1" == "" ]; do
+    case "$1" in
+    "-d" )
+            CN="$2"
+            shift
+            ;;
+    esac
+    shift
+done
+
+if [ -z "$CN" ]
+then
+      for C in $(ls /etc/letsencrypt/renewal-hooks/deploy/)
+      do
+            bash "$C"
+      done
+      exit 0
+fi
+
+DEST=/etc/letsencrypt/live/$CN/
+
+mkdir -p $DEST
+
+openssl req -newkey rsa:4096 \
+            -x509 \
+            -sha256 \
+            -days 3650 \
+            -nodes \
+            -out $DEST/fullchain.pem \
+            -keyout $DEST/privkey.pem \
+            -subj "/C=FK/ST=LFAKE/L=LFake/O=Security/OU=IT Department/CN=$CN"
+
+

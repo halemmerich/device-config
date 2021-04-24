@@ -1,0 +1,66 @@
+compatibility_level = 2
+
+queue_directory = /var/spool/postfix
+command_directory = {{ postfix_command_dir }}
+daemon_directory = {{ postfix_daemon_dir }}
+data_directory = /var/lib/postfix
+mail_owner = postfix
+mydomain = {{ domain }}
+unknown_local_recipient_reject_code = 550
+mynetworks_style = host
+alias_maps = hash:/etc/postfix/aliases
+alias_database = $alias_maps
+debug_peer_level = 2
+debugger_command =
+	 PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin
+	 ddd $daemon_directory/$process_name $process_id & sleep 5
+sendmail_path = /usr/bin/sendmail
+newaliases_path = /usr/bin/newaliases
+mailq_path = /usr/bin/mailq
+setgid_group = postdrop
+html_directory = no
+manpage_directory = /usr/share/man
+sample_directory = /etc/postfix
+readme_directory = /usr/share/doc/postfix
+inet_protocols = ipv4 ipv6
+meta_directory = /etc/postfix
+shlib_directory = /usr/lib/postfix
+
+virtual_mailbox_domains =
+	mysql:/etc/postfix/mysql_virtual_mailbox_domains.cf
+virtual_mailbox_maps =
+	mysql:/etc/postfix/mysql_virtual_mailbox_maps.cf
+virtual_alias_maps =
+	mysql:/etc/postfix/mysql_virtual_alias_maps.cf
+	mysql:/etc/postfix/mysql_virtual_alias_maps_regexp.cf
+virtual_transport = lmtp:unix:private/dovecot-lmtp
+
+smtpd_relay_restrictions =
+	permit_mynetworks
+	permit_sasl_authenticated
+	defer_unauth_destination
+smtpd_recipient_restrictions =
+	check_policy_service unix:private/quota-status
+smtpd_sender_restrictions =
+	permit_mynetworks
+	permit_sasl_authenticated
+	reject_unknown_reverse_client_hostname
+smtpd_helo_required = yes
+smtpd_helo_restrictions =
+	permit_mynetworks
+	permit_sasl_authenticated
+	reject_unknown_sender_domain
+	reject_unknown_reverse_client_hostname 
+
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = yes
+
+smtpd_tls_auth_only = yes
+smtpd_tls_cert_file = /etc/letsencrypt/live/mail.{{ domain }}/fullchain.pem
+smtpd_tls_key_file = /etc/letsencrypt/live/mail.{{ domain }}/privkey.pem
+smtpd_tls_security_level = may
+
+smtp_tls_security_level = may
+
+notify_classes = resource, software 

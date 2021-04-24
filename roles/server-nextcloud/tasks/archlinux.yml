@@ -1,0 +1,40 @@
+- name: 'Install'
+  package:
+    name:
+    - nextcloud
+    - php-fpm
+    - php-intl
+  tags:
+    - install
+
+- name: Ensure extensions are enabled
+  lineinfile:
+    dest: "{{ php_ini_path }}"
+    regexp: ";extension={{ item }}"
+    insertafter: ";extension"
+    line: "extension={{ item }}"
+  loop:
+    - iconv
+    - mysqli
+    - pdo_mysql
+    - curl
+    - zip
+    - gd
+    - bz2
+    - intl
+
+- name: Configure directories
+  file:
+    path: '{{ item }}'
+    owner: '{{ nextcloud_user }}'
+    mode: '0700'
+    state: directory
+  loop:
+   - '/var/lib/nextcloud'
+   - '/var/lib/nextcloud/apps'
+   - '/var/lib/nextcloud/data'
+
+- user:
+    name: nextcloud
+    groups: webshare
+    append: yes

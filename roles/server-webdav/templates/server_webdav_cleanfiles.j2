@@ -1,0 +1,17 @@
+#!/bin/bash
+
+ls /var/lib/webdav/cfg/cleanup.d/ | while read CURRENT;
+do
+	echo Cleaning webshares:
+	if [ -d /var/lib/webdav/shares/$CURRENT/ ] && [ -f /var/lib/webdav/cfg/cleanup.d/$CURRENT ] && [ 0 -lt $( ls /var/lib/webdav/shares/$CURRENT/ | wc -l ) ]
+	then
+		TIME=$(cat /var/lib/webdav/cfg/cleanup.d/$CURRENT)
+		
+		echo $CURRENT \($TIME days\)
+		
+		find /var/lib/webdav/shares/$CURRENT/* -mtime +"$TIME" -type f -delete
+		find /var/lib/webdav/shares/$CURRENT/* -empty -type d -delete
+	fi
+done
+
+command -v server_nextcloud_scanfiles && server_nextcloud_scanfiles

@@ -1,0 +1,309 @@
+- include_vars: "vars/{{ ansible_os_family | lower}}.yml"
+  tags:
+    - config
+- include_tasks: "{{ ansible_os_family | lower}}.yml"
+
+- name: Create a new database
+  community.mysql.mysql_db:
+    name: postfix
+    state: present
+    encoding: utf8mb4
+    collation: utf8mb4_general_ci
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+  tags:
+    - config
+
+- name: Create user with password, all database privileges and 'WITH GRANT OPTION' in DB
+  community.mysql.mysql_user:
+    state: present
+    name: postfix
+    password: "{{ postfix_db_user_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+    priv:
+      'postfix.*': 'ALL'
+  tags:
+    - config
+      
+- name: Create user with password, read only database privileges and 'WITH GRANT OPTION' in DB
+  community.mysql.mysql_user:
+    state: present
+    name: postfix_ro
+    password: "{{ postfix_ro_db_user_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+    priv:
+      'postfix.*': 'SELECT'
+  tags:
+    - config
+      
+- name: Creates tables
+  community.mysql.mysql_query:
+    login_db: postfix
+    query: "{{ item }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+  loop:
+    - "CREATE TABLE IF NOT EXISTS `postfix`.`virtual_domains` (`id` int(11) NOT NULL auto_increment, `name` varchar(50) NOT NULL, PRIMARY KEY (`id`));"
+    - "CREATE TABLE IF NOT EXISTS `virtual_users` ( `id` int(11) NOT NULL auto_increment, `domain_id` int(11) NOT NULL, `email` varchar(100) NOT NULL, `password` varchar(150) NOT NULL, `quota` varchar(15) NOT NULL DEFAULT 0, PRIMARY KEY (`id`), UNIQUE KEY `email` (`email`), FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE);"
+    - "CREATE TABLE IF NOT EXISTS `postfix`.`virtual_aliases` ( `id` int(11) NOT NULL auto_increment, `domain_id` int(11) NOT NULL, `source` varchar(100) NOT NULL, `destination` varchar(100) NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE);"
+    - "CREATE TABLE IF NOT EXISTS `postfix`.`virtual_aliases_regexp` ( `id` int(11) NOT NULL auto_increment, `domain_id` int(11) NOT NULL, `source` varchar(100) NOT NULL, `destination` varchar(100) NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE);"
+  tags:
+    - config
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
+  loop:
+    - mail
+  notify: restart_mail
+  tags:
+    - config
+
+- name: 'Create config'
+  template:
+    src: "postfix/{{ item }}.j2"
+    dest: '/etc/postfix/{{ item }}'
+    mode: '0640'
+    group: 'postfix'
+  loop:
+    - "mysql_virtual_mailbox_domains.cf"
+    - "mysql_virtual_mailbox_maps.cf"
+    - "mysql_virtual_alias_maps.cf"
+    - "mysql_virtual_alias_maps_regexp.cf"
+  notify:
+    - restart_mail
+  tags:
+    - config
+
+- name: Create group
+  group:
+    name: vmail
+    state: present
+    gid: 5000
+  tags:
+    - config
+
+- name: "Create user/group for vmail"
+  user:
+    name: vmail
+    group: vmail
+    home: /var/vmail
+    uid: 5000
+  tags:
+    - config
+    
+- name: Configure directories
+  file:
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    state: directory
+  loop:
+    - { path: "/var/vmail", mode: "770", owner: "vmail", group: "vmail" }
+    - { path: "/etc/dovecot", mode: "770", owner: "dovecot", group: "dovecot" }
+    - { path: "/etc/dovecot/conf.d", mode: "770", owner: "dovecot", group: "dovecot" }
+    - { path: "/usr/local/lib/sievetemplates", mode: "700", owner: "root", group: "root" }
+  notify:
+    - restart_mail
+  tags:
+    - config
+
+- name: 'Create config and scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - { src: "dovecot/dovecot.conf.j2", dest: "/etc/dovecot/dovecot.conf"}
+    - { src: "dovecot/conf.d/10-auth.conf.j2", dest: "/etc/dovecot/conf.d/10-auth.conf"}
+    - { src: "dovecot/conf.d/auth-sqlconf.ext.j2", dest: "/etc/dovecot/conf.d/auth-sql.conf.ext"}
+    - { src: "dovecot/conf.d/10-mail.conf.j2", dest: "/etc/dovecot/conf.d/10-mail.conf"}
+    - { src: "dovecot/conf.d/10-master.conf.j2", dest: "/etc/dovecot/conf.d/10-master.conf"}
+    - { src: "dovecot/conf.d/10-ssl.conf.j2", dest: "/etc/dovecot/conf.d/10-ssl.conf"}
+    - { src: "dovecot/conf.d/15-mailboxes.conf.j2", dest: "/etc/dovecot/conf.d/15-mailboxes.conf"}
+    - { src: "dovecot/conf.d/20-managesieve.conf.j2", dest: "/etc/dovecot/conf.d/20-managesieve.conf"}
+    - { src: "dovecot/conf.d/20-lmtp.conf.j2", dest: "/etc/dovecot/conf.d/20-lmtp.conf"}
+    - { src: "dovecot/conf.d/20-imap.conf.j2", dest: "/etc/dovecot/conf.d/20-imap.conf"}
+    - { src: "dovecot/conf.d/90-quota.conf.j2", dest: "/etc/dovecot/conf.d/90-quota.conf"}
+    - { src: "dovecot/conf.d/90-sieve.conf.j2", dest: "/etc/dovecot/conf.d/90-sieve.conf"}
+    - { src: "dovecot/dovecot-sql.conf.ext.j2", dest: "/etc/dovecot/dovecot-sql.conf.ext"}
+    - { src: "dovecot/quota-warning.sh.j2", dest: "/usr/local/bin/quota-warning.sh"}
+    - { src: "postfix/master.cf.j2", dest: "/etc/postfix/master.cf"}
+    - { src: "postfix/main.cf.j2", dest: "/etc/postfix/main.cf"}
+    - { src: "postfix/aliases.j2", dest: "/etc/postfix/aliases"}
+    - { src: "scripts/server_mail_addalias.j2", dest: "/usr/local/bin/server_mail_addalias"}
+    - { src: "scripts/server_mail_addaliasregex.j2", dest: "/usr/local/bin/server_mail_addaliasregex"}
+    - { src: "scripts/server_mail_adduser.j2", dest: "/usr/local/bin/server_mail_adduser"}
+    - { src: "scripts/server_mail_adddomain.j2", dest: "/usr/local/bin/server_mail_adddomain"}
+    - { src: "scripts/server_mail_resetpwd.j2", dest: "/usr/local/bin/server_mail_resetpwd"}
+    - { src: "scripts/server_mail_resetquota.j2", dest: "/usr/local/bin/server_mail_resetquota"}
+    - { src: "scripts/server_mail_syncsogopwds.j2", dest: "/usr/local/bin/server_mail_syncsogopwds"}
+    - { src: "scripts/server_mail_sieve_edit.j2", dest: "/usr/local/bin/server_mail_sieve_edit"}
+    - { src: "scripts/server_mail_sieve_activate.j2", dest: "/usr/local/bin/server_mail_sieve_activate"}
+    - { src: "sievetemplates/move_regexed.sieve.j2", dest: "/usr/local/lib/sievetemplates/move_regexed.sieve"}
+    - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/mail.sh"}
+    - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/mail.sh"}
+  notify:
+    - restart_mail
+    - run_newaliases
+  tags:
+    - config
+
+- name: Config fail2ban
+  community.general.ini_file:
+    path: /etc/fail2ban/jail.d/postfix.local
+    section: postfix
+    option: enabled
+    value: true
+    mode: '0600'
+  when: fail2ban_enabled is defined
+  notify:
+    - restart_fail2ban
+  tags:
+    - config
+    
+- community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - "25"
+    - "465"
+    - "587"
+    - "993"
+    - "4190"
+  when: ufw_enabled is defined
+  tags:
+    - config
+
+- name: Configure directories
+  file:
+    path: "/usr/local/share/webapps/default/.well-known/autoconfig/mail/"
+    mode: "755"
+    state: directory
+  tags:
+    - config
+
+- name: "Check autoconf"
+  stat:
+    path: "/usr/local/share/webapps/default/.well-known/autoconfig/mail/config-v1.1.xml"
+  register: autoconf_path
+  tags:
+    - config
+  
+- name: 'Create autoconf'
+  template:
+    src: "autoconf.j2"
+    dest: "/usr/local/share/webapps/default/.well-known/autoconfig/mail/config-v1.1.xml"
+    mode: '0644'
+  when: not autoconf_path.stat.exists
+  tags:
+    - config
+    
+- name: 'Modify autoconf'
+  blockinfile:
+    path: "/usr/local/share/webapps/default/.well-known/autoconfig/mail/config-v1.1.xml"
+    marker: '<!-- {mark} ansible managed block -->'
+    block: |
+      {% for item in mail_server_domains %}
+        <emailProvider id="{{ item }}">
+          <domain>{{ item }}</domain>
+          <displayName>{{ item }} mail service</displayName>
+          <displayShortName>{{item}} mail</displayShortName>
+          <incomingServer type="imap">
+            <hostname>mail.{{ domain }}</hostname>
+            <port>993</port>
+            <socketType>SSL</socketType>
+            <authentication>password-cleartext</authentication>
+            <username>%EMAILADDRESS%</username>
+          </incomingServer>
+          <outgoingServer type="smtp">
+            <hostname>mail.{{ domain }}</hostname>
+            <port>465</port>
+            <socketType>SSL</socketType>
+            <authentication>password-cleartext</authentication>
+            <username>%EMAILADDRESS%</username>
+          </outgoingServer>
+        </emailProvider>
+      {% endfor %}
+  tags:
+    - config
+
+- name: Adds domains
+  shell:
+    cmd: "server_mail_adddomain {{ item }} true"
+  loop: "{{ mail_server_domains }}"
+  tags:
+    - config
+
+- name: Adds users
+  vars:
+    password: "{{ item.passwort | default(lookup('password', '/dev/null')) }}"
+  shell:
+    cmd: "server_mail_adduser {{ item.name }}@{{ item.domain }}"
+    stdin: "{{ password }}\n"
+  loop: "{{ mail_server_users }}"
+  tags:
+    - config
+
+- name: Adds default aliases
+  shell:
+    cmd: 'server_mail_addalias {{ item.0.domain }} "{{ item.1 }}" {{ item.0.name }}@{{ item.0.domain }}'
+  loop:
+    "{{ mail_server_users|subelements('aliases', 'skip_missing=true') }}"
+  tags:
+    - config
+
+- name: Adds regex aliases
+  shell:
+    cmd: 'server_mail_addaliasregex {{ item.0.domain }} "{{ item.1 }}" {{ item.0.name }}@{{ item.0.domain }}'
+  loop:
+    "{{ mail_server_users|subelements('aliases_regex', 'skip_missing=true') }}"
+  tags:
+    - config
+
+- name: Resets passwords
+  shell:
+    cmd: "server_mail_resetpwd {{ item.name }}@{{ item.domain }}"
+    stdin: "{{ item.password }}\n"
+  when: item.password is defined
+  loop: "{{ mail_server_users }}"
+  tags:
+    - config
+
+- name: Resets quotas
+  shell:
+    cmd: "server_mail_resetquota {{ item.name }}@{{ item.domain }} {{ item.quota }}"
+    stdin: "{{ item.quota }}\n"
+  when: item.quota is defined
+  loop: "{{ mail_server_users }}"
+  tags:
+    - config
+
+- name: Check existence
+  stat:
+    path: /etc/dovecot/dh.pem
+  register: dovecot_dh_params
+
+- name: 'Gen DH params'
+  shell:
+    cmd: "openssl dhparam -out /etc/dovecot/dh.pem {{ server_mail_dh_param_size | default('4096') }}"
+  when: not dovecot_dh_params.stat.exists
+
+- name: 'Enable services'
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+  loop:
+    - postfix
+    - dovecot
+  notify:
+    - restart_mail
+  tags:
+    - config

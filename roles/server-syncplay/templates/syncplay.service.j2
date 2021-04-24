@@ -1,0 +1,13 @@
+[Unit]
+Description=syncplay
+Wants=network.target
+
+[Service]
+WorkingDirectory=/opt/syncplay
+User=syncplay
+ExecStart=/opt/syncplay/server/latest/syncplayServer.py
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

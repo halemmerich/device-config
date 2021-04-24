@@ -1,0 +1,4 @@
+- name: 'restart_nextcloud_cron'
+  systemd:
+    name: nextcloud-cron.timer
+    state: restarted

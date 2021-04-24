@@ -1,0 +1,5 @@
+hosts = 127.0.0.1
+user = postfix_ro
+password = {{ postfix_ro_db_user_password }}
+dbname = postfix
+query = SELECT domain FROM virtual_domains WHERE domain='%s' and backupmx = 1

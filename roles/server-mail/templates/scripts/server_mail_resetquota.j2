@@ -1,0 +1,20 @@
+#!/bin/bash
+[ -z "$1" ] && echo mail data needed: MAIL QUOTA && exit 1
+
+MAIL="$1"
+QUOTA="$2"
+
+if [ -z "$QUOTA" ]
+then
+	QUOTA="{{ server_mail_default_quota }}"
+fi
+
+QUERY="UPDATE postfix.virtual_users SET quota = '$QUOTA' WHERE email = '$MAIL';"
+
+echo "$QUERY"
+
+mysql --defaults-file=<(echo "[client]
+user=postfix
+password={{ postfix_db_user_password }}") -u postfix -D postfix -e "$QUERY"
+
+[ "$?" = 0 ] && echo New PWD is "$PW" || echo Done

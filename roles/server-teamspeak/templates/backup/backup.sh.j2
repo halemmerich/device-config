@@ -1,0 +1,17 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+mkdir -p "$MOUNTDIR"/teamspeak/db; (( RC |= $? ))
+mkdir -p "$MOUNTDIR"/teamspeak/files; (( RC |= $? ))
+
+rsync_backup /opt/teamspeak/server/latest/ts3server.sqlitedb teamspeak/db/
+rsync_backup /opt/teamspeak/server/latest/files/ teamspeak/files/
+
+systemctl stop teamspeak; (( RC |= $? ))
+
+rsync_backup /opt/teamspeak/server/latest/ts3server.sqlitedb teamspeak/db/; (( RC |= $? ))
+rsync_backup /opt/teamspeak/server/latest/files/ teamspeak/files/; (( RC |= $? ))
+
+systemctl start teamspeak
+
+exit $RC

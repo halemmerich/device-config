@@ -1,0 +1,3 @@
+- name: 'Execute hook'
+  ansible.builtin.shell:
+    cmd: 'for C in /etc/letsencrypt/renewal-hooks/deploy/*; do "$C"; done'

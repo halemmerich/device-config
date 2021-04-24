@@ -1,0 +1,1 @@
+ansible-playbook -i staging site.yml --skip-tags upgrade -l $@

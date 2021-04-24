@@ -1,0 +1,105 @@
+{% if ansible_os_family == "Debian" %}
+load_module /usr/lib/nginx/modules/ngx_stream_module.so;
+{% endif %}
+
+{% if server_nginx_user is defined and server_nginx_group is defined %}
+user {{ server_nginx_user }} {{ server_nginx_group }};
+{% endif %}
+
+include /etc/nginx/modules.d/*.conf;
+
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    types_hash_max_size 4096;
+
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    sendfile        on;
+
+    keepalive_timeout  65;
+
+    gzip  on;
+
+    server {
+        listen {{ server_nginx_port_http }};
+        server_name localhost;
+
+        include /etc/nginx/locations_http.d/*.conf;
+
+        location '/' {
+            return 301 https://$host$request_uri;
+        }
+    }
+
+    {% for current in server_nginx_default_domains %}
+	server {
+		listen {{ server_nginx_port_https_backend }} ssl http2;
+		listen [::]:{{ server_nginx_port_https_backend }} ssl http2;
+		server_name {{ current }};
+
+		add_header Strict-Transport-Security "max-age=63072000" always;
+
+		ssl_certificate /etc/letsencrypt/live/{{ current }}/fullchain.pem;
+		ssl_certificate_key /etc/letsencrypt/live/{{ current }}/privkey.pem;
+
+		root /usr/local/share/webapps/default;
+
+		index index.html index.htm;
+
+		gzip on;
+		gzip_types text/plain text/css application/javascript application/json image/x-icon application/octet-stream application/wasm;
+		gzip_vary on;
+		gzip_proxied no-cache no-store private expired auth;
+		gzip_min_length 512;
+
+		location = /.well-known/host-meta {
+			add_header 'Access-Control-Allow-Origin' '*';
+		}
+    }
+    {% endfor %}
+
+    include /etc/nginx/servers.d/*.conf;
+}
+
+stream {
+    map_hash_bucket_size 128;
+
+    map $ssl_preread_server_name $sni_target {
+	    include /etc/nginx/upstream_mappings_sni.d/*.conf;
+	    default web_backend;
+    }
+
+    map $ssl_preread_alpn_protocols $target {
+		include /etc/nginx/upstream_mappings_alpn.d/*.conf;
+		default $sni_target;
+    }
+
+    upstream web_backend {
+        server 127.0.0.1:{{ server_nginx_port_https_backend }};
+    }
+
+    include /etc/nginx/upstreams.d/*.conf;
+
+    server {
+        listen {{ server_nginx_port_tls }};
+        listen [::]:{{ server_nginx_port_tls }};
+
+        ssl_preread on;
+
+        proxy_pass $target;
+        proxy_buffer_size 10m;
+    }
+}
+
+
+include /etc/nginx/conf.d/*.conf;

@@ -1,0 +1,8 @@
+- name: 'Install'
+  aur:
+    name:
+    - sogo
+  become: yes
+  become_user: aur_builder
+  tags:
+    - install

@@ -1,0 +1,9 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+systemctl stop fail2ban
+
+cp $MOUNTDIR/fail2ban/fail2ban.sqlite3 /var/lib/fail2ban/fail2ban.sqlite3
+
+systemctl restart fail2ban
+

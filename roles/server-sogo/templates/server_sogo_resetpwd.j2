@@ -1,0 +1,21 @@
+#!/bin/bash
+[ -z "$1" ] && echo sogo username needed, password optional && exit 1
+
+IFS= read PW
+
+if [ -z "$PW" ]
+then
+	PW=$(pwgen -n 10 | cat)
+fi
+
+PW_HASH='{md5-crypt}'$(echo -n "$PW" | openssl passwd -1 -stdin)
+
+QUERY="UPDATE sogo_users SET c_password = '$PW_HASH' WHERE c_name = '$1';"
+
+echo "$QUERY"
+
+mysql --defaults-file=<(echo "[client]
+user=sogo
+password={{ sogo_db_user_password }}") -u sogo -D sogo -e "$QUERY"
+
+[ "$?" = 0 ] && echo New PWD is "$PW" || echo Done

@@ -1,0 +1,4 @@
+- name: restart_sogo
+  systemd:
+    name: sogo
+    state: restarted

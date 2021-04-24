@@ -1,0 +1,37 @@
+#!/bin/bash
+[ -z "$2" ] && echo nextcloud data needed: UID WEBDAV_SHARE_NAME [MOUNTPOINT] && exit 1
+
+
+ID="$1"
+WEBDAVSHARE="$2"
+MOUNTPOINT="$3"
+BACKEND=local
+AUTH=null::null
+
+[ -z "$MOUNTPOINT" ] && MOUNTPOINT="$WEBDAVSHARE"
+
+
+
+
+SID=$(su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ files_external:list \"$ID\" | grep \"$WEBDAVSHARE\"  | cut -d ' ' -f 2 ")
+
+if [ $( echo "$SID" | wc -l ) -gt 1 ]
+then
+	echo Found multiple matches, using last entry
+	SID=$( echo "$SID" | tail -n 1 )
+fi
+
+if [ -n "$SID" ]
+then
+	echo Existing mount with ID $SID will be modified
+else
+	echo Creating new mount
+	SID=$(su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ files_external:create --user \"$ID\" \"$MOUNTPOINT\" \"$BACKEND\" \"$AUTH\"" | sed "s/.*id \(\d*\)/\1/")
+fi
+
+su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ files_external:config $SID datadir /var/lib/webdav/shares/$WEBDAVSHARE"
+
+su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ files_external:option $SID enable_sharing true"
+
+[ "$?" -eq 0 ] && echo Success
+

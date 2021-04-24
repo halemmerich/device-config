@@ -1,0 +1,14 @@
+[Unit]
+Description=TeamSpeak 3 Server
+Wants=network.target
+
+[Service]
+Environment=TS3SERVER_LICENSE=accept
+WorkingDirectory=/opt/teamspeak/server/latest
+User=teamspeak
+ExecStart=/opt/teamspeak/server/latest/ts3server
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,42 @@
+#!/bin/bash
+[ -z "$1" ] && echo mail data needed: DOMAIN [PREVENTAUTOCONF] && exit 1
+
+DOMAIN="$1"
+PREVENTAUTOCONF="$2"
+DOMAIN_ID=$(mysql -u postfix -ppassword_postfix_db_user -D postfix -e "SELECT 1 FROM postfix.virtual_domains WHERE name LIKE '$DOMAIN'" | tail -n 1)
+
+if [ -z "$DOMAIN_ID" ]
+then
+	QUERY="INSERT IGNORE INTO postfix.virtual_domains (name) VALUES ('$DOMAIN');"
+	mysql --defaults-file=<(echo "[client]
+user=postfix
+password=password_postfix_db_user") -u postfix -D postfix -e "$QUERY"
+
+if [ -z "$PREVENTAUTO" -o ! "false" = "$PREVENTAUTOCONF" ]
+then
+	sed -i  '/<!-- END ansible managed block -->/a\
+  <emailProvider id="'$DOMAIN'">\
+    <domain>'$DOMAIN'</domain>\
+    <displayName>'$DOMAIN' mail service</displayName>\
+    <displayShortName>'$DOMAIN' mail</displayShortName>\
+    <incomingServer type="imap">\
+      <hostname>mail.{{ domain }}</hostname>\
+      <port>993</port>\
+      <socketType>SSL</socketType>\
+      <authentication>password-cleartext</authentication>\
+      <username>%EMAILADDRESS%</username>\
+    </incomingServer>\
+    <outgoingServer type="smtp">\
+      <hostname>mail.{{ domain }}</hostname>\
+      <port>465</port>\
+      <socketType>SSL</socketType>\
+      <authentication>password-cleartext</authentication>\
+      <username>%EMAILADDRESS%</username>\
+    </outgoingServer>\
+  </emailProvider>' /usr/local/share/webapps/default/.well-known/autoconfig/mail/config-v1.1.xml
+fi
+
+else
+	echo $DOMAIN already exists
+fi
+

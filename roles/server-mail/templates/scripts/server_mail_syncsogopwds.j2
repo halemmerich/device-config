@@ -1,0 +1,15 @@
+#!/bin/bash
+mysql -u sogo -p{{ sogo_db_user_password }} -D sogo -e "SELECT c_uid, c_password FROM sogo.sogo_users" | sed -n '1!p' | while read C
+do
+	MAIL=$(echo "$C" | cut -f 1)
+	PW=$(echo "$C" | cut -f 2)
+
+
+	QUERY="UPDATE postfix.virtual_users SET password = '$PW' WHERE email = '$MAIL';"
+
+	echo "$QUERY"
+
+	mysql --defaults-file=<(echo "[client]
+user=postfix
+password={{ postfix_db_user_password }}") -u postfix -D postfix -e "$QUERY"
+done

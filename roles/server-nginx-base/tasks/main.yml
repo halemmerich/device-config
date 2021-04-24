@@ -1,0 +1,40 @@
+- name: 'Install packages'
+  package:
+    name:
+    - nginx
+  tags:
+    - install
+
+- name: 'Install'
+  aur:
+    name:
+    - apache-tools
+  become: yes
+  become_user: aur_builder
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: 'Install'
+  package:
+    name:
+    - apache-tools
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+
+- name: Configure directories
+  file:
+    path: "/etc/nginx/{{ item }}"
+    mode: '0700'
+    state: directory
+  loop:
+    - modules.d
+    - servers.d
+    - conf.d
+    - upstreams.d
+    - upstream_mappings_sni.d
+    - upstream_mappings_alpn.d
+    - locations_http.d
+  tags:
+    - config

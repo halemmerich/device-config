@@ -1,0 +1,20 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+SOGO_SPOOL=/var/spool/sogo/
+SOGO_SPOOL_TARGET=sogo/spool
+
+mkdir -p "$MOUNTDIR"/$SOGO_SPOOL_TARGET
+rsync_backup $SOGO_SPOOL $SOGO_SPOOL_TARGET
+
+systemctl stop sogo; (( RC |= $? ))
+
+mysqldump --defaults-file=<(echo "[mysqldump]
+user=sogo
+password={{ sogo_db_user_password }}") --lock-tables -h localhost -u sogo sogo > "$MOUNTDIR/sogo/dbdump.sql"; (( RC |= $? ))
+
+rsync_backup $SOGO_SPOOL $SOGO_SPOOL_TARGET; (( RC |= $? ))
+
+systemctl restart sogo; (( RC |= $? ))
+
+exit $RC

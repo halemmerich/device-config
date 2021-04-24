@@ -1,0 +1,7 @@
+[Unit]
+Description=Nextcloud cron.php job
+
+[Service]
+User={{ nextcloud_user }}
+ExecStart=/usr/bin/php -f {{ nextcloud_path }}/cron.php
+KillMode=process

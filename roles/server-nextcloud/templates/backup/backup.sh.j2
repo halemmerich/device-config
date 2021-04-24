@@ -1,0 +1,21 @@
+MOUNTDIR="$1"
+
+
+NEXTCLOUD_DATA=/var/lib/nextcloud/data/
+NEXTCLOUD_DATA_TARGET=nextcloud/data/
+
+mkdir -p "$MOUNTDIR"/"$NEXTCLOUD_DATA_TARGET"; (( RC |= $? ))
+
+rsync_backup "$NEXTCLOUD_DATA" "$NEXTCLOUD_DATA_TARGET"
+
+su -s /bin/bash nextcloud -c "php /usr/share/webapps/nextcloud/occ maintenance:mode --on"; (( RC |= $? ))
+
+mysqldump --defaults-file=<(echo "[mysqldump]
+user=nextcloud
+password={{ nextcloud_db_user_password }}") --lock-tables -h localhost -u nextcloud nextcloud > "$MOUNTDIR/nextcloud/dbdump.sql"; (( RC |= $? ))
+
+rsync_backup "$NEXTCLOUD_DATA" "$NEXTCLOUD_DATA_TARGET"; (( RC |= $? ))
+
+su -s /bin/bash nextcloud -c "php /usr/share/webapps/nextcloud/occ maintenance:mode --off"; (( RC |= $? ))
+
+exit $RC

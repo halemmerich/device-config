@@ -1,0 +1,6 @@
+- name: 'Install'
+  package:
+    name:
+    - libnginx-mod-http-dav-ext
+  tags:
+    - install

@@ -1,0 +1,10 @@
+#!/bin/bash
+[ -z "$1" ] && echo webdav data needed: SHARENAME && exit 1
+
+SHARENAME="$1"
+
+mkdir -p /var/lib/webdav/shares/"$SHARENAME"
+chown -R {{ server_nginx_user }}:webshare /var/lib/webdav/shares/"$SHARENAME"
+chmod -R 770 /var/lib/webdav/shares/"$SHARENAME"
+
+echo Done

@@ -1,0 +1,21 @@
+#!/bin/bash
+[ -z "$2" ] && echo nextcloud data needed: UID FULLNAME [QUOTA_GIGS], PASSWORD from - && exit 1
+
+IFS= read PW
+
+if [ -z "$PW" ]
+then
+	PW=$(pwgen -n 10 | cat)
+fi
+
+ID="$1"
+FULLNAME="$2"
+QUOTA_GIGS="$3"
+
+export OC_PASS="$PW"
+su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ user:add --password-from-env --display-name=\"$FULLNAME\" \"$ID\""
+
+[ "$?" -eq 0 ] && echo New PWD is "$PW" || echo Done
+
+[ -n "$QUOTA_GIGS" ] && server_nextcloud_setuserquota "$UID" "$QUOTA_GIGS"
+

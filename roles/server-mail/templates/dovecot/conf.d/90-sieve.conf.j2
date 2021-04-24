@@ -1,0 +1,5 @@
+plugin {
+  sieve = file:/var/vmail/%d/%n/sieve;active=/var/vmail/%d/%n/sieve/.dovecot.sieve
+  sieve_before = /var/vmail/sieve/spam-global.sieve
+  sieve_dir = file:/var/vmail/%d/%n/sieve
+}

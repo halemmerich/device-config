@@ -1,0 +1,102 @@
+VirtualHost "meet.{{ domain }}"
+
+    modules_enabled = {
+        "pubsub";
+        "ping";
+        "speakerstats";
+        "conference_duration";
+        "muc_lobby_rooms";
+        "turncredentials";
+        "disco";
+	    "bosh";
+        "websocket";
+        "smacks";
+    }
+
+    http_external_url = "https://meet.{{ domain }}/"
+    trusted_proxies = { "127.0.0.1", "::1", "{{ public_ip_v4 }}", }
+
+    authentication = "anonymous"
+    speakerstats_component = "speakerstats.meet.{{ domain }}"
+    conference_duration_component = "conferenceduration.meet.{{ domain }}"
+
+    c2s_require_encryption = false
+
+	turncredentials_secret = "{{ turnserver_secret }}";
+	turncredentials = {
+		{
+			type = "stun",
+			host = "{{ turnserver_dns }}",
+			transport = "udp",
+			port = {{ turnserver_port }}
+		}, {
+			type = "turn",
+			host = "{{ turnserver_dns }}",
+			transport = "udp",
+			port = {{ turnserver_port }}
+		}, {
+			type = "stuns",
+			host = "{{ turnserver_secure_dns }}",
+			transport = "tcp",
+			port = {{ turnserver_secure_port }}
+		}, {
+			type = "turns",
+			host = "{{ turnserver_secure_dns }}",
+			transport = "tcp",
+			port = {{ turnserver_secure_port }}
+		}, {
+			type = "stuns",
+			host = "{{ turnserver_backend_secure_dns }}",
+			transport = "tcp",
+			port = {{ turnserver_backend_secure_port }}
+		}, {
+			type = "turns",
+			host = "{{ turnserver_backend_secure_dns }}",
+			transport = "tcp",
+			port = {{ turnserver_backend_secure_port }}
+		}
+	};
+
+
+
+    lobby_muc = "lobby.meet.{{ domain }}"
+    main_muc = "conference.meet.{{ domain }}"
+
+Component "conference.meet.{{ domain }}" "muc"
+    storage = "memory"
+
+    muc_mapper_domain_base = "meet.{{ domain }}";
+    modules_enabled = {
+        "muc_meeting_id";
+        "muc_domain_mapper";
+    }
+    admins = { "focus@auth.meet.{{ domain }}" }
+    muc_room_locking = false
+    muc_room_default_public_jids = true
+
+Component "internal.auth.meet.{{ domain }}" "muc"
+    storage = "memory"
+    modules_enabled = {
+        "ping";
+    }
+    admins = { "focus@auth.meet.{{ domain }}", "jvb@auth.meet.{{ domain }}" }
+    muc_room_locking = false
+    muc_room_default_public_jids = true
+
+VirtualHost "auth.meet.{{ domain }}"
+    authentication = "internal_plain"
+
+Component "focus.meet.{{ domain }}"
+    component_secret = "{{ jitsi_secret_focus_component }}"
+
+Component "speakerstats.meet.{{ domain }}" "speakerstats_component"
+    muc_component = "conference.meet.{{ domain }}"
+
+Component "conferenceduration.meet.{{ domain }}" "conference_duration_component"
+    muc_component = "conference.meet.{{ domain }}"
+
+Component "lobby.meet.{{ domain }}" "muc"
+    storage = "memory"
+    restrict_room_creation = true
+    muc_room_locking = false
+    muc_room_default_public_jids = true

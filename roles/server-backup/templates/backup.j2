@@ -1,0 +1,63 @@
+#!/bin/bash
+
+MOUNTDIR=$(mktemp -d)
+
+sshfs -p {{ backup_server_port }} {{ backup_server_user }}@{{ backup_server_host }}:{{ backup_server_path }} "$MOUNTDIR"
+
+SSHFS_RC=$?
+
+function rsync_backup {
+        rsync --info=progress2 -r -l --delete -e "ssh -p {{ backup_server_port }}" "$1" {{ backup_server_user }}@{{ backup_server_host }}:{{ backup_server_path }}/"$2"
+}
+
+export -f rsync_backup
+
+REPORT_MAIL_DIR=$(mktemp -d)
+REPORT_FILE=$REPORT_MAIL_DIR/report
+LOGS_FILE=$REPORT_MAIL_DIR/logs
+CURRENT_LOG_FILE=$REPORT_MAIL_DIR/current
+REPORT_MAIL_FILE=$REPORT_MAIL_DIR/mail
+CURRENT_TIMER_FILE=$REPORT_MAIL_DIR/timer
+
+
+echo "Backup report for {{ fqdn }}" >> $REPORT_FILE
+echo "To: admin@{{ domain }}" > $REPORT_MAIL_FILE
+echo "From: backup@{{ domain }}" >> $REPORT_MAIL_FILE
+echo "Subject: Backup report {{ fqdn }} - $(date)" >> $REPORT_MAIL_FILE
+
+OVERALL_RC=$SSHFS_RC
+
+if [ 0 -eq "$SSHFS_RC" ]
+then
+	for C in /usr/local/lib/backupscripts/backup/*
+	do
+		echo Running $C
+		
+		\time -o $CURRENT_TIMER_FILE --format="%E %x" -- bash -c "bash $C $MOUNTDIR 2>&1 | tee $CURRENT_LOG_FILE; exit ${PIPESTATUS[0]}"
+		
+		DURATION=$(cat $CURRENT_TIMER_FILE | cut -d ' ' -f 1)
+		RC=$(cat $CURRENT_TIMER_FILE | cut -d ' ' -f 2)
+		
+		(( OVERALL_RC |= RC ))
+		
+		if [ 0 -eq "$RC" ]
+		then
+			echo "OK  - $(basename "$C") - $DURATION" | tee -a $REPORT_FILE
+		else
+			echo "ERR - $(basename "$C") - RC: $RC" - $DURATION | tee -a $REPORT_FILE
+			echo -e "BEGIN OUTPUT $(basename "$C")\n" | tee -a $LOGS_FILE
+			cat $CURRENT_LOG_FILE | tee $LOGS_FILE
+			echo -e "END OUTPUT $(basename "$C")\n\n" | tee -a $LOGS_FILE
+		fi
+	done
+else
+	echo "ERR - mounting backup destination failed - RC: $SSHFS_RC"  | tee -a $REPORT_FILE
+fi
+
+cat $REPORT_FILE >> $REPORT_MAIL_FILE
+[ -f $LOGS_FILE ] && cat $LOGS_FILE >> $REPORT_MAIL_FILE
+
+[ 0 -ne "$OVERALL_RC" ] && sendmail admin@{{ domain }} < $REPORT_MAIL_FILE
+
+umount "$MOUNTDIR" && rm -r "$MOUNTDIR"
+rm -r $REPORT_MAIL_DIR

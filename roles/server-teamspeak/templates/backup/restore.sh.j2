@@ -1,0 +1,11 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+cp "$MOUNTDIR"/teamspeak/ts3server.sqlitedb /opt/teamspeak/server/latest/ts3server.sqlitedb
+
+mkdir -p /opt/teamspeak/server/latest/files
+rsync -r "$MOUNTDIR"/teamspeak/files/ /opt/teamspeak/server/latest/files/
+
+chown teamspeak:teamspeak -R /opt/teamspeak/server/latest/files
+find /opt/teamspeak/server/latest/files -type f -print0 | xargs -0 chmod 600
+find /opt/teamspeak/server/latest/files -type d -print0 | xargs -0 chmod 700

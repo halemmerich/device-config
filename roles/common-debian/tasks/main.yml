@@ -1,0 +1,19 @@
+- name: Update cache
+  apt:
+    update_cache: yes
+  tags:
+    - upgrade
+    - install
+    
+- name: Upgrade packages
+  apt:
+    upgrade: yes
+  tags:
+    - upgrade
+
+- name: Utilites
+  package:
+    name:
+      - build-essential
+  tags:
+    - install

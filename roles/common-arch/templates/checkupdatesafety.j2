@@ -1,0 +1,29 @@
+EXITCODE=0
+
+MAJOR_UPGRADES=""
+LINUX_KERNELS=""
+
+while read CURRENT; do
+	PACKAGE=$(echo $CURRENT | cut -d ' ' -f 1)
+	MAJOR_CURRENT=$(echo $CURRENT | cut -d ' ' -f 2 | sed -e "s|[.:_-].*$||")
+	MAJOR_NEW=$(echo $CURRENT | cut -d ' ' -f 4 | sed -e "s|[.:_-].*$||")
+
+	if [ "$MAJOR_CURRENT" != "$MAJOR_NEW" ]
+	then
+		MAJOR_UPGRADES="$MAJOR_UPGRADES $PACKAGE"
+		EXITCODE=$(( EXITCODE | 1 ))
+	fi
+
+	if echo "$PACKAGE" | grep -q linux
+	then
+		LINUX_KERNELS="$LINUX_KERNELS $PACKAGE"
+		EXITCODE=$(( EXITCODE | 2 ))
+	fi
+done < <(checkupdates)
+
+echo Packages with major upgrade:
+echo $MAJOR_UPGRADES
+echo Linux kernels:
+echo $LINUX_KERNELS
+
+exit $EXITCODE

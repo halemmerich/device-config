@@ -1,0 +1,127 @@
+domain: "staging.arch"
+hostname: "staging-server-arch"
+fqdn: "{{ hostname }}.{{ domain }}"
+
+public_ip_v4: "10.0.2.15"
+public_ip_v6: "fd17:625c:f037:2:1214:13bc:f676:c5a4"
+
+letsencrypt_mail: "hostmaster@{{ domain }}"
+letsencrypt_port: "8000"
+letsencrypt_fake: true
+
+server_nginx_user: "http"
+server_nginx_group: "http"
+server_nginx_port_https_backend: "4444"
+server_nginx_port_http: "80"
+server_nginx_port_tls: "443"
+server_nginx_default_domains:
+  - "{{ domain }}"
+
+testadmin_pwd: "admin"
+testuser_pwd: "tester"
+
+jitsi_secret_jvb_user: "password_jvb_user"
+jitsi_secret_focus_user: "password_focus_user"
+jitsi_secret_focus_component: "secret_focus_component"
+
+turnserver_dns: "turn.{{ domain }}"
+turnserver_port: "3478"
+turnserver_secure_dns: "turn.{{ domain }}"
+turnserver_secure_port: "433"
+turnserver_secret: "secret_turn"
+
+turnserver_backend_secure_dns: "127.0.0.1"
+turnserver_backend_secure_port: "5349"
+
+turnserver_min_port: "50000"
+turnserver_max_port: "60000"
+
+server_mail_dh_param_size: "1024"
+
+mysql_root_password: "password_db_root_user"
+
+sogo_db_user_password: "password_sogo_db_user"
+
+postfix_db_user_password: "password_postfix_db_user"
+postfix_ro_db_user_password: "password_postfix_ro_db_user"
+
+nextcloud_db_user_password: "password_nextcloud_db_user"
+nextcloud_admin_user_password: "admin"
+nextcloud_passwordsalt: "passwordsalt_nextcloud"
+nextcloud_secret: "secret_nextcloud"
+nextcloud_instanceid: "instanceid_nextcloud"
+nextcloud_enabled_apps:
+  - notifications
+  - sharebymail
+  - files_external
+  - files_sharing
+
+backup_server_port: "22"
+backup_server_user: "admin"
+backup_server_host: "localhost"
+backup_server_path: "/backup"
+
+sogo_server_users:
+  - name: "tester@{{ domain }}"
+    password: "{{ testuser_pwd }}"
+    fullname: Tester
+    mail: "tester@{{ domain }}"
+
+nextcloud_server_users:
+  - name: "tester"
+    password: "{{ testuser_pwd }}"
+    fullname: Tester
+    bigfileshare: bigfileshare_tester
+    quota: "1"
+
+chat_server_users:
+  - name: "tester@{{ domain }}"
+    password: "{{ testuser_pwd }}"
+    fullname: Tester
+
+server_mail_default_quota: 1G
+
+mail_server_domains:
+  - "{{ domain }}"
+  - "{{ fqdn }}"
+
+mail_server_users:
+  - name: tester
+    password: "{{ testuser_pwd }}"
+    fullname: "Tester {{ domain }}"
+    domain: "{{ domain }}"
+    quota: 123M
+    aliases:
+      - "tester@{{ domain }}"
+    aliases_regex:
+      - "tester[+_-][^+_-]*@{{ domain }}"
+  - name: tester.miniquota
+    password: "{{ testuser_pwd }}"
+    fullname: "Tester Miniquota {{ domain }}"
+    domain: "{{ domain }}"
+    quota: 1
+  - name: admin
+    password: "{{ testadmin_pwd }}"
+    fullname: "Admin {{ domain }}"
+    domain: "{{ domain }}"
+    aliases:
+      - "abuse@{{ domain }}"
+      - "hostmaster@{{ domain }}"
+      - "postmaster@{{ domain }}"
+      - "webmaster@{{ domain }}"
+      - "www@{{ domain }}"
+      - "noc@{{ domain }}"
+      - "security@{{ domain }}"
+      - "abuse@{{ domain }}"
+      - "hostmaster@{{ fqdn }}"
+      - "postmaster@{{ fqdn }}"
+      - "webmaster@{{ fqdn }}"
+      - "www@{{ fqdn }}"
+      - "noc@{{ fqdn }}"
+      - "security@{{ fqdn }}"
+
+webdav_server_shares:
+  - name: bigfileshare_tester
+    users:
+      - name: tester
+        password: "{{ testuser_pwd }}"

@@ -1,0 +1,14 @@
+- name: Adds user
+  user:
+    name: "sshtunnel"
+    state: present
+    generate_ssh_key: true
+    create_home: true
+    
+- name: Set authorized key
+  authorized_key:
+    user: sshtunnel
+    state: present
+    key: "{{ item }}"
+  loop: "{{ sshtunnel_authorized_keys | default([]) }}"
+  

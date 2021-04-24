@@ -1,0 +1,11 @@
+nextcloud_path: /var/www/nextcloud
+nextcloud_data_path: /var/lib/nextcloud/data
+nextcloud_config_path: /var/www/nextcloud/config/config.php
+nextcloud_config_path_ro: /var/www/nextcloud/config/config.php
+nextcloud_user: www-data
+nextcloud_group: www-data
+php_fpm_path: /etc/php/7.3/fpm
+php_path: "{{ php_fpm_path }}"
+php_ini_path: "{{ php_fpm_path }}/php.ini"
+php_fpm_service: "php7.3-fpm"
+nextcloud_fastcgi: "unix://run/php/php7.3-fpm.sock"

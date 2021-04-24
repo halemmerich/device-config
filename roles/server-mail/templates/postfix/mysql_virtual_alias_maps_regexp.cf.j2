@@ -1,0 +1,5 @@
+hosts = 127.0.0.1
+user = postfix_ro
+password = {{ postfix_ro_db_user_password }}
+dbname = postfix
+query = SELECT destination FROM virtual_aliases_regexp WHERE '%s' REGEXP CONCAT('^',source,'$') AND SUBSTRING(source,1,1) != '@'

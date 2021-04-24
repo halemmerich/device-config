@@ -1,0 +1,10 @@
+#!/bin/sh
+/usr/bin/install -d -m770 -o turnserver -g turnserver /etc/turnserver/certs
+/usr/bin/install    -m640 -o turnserver -g turnserver /etc/letsencrypt/live/turn.{{ domain }}/fullchain.pem /etc/turnserver/certs/cert.pem
+/usr/bin/install    -m600 -o turnserver -g turnserver /etc/letsencrypt/live/turn.{{ domain }}/privkey.pem /etc/turnserver/certs/pkey.pem
+{% if ansible_os_family == "Archlinux" %}
+/bin/systemctl restart turnserver.service
+{% endif %}
+{% if ansible_os_family == "Debian" %}
+/bin/systemctl restart coturn.service
+{% endif %}

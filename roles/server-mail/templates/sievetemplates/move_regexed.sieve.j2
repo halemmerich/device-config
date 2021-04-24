@@ -1,0 +1,5 @@
+require [ "fileinto", "regex", "variables", "mailbox" ];
+
+if address :localpart :regex "to" ".*[+_-]([^+_-]*)" {
+  fileinto :create "INBOX.${1}";
+}

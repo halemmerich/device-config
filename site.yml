@@ -1,0 +1,64 @@
+- hosts: all
+  become: yes
+  remote_user: admin
+  roles:
+  - ansible-deps
+  - hosts
+  - common
+
+- hosts: arch
+  become: yes
+  remote_user: admin
+  roles:
+  - aurhelper
+  - common-arch
+
+- hosts: debian
+  become: yes
+  remote_user: admin
+  roles:
+  - common-debian
+
+- hosts: server_teamspeak
+  become: yes
+  remote_user: admin
+  roles:
+  - ufw
+  - server-backup
+  - server-teamspeak
+
+- hosts: server_syncplay
+  become: yes
+  remote_user: admin
+  roles:
+  - ufw
+  - server-backup
+  - server-syncplay
+  
+- hosts: server_arch
+  become: yes
+  remote_user: admin
+  roles:
+  - pacmatic
+  
+- hosts: server
+  become: yes
+  remote_user: admin
+  roles:
+  - ufw
+  - server-sshtunnel
+  - server-backup
+  - server-nginx-base
+  - server-letsencrypt
+  - server-nginx
+  - server-mariadb
+  - server-turn
+  - server-webdav
+  - server-nextcloud
+  - server-prosody
+  - server-jabber
+  - server-jitsi-meet
+  - server-mail
+  - server-sogo
+  - server-fail2ban
+  - util-run-letsencrypt-hooks

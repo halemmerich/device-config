@@ -1,0 +1,13 @@
+- name: 'Install'
+  package:
+    name:
+    - dovecot-core
+    - dovecot-mysql
+    - dovecot-lmtpd
+    - dovecot-sieve
+    - dovecot-managesieved
+    - dovecot-imapd
+    - postfix
+    - postfix-mysql
+  tags:
+    - install

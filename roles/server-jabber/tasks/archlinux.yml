@@ -1,0 +1,8 @@
+- name: 'Install'
+  aur:
+    name:
+     - prosody-modules-hg
+  become: yes
+  become_user: aur_builder
+  tags:
+    - install

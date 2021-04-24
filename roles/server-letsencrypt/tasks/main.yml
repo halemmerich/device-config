@@ -1,0 +1,72 @@
+- name: Set a hostname
+  ansible.builtin.hostname:
+    name: "{{ fqdn }}"
+
+- name: 'Install dependencies'
+  package:
+    name:
+    - certbot
+  when: not (letsencrypt_fake | default(false))
+  tags:
+    - install
+
+- name: "Fake certbot"
+  block:
+  - name: Configure directories
+    file:
+      path: "{{ item }}"
+      owner: 'root'
+      group: 'root'
+      mode: '0700'
+      state: directory
+    loop:
+      - '/etc/letsencrypt/'
+      - '/etc/letsencrypt/live/'
+      - '/etc/letsencrypt/renewal-hooks/deploy'
+    tags:
+      - config
+
+  - name: Create executable
+    template:
+      src: certbot_fake.j2
+      dest: /usr/local/bin/certbot
+      mode: '0700'
+  when: letsencrypt_fake | default(false)
+
+- name: 'Create service'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  register: systemd
+  loop:
+    - { src: "letsencrypt.service.j2", dest: "/etc/systemd/system/letsencrypt.service" }
+    - { src: "letsencrypt.timer.j2", dest: "/etc/systemd/system/letsencrypt.timer" }
+    - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/letsencrypt.sh" }
+    - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/letsencrypt.sh" }
+  tags:
+    - config
+
+- name: 'Create nginx config'
+  template:
+    src: "nginx_location.conf.j2"
+    dest: "/etc/nginx/locations_http.d/letsencrypt.conf"
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  when: systemd.changed
+  tags:
+    - config
+
+- name: 'Start service'
+  systemd:
+    name: 'letsencrypt.timer'
+    enabled: yes
+    state: started
+  tags:
+    - config

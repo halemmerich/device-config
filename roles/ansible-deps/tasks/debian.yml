@@ -1,0 +1,9 @@
+- apt:
+    update_cache: yes
+
+- package:
+    name:
+      - python-lxml
+      - apt-transport-https
+  tags:
+    - install

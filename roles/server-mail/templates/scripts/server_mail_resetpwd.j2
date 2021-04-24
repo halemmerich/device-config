@@ -1,0 +1,23 @@
+#!/bin/bash
+[ -z "$1" ] && echo mail data needed: MAIL, PASSWORD from - && exit 1
+
+IFS= read PW
+
+if [ -z "$PW" ]
+then
+	PW=$(pwgen -n 10 | cat)
+fi
+
+PW_HASH='{md5-crypt}'$(echo -n "$PW" | openssl passwd -1 -stdin)
+
+MAIL="$1"
+
+QUERY="UPDATE postfix.virtual_users SET password = '$PW_HASH' WHERE email = '$MAIL';"
+
+echo "$QUERY"
+
+mysql --defaults-file=<(echo "[client]
+user=postfix
+password={{ postfix_db_user_password }}") -u postfix -D postfix -e "$QUERY"
+
+[ "$?" = 0 ] && echo New PWD is "$PW" || echo Done

@@ -1,0 +1,24 @@
+- name: 'Install'
+  package:
+    name:
+     - prosody-modules
+     - mercurial
+  tags:
+    - install
+
+- name: Get prosody-modules hg repository
+  community.general.hg:
+    repo: https://hg.prosody.im/prosody-modules/
+    dest: /opt/prosody-modules
+    clone: yes
+  tags:
+    - install
+    
+- name: Get prosody-modules hg repository
+  community.general.hg:
+    repo: https://hg.prosody.im/prosody-modules/
+    dest: /opt/prosody-modules
+    purge: yes
+  tags:
+    - upgrade
+    

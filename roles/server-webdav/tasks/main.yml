@@ -1,0 +1,117 @@
+- include_tasks: "{{ ansible_os_family | lower }}.yml"
+
+- group:
+    name: webshare
+    state: present
+
+- name: Configure directories
+  file:
+    path: "{{ item }}"
+    owner: '{{ server_nginx_user }}'
+    group: 'webshare'
+    mode: '0700'
+    state: directory
+  loop:
+    - '/var/lib/webdav'
+    - '/var/lib/webdav/shares'
+    - '/var/lib/webdav/cfg'
+    - '/var/lib/webdav/cfg/cleanup.d'
+    - '/var/lib/webdav/temp'
+  tags:
+    - config
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
+  loop:
+    - webdav
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create config nginx'
+  template:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    mode: '0700'
+  notify: restart_nginx
+  loop:
+    - { src: "nginx/webdav.conf.j2", dest: "/etc/nginx/servers.d/webdav.conf" }
+    - { src: "nginx/dav_module.conf.j2", dest: "/etc/nginx/modules.d/dav.conf" }
+  tags:
+    - config
+
+- name: 'Create scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  loop:
+    - { src: "server_webdav_resetpwd.j2", dest: "/usr/local/bin/server_webdav_resetpwd" }
+    - { src: "server_webdav_adduser.j2", dest: "/usr/local/bin/server_webdav_adduser" }
+    - { src: "server_webdav_addshare.j2", dest: "/usr/local/bin/server_webdav_addshare" }
+    - { src: "server_webdav_cleanfiles.j2", dest: "/usr/local/bin/server_webdav_cleanfiles" }
+    - { src: "server_webdav_setexpiration.j2", dest: "/usr/local/bin/server_webdav_setexpiration" }
+    - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/webdav.sh" }
+    - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/webdav.sh" }
+  tags:
+    - config
+
+- name: Adds shares
+  vars:
+    password: "{{ item.passwort | default(lookup('password', '/dev/null')) }}"
+  shell:
+    cmd: 'server_webdav_addshare "{{ item.name }}"'
+    stdin: "{{ password }}\n"
+  loop: "{{ webdav_server_shares }}"
+  tags:
+    - config
+    
+- name: Adds users to shares
+  vars:
+    password: "{{ item.passwort | default(lookup('password', '/dev/null')) }}"
+  shell:
+    cmd: 'server_webdav_adduser "{{ item.0.name }}" "{{ item.1.name}}"'
+    stdin: "{{ item.1.password }}\n"
+  loop: "{{ webdav_server_shares | subelements('users', 'skip_missing=true') }}"
+  tags:
+    - config
+    
+- name: Resets passwords
+  vars:
+    password: "{{ item.passwort }}"
+  shell:
+    cmd: 'server_webdav_resetpwd "{{ item.0.name }}" "{{ item.1.name }}"'
+    stdin: "{{ item.1.password }}\n"
+  when: item.1.password is defined
+  loop: "{{ webdav_server_shares | subelements('users', 'skip_missing=true') }}"
+  tags:
+    - config
+
+- name: 'Create service'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  register: systemd
+  loop:
+    - { src: "systemd/cleanup-webshares.service.j2", dest: "/etc/systemd/system/cleanup-webshares.service" }
+    - { src: "systemd/cleanup-webshares.timer.j2", dest: "/etc/systemd/system/cleanup-webshares.timer" }
+  tags:
+    - config
+    
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  when: systemd.changed
+  tags:
+    - config
+
+- name: 'Start service'
+  systemd:
+    name: 'cleanup-webshares.timer'
+    enabled: yes
+    state: started
+  tags:
+    - config

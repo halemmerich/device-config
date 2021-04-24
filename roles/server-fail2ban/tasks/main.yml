@@ -1,0 +1,43 @@
+- name: 'Install'
+  package:
+    name:
+    - fail2ban
+  tags:
+    - install
+
+- name: 'Create config and scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: '0700'
+  loop:
+    - { src: "backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/fail2ban.sh"}
+    - { src: "restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/fail2ban.sh"}
+  notify:
+    - restart_mail
+  tags:
+    - config
+
+- name: Config fail2ban for ssh
+  community.general.ini_file:
+    path: /etc/fail2ban/jail.d/sshd.local
+    section: sshd
+    option: enabled
+    value: true
+    mode: '0600'
+  when: fail2ban_enabled is defined
+  notify:
+    - restart_fail2ban
+  tags:
+    - config
+
+- name: 'Enable services'
+  systemd:
+    name: "fail2ban"
+    enabled: yes
+    state: restarted
+  register: fail2ban_enabled
+  tags:
+    - config

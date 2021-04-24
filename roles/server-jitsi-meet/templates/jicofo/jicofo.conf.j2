@@ -1,0 +1,165 @@
+jicofo {
+  authentication {
+    enabled = false
+    type = SHIBBOLETH
+    authentication-lifetime = 24 hours
+    enable-auto-login = true
+  }
+  bridge {
+    max-bridge-participants = -1
+    max-bridge-packet-rate = 50000
+    average-participant-packet-rate-pps = 500
+    average-participant-stress = 0.01
+    participant-rampup-interval = 20 seconds
+    stress-threshold = 0.8
+    failure-reset-threshold = 1 minute
+    selection-strategy = SingleBridgeSelectionStrategy
+    health-checks {
+      enabled = true
+      interval = 10 seconds
+    }
+  }
+  codec {
+    video {
+      vp8 {
+        enabled = true
+        pt = 100
+        rtx-pt = 96
+      }
+      vp9 {
+        enabled = true
+        pt = 101
+        rtx-pt = 97
+      }
+      h264 {
+        enabled = true
+        pt = 107
+        rtx-pt = 99
+      }
+    }
+
+    audio {
+      isac-16000 {
+        enabled = true
+        pt = 103
+      }
+      isac-32000 {
+        enabled = true
+        pt = 104
+      }
+      opus {
+        enabled = true
+        pt = 111
+        minptime = 10
+        use-inband-fec = true
+        red {
+          enabled = false
+          pt = 112
+        }
+      }
+      telephone-event {
+        enabled = true
+        pt = 126
+      }
+    }
+
+    rtp-extensions {
+      audio-level {
+        enabled = true
+        id = 1
+      }
+      tof {
+        enabled = false
+        id = 2
+      }
+      abs-send-time {
+        enabled = true
+        id = 3
+      }
+      rid {
+        enabled = false
+        id = 4
+      }
+      tcc {
+        enabled = true
+        id = 5
+      }
+      video-content-type {
+        enabled = false
+        id = 7
+      }
+      framemarking {
+        enabled = false
+        id = 9
+      }
+    }
+  }
+
+  conference {
+    enable-auto-owner = true
+    initial-timeout = 15 seconds
+    inject-ssrc-for-recv-only-endpoints = false
+    max-ssrcs-per-user = 20
+    single-participant-timeout = 20 seconds
+    min-participants = 2
+    enable-lip-sync = false
+    shared-document {
+      use-random-name = false
+    }
+  }
+
+  health {
+    enabled = false
+    interval = 10 seconds
+    timeout = 30 seconds
+    max-check-duration = 20 seconds
+    room-name-prefix = "__jicofo-health-check"
+  }
+
+  jibri {
+    num-retries = 5
+    pending-timeout = 90 seconds
+  }
+
+  jibri-sip {
+  }
+
+  jigasi {
+  }
+
+  octo {
+    enabled = true
+  }
+
+  rest {
+    port = 8888
+    tls-port = 8843
+  }
+
+  sctp {
+    enabled = true
+  }
+
+  task-pools {
+    shared-pool-max-threads = 1500
+  }
+
+  xmpp {
+    client {
+      enabled = true
+      hostname = "localhost"
+      port = 5222
+      username = "focus"
+
+      reply-timeout = 15 seconds
+      disable-certificate-verification = false
+    }
+    service {
+      enabled = false
+      hostname = "localhost"
+      port = 6222
+      reply-timeout = 15 seconds
+      disable-certificate-verification = false
+    }
+  }
+}

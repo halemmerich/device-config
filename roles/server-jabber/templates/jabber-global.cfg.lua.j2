@@ -1,0 +1,10 @@
+legacy_ssl_ports = { 5223 }
+legacy_ssl_ssl = {
+    certificate = "/etc/prosody/certs/{{ domain }}.crt";
+    key = "/etc/prosody/certs/{{ domain }}.key";
+}
+
+https_ssl = {
+    certificate = "/etc/prosody/certs/upload.{{ domain }}.crt";
+    key = "/etc/prosody/certs/upload.{{ domain }}.key";
+}

@@ -1,0 +1,65 @@
+- include_tasks: "{{ ansible_os_family | lower }}.yml"
+
+- name: Configure directories
+  file:
+    path: '/etc/{{ item }}'
+    owner: 'prosody'
+    mode: '0755'
+    state: directory
+  loop:
+    - 'prosody/'
+    - 'prosody/vhosts.d'
+    - 'prosody/globals.d'
+  notify: restart_prosody
+  tags:
+    - config
+
+- name: 'Create config'
+  template:
+    src: "{{ item }}.j2"
+    dest: '/etc/prosody/{{ item }}'
+    mode: '0640'
+    owner: 'prosody'
+  loop:
+    - prosody.cfg.lua
+    - pluginpath.cfg.lua
+  notify: restart_prosody
+  tags:
+    - config
+
+- name: 'Create nginx upstream'
+  template:
+    src: nginx/xmpp_upstream.conf.j2
+    dest: '/etc/nginx/upstreams.d/xmpp.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create nginx maps'
+  template:
+    src: "nginx/{{ item.source }}"
+    dest: '/etc/nginx/{{ item.target }}'
+    mode: '0700'
+  loop:
+    - { source: "xmpp_map_sni.conf.j2", target: "upstream_mappings_sni.d/xmpp.conf" }
+    - { source: "xmpp_map_alpn.conf.j2", target: "upstream_mappings_alpn.d/xmpp.conf" }
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create letsencrypt hook'
+  template:
+    src: prosody.sh.j2
+    dest: '/etc/letsencrypt/renewal-hooks/deploy/prosody.sh'
+    mode: '0700'
+  tags:
+    - config
+
+- name: 'Enable services'
+  systemd:
+    name: "prosody"
+    enabled: yes
+  notify: restart_prosody
+  tags:
+    - config

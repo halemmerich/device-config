@@ -1,0 +1,4 @@
+dependencies:
+  - role: server-prosody
+  - role: server-letsencrypt
+  - role: server-nginx

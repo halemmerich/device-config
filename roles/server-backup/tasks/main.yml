@@ -1,0 +1,53 @@
+- name: 'Install dependencies'
+  package:
+    name:
+    - sshfs
+    - rsync
+  tags:
+    - install
+
+- name: 'Create script'
+  template:
+    src: backup.j2
+    dest: '/usr/local/bin/backup'
+    mode: '0700'
+  tags:
+    - config
+
+- name: Configure directories
+  file:
+    path: "{{ item }}"
+    mode: '0700'
+    state: directory
+  loop:
+    - '/usr/local/lib/backupscripts/backup'
+    - '/usr/local/lib/backupscripts/restore'
+  tags:
+    - config
+
+- name: 'Create service'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  register: systemd
+  loop:
+    - { src: "backup.service.j2", dest: "/etc/systemd/system/backup.service" }
+    - { src: "backup.timer.j2", dest: "/etc/systemd/system/backup.timer" }
+  tags:
+    - config
+    
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  when: systemd.changed
+  tags:
+    - config
+
+- name: 'Start service'
+  systemd:
+    name: 'backup.timer'
+    enabled: yes
+    state: started
+  tags:
+    - config

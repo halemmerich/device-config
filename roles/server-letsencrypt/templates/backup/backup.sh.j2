@@ -1,0 +1,10 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+for C in accounts live csr archive
+do
+	mkdir -p "$MOUNTDIR"/letsencrypt/$C; (( RC |= $? ))
+	rsync_backup /etc/letsencrypt/$C/ letsencrypt/$C/; (( RC |= $? ))
+done
+
+exit $RC

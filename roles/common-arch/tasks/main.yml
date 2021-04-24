@@ -1,0 +1,58 @@
+- name: enable multilib
+  ini_file:
+    path: /etc/pacman.d/multilib.conf
+    section: multilib
+    option: Include
+    value: /etc/pacman.d/mirrorlist
+
+- name: 'Install'
+  template:
+    src: checkupdatesafety.j2
+    dest: '/usr/local/bin/checkupdatesafety'
+    mode: '0700'
+    owner: root
+    group: root
+  tags:
+    - config
+
+- name: Update cache
+  pacman:
+    update_cache: yes
+  tags:
+    - upgrade
+    - install
+    
+- name: Upgrade packages
+  pacman:
+    upgrade: yes
+  tags:
+    - upgrade
+    
+- name: Upgrade aur packages
+  aur:
+    upgrade: yes
+  become: yes
+  become_user: aur_builder
+  tags:
+    - upgrade
+
+- name: Utilites
+  package:
+    name:
+      - linux-headers
+      - linux
+      - base-devel
+  tags:
+    - install
+
+- name: Install console utilities
+  package:
+    name:
+      - tmux
+      - mosh
+      - wget
+      - htop
+      - iotop
+      - rsync
+  tags:
+    - install

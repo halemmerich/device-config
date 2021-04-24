@@ -1,0 +1,118 @@
+- include_tasks: "{{ ansible_os_family | lower }}.yml"
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
+  loop:
+    - upload
+    - xmpp
+  notify: restart_prosody
+  tags:
+    - config
+
+- name: 'Create config prosody'
+  template:
+    src: "{{ item.src }}"
+    dest: '{{ item.dest }}'
+    mode: '0600'
+  loop:
+    - {src: "nginx/jabber.conf.j2", dest: "/etc/nginx/servers.d/jabber.conf"}
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create config prosody'
+  template:
+    src: jabber-vhost.cfg.lua.j2
+    dest: '/etc/prosody/vhosts.d/jabber.cfg.lua'
+    mode: '0640'
+    owner: 'prosody'
+  notify: restart_prosody
+  tags:
+    - config
+
+- name: Ensure modules are available
+  ansible.builtin.lineinfile:
+    path: /etc/prosody/pluginpath.cfg.lua
+    insertbefore: '^\}'
+    line: '"/opt/prosody-modules",'
+  when: ansible_os_family == "Debian"
+
+- name: 'Create config prosody'
+  template:
+    src: jabber-global.cfg.lua.j2
+    dest: '/etc/prosody/globals.d/jabber.cfg.lua'
+    mode: '0640'
+    owner: 'prosody'
+  notify: restart_prosody
+  tags:
+    - config
+
+- name: Add or modify an attribute, add element if needed
+  community.general.xml:
+    path: '/usr/local/share/webapps/default/.well-known/host-meta'
+    xpath: /x:XRD/Link[@rel='{{ item.rel }}']
+    namespaces:
+      x: "http://docs.oasis-open.org/ns/xri/xrd-1.0"
+    attribute: href
+    value: "{{ item.value }}"
+    pretty_print: true
+  loop:
+    - { rel: "urn:xmpp:alt-connections:xbosh", value: "https://xmpp.{{ domain }}:{{ server_nginx_port_tls }}/http-bind" }
+    - { rel: "urn:xmpp:alt-connections:websocket", value: "wss://xmpp.{{ domain }}:{{ server_nginx_port_tls }}/xmpp-websocket" }
+  tags:
+    - config
+
+- name: 'Create helper scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  loop:
+    - { src: "server_jabber_resetpwd.j2", dest: "/usr/local/bin/server_jabber_resetpwd"}
+    - { src: "server_jabber_adduser.j2", dest: "/usr/local/bin/server_jabber_adduser"}
+    - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/jabber.sh"}
+    - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/jabber.sh"}
+  tags:
+    - config
+
+- community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto}}"
+  loop:
+    - { port: "5222", proto: "tcp" }
+    - { port: "5223", proto: "tcp" }
+    - { port: "5269", proto: "tcp" }
+    - { port: "5000", proto: "tcp" }
+    - { port: "5281", proto: "tcp" }
+  when: ufw_enabled is defined
+  tags:
+    - config
+
+- name: Adds several users
+  vars:
+    password: "{{ item.passwort | default(lookup('password', '/dev/null')) }}"
+  shell:
+    cmd: "server_jabber_adduser {{ item.name }}"
+    stdin: "{{ password }}\n"
+  loop: "{{ chat_server_users }}"
+  tags:
+    - config
+
+- name: Resets passwords
+  shell:
+    cmd: "server_jabber_resetpwd {{ item.name }}"
+    stdin: "{{ item.password }}\n"
+  when: item.password is defined
+  loop: "{{ chat_server_users }}"
+  tags:
+    - config
+
+- name: 'Start services'
+  systemd:
+    name: prosody
+    enabled: yes
+  tags:
+    - config

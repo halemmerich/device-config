@@ -1,0 +1,23 @@
+- name: Install LTS Kernel and Headers
+  pacman:
+    name:
+      - linux-lts
+      - linux-lts-headers
+    state: present
+  tags:
+    - install
+    
+- name: Remove Default Kernel and Headers
+  pacman:
+    name:
+      - linux
+      - linux-headers
+    state: absent
+  tags:
+    - install
+
+- name: Update bootloader config
+  shell:
+    cmd: "grub-mkconfig -o /boot/grub/grub.cfg"
+  tags:
+    - config

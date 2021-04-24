@@ -1,0 +1,79 @@
+VirtualHost "{{ domain }}"
+
+	admins = { "admin@{{ domain }}" }
+
+	modules_enabled = {
+		"roster";
+		"dialback";
+		"disco";
+		"private";
+		"csi_simple";
+		"vcard4";
+		"vcard_legacy";
+		"bookmarks";
+		"groups";
+		"announce";
+		"pep";
+		"proxy65";
+		"blocklist";
+		"carbons";
+		"smacks";
+		"mam";
+		"filter_chatstates";
+		"cloud_notify";
+		"external_services";
+		"user_account_management";
+	};
+
+	disco_items = {
+		{ "upload.{{ domain }}" },
+	}
+
+	c2s_require_encryption = true
+	s2s_require_encryption = true
+
+	authentication = "internal_hashed"
+
+	storage = {
+		muc_log = "xmlarchive";
+	}
+
+	muc_log_by_default = true;
+	max_history_messages = 2000;
+
+	external_services = {
+		{
+			type = "stun",
+			host = "{{ turnserver_dns }}",
+			transport = "udp",
+			port = {{ turnserver_port }}
+		}, {
+			type = "turn",
+			host = "{{ turnserver_dns }}",
+			transport = "udp",
+			port = {{ turnserver_port }},
+			secret = "{{ turnserver_secret }}"
+		}, {
+			type = "turns",
+			host = "{{ turnserver_secure_dns }}",
+			transport = "tcp",
+			port = {{ turnserver_secure_port }},
+			secret = "{{ turnserver_secret }}"
+		}
+	};
+
+Component "conference.{{ domain }}" "muc"
+	restrict_room_creation = "local"
+	max_history_messages = 2000
+	modules_enabled = {
+		"muc_mam";
+		"vcard_muc";
+	}
+
+Component "proxy.{{ domain }}" "proxy65"
+
+Component "pubsub.{{ domain }}" "pubsub"
+
+Component "upload.{{ domain }}" "http_upload"
+	http_max_content_size = 1024*1024*1024*{{ jabber_http_upload_size }}
+	http_upload_file_size_limit = 1024*1024*1024*{{ jabber_http_upload_size }}

@@ -1,0 +1,25 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+systemctl stop dovecot
+systemctl stop postfix
+
+export MYSQL_PWD={{ postfix_db_user_password }}
+mysql -h localhost -u postfix postfix < "$MOUNTDIR/mail/dbdump.sql"
+
+mkdir -p /var/vmail
+rsync -r "$MOUNTDIR"/mail/vmail/ /var/vmail/
+
+chown vmail:vmail -R /var/vmail
+find /var/lib/nextcloud/data -type f -print0 | xargs -0 chmod 640
+find /var/lib/nextcloud/data -type d -print0 | xargs -0 chmod 750
+
+mkdir -p /var/spool/postfix
+rsync -r "$MOUNTDIR"/mail/spool/ /var/spool/postfix/
+
+chown postfix:postfix -R /var/spool/postfix
+find /var/lib/nextcloud/data -type f -print0 | xargs -0 chmod 640
+find /var/lib/nextcloud/data -type d -print0 | xargs -0 chmod 750
+
+systemctl restart postfix
+systemctl restart dovecot

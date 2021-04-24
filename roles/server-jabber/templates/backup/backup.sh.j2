@@ -1,0 +1,23 @@
+MOUNTDIR="$1"
+
+
+mkdir -p "$MOUNTDIR"/prosody; (( RC |= $? ))
+
+SOURCES="{{ ('conference.'~domain) | replace(".", "%2e") | replace("-", "%2d") }} {{ domain | replace(".", "%2e") | replace("-", "%2d") }} http_upload"
+
+for C in $SOURCES
+do
+	rsync_backup /var/lib/prosody/$C/ prosody/$C/
+done
+
+
+systemctl stop prosody; (( RC |= $? ))
+
+for C in $SOURCES
+do
+	rsync_backup /var/lib/prosody/$C/ prosody/$C/; (( RC |= $? ))
+done
+
+systemctl start prosody; (( RC |= $? ))
+
+exit $RC

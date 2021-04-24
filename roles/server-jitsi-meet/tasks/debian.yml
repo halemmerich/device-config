@@ -1,0 +1,34 @@
+- name: Add an Apt key
+  ansible.builtin.apt_key:
+    url: https://download.jitsi.org/jitsi-key.gpg.key
+    state: present
+  register: key_result
+
+- name: 'Add repository'
+  apt_repository:
+    repo: "deb https://download.jitsi.org stable/"
+  register: repo_result
+
+- name: 'Update cache'
+  apt:
+    update_cache: true
+  when: key_result.changed or repo_result.changed
+
+- name: 'Install packages'
+  apt:
+    name:
+    - openjdk-11-jre
+    - jitsi-meet-web
+    - jitsi-videobridge2
+    - jitsi-meet-prosody
+    - jicofo
+  tags:
+    - install
+
+- name: Folder for jitsi meet config
+  file:
+    path: "{{ jitsi_config_webapp }}"
+    state: directory
+    owner: "{{ server_nginx_user }}"
+    group: root
+    mode: "0755"

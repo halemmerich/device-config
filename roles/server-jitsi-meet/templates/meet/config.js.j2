@@ -1,0 +1,127 @@
+var config = {
+
+	hosts: {
+		domain: 'meet.{{ domain }}',
+		muc: 'conference.meet.{{ domain }}'
+	},
+
+	bosh: '//meet.{{ domain }}/http-bind',
+	websocket: 'wss://meet.{{ domain }}/xmpp-websocket',
+
+	openBridgeChannel: 'websocket',
+	clientNode: 'http://jitsi.org/jitsimeet',
+
+	enableNoAudioDetection: true,
+	enableNoisyMicDetection: true,
+
+	opusMaxAverageBitrate: 20000,
+	enableOpusRed: true,
+
+	resolution: 720,
+
+	maxFullResolutionParticipants: 6,
+	constraints: {
+		video: {
+			height: {
+				ideal: 720,
+				max: 720,
+				min: 180
+			},
+			width: {
+				ideal: 1280,
+				max: 1280,
+				min: 320
+			}
+		}
+	},
+
+	disableSimulcast: false,
+	enableLayerSuspension: true,
+
+	desktopSharingFrameRate: {
+		min: 10,
+		max: 60
+	},
+
+	fileRecordingsEnabled: false,
+	liveStreamingEnabled: false,
+	transcribingEnabled: false,
+	autoCaptionOnRecord: false,
+
+	channelLastN: 20,
+
+	videoQuality: {
+		disabledCodec: '',
+		preferredCodec: 'VP8',
+
+		maxBitratesVideo: {
+			low: 200000,
+			standard: 1500000,
+			high: 5000000
+		},
+
+		minHeightForQualityLvl: {
+			360: 'standard',
+			720: 'high'
+		},
+		resizeDesktopForPresenter: false
+	},
+
+	useTurnUdp: false,
+
+	hideLobbyButton: false,
+	requireDisplayName: false,
+	enableWelcomePage: true,
+
+	disable1On1Mode: false,
+
+	defaultLanguage: 'en',
+
+	disableProfile: false,
+
+	// noticeMessage: '',
+
+	prejoinPageEnabled: true,
+	openSharedDocumentOnJoin: false,
+
+	enableInsecureRoomNameWarning: true,
+	enableAutomaticUrlCopy: false,
+
+	gatherStats: false,
+	disableThirdPartyRequests: true,
+
+	useStunTurn: true,
+
+	p2p: {
+		enabled: true,
+		useStunTurn: true,
+		iceTransportPolicy: 'all',
+		backToP2PDelay: 5
+	},
+
+	disableRecordAudioNotification: false,
+
+
+	localRecording: {
+		enabled: false,
+	},
+
+	e2eping: {
+		pingInterval: -1,
+		analyticsInterval: 0,
+	},
+
+	disableInviteFunctions: false,
+	doNotStoreRoom: true,
+
+	disableRemoteMute: false,
+	enableLipSync: false,
+
+	disableTileView: false,
+
+	hideConferenceSubject: false,
+	hideConferenceTimer: false,
+	hideParticipantsStats: false,
+
+	makeJsonParserHappy: 'even if last key had a trailing comma'
+};

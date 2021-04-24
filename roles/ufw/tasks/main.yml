@@ -1,0 +1,29 @@
+- name: 'Install packages'
+  package:
+    name:
+    - ufw
+  tags:
+    - install
+
+- name: Deny everything and enable UFW
+  community.general.ufw:
+    state: enabled
+    policy: deny
+  register: ufw_enabled
+  tags:
+    - config
+
+- community.general.ufw:
+    rule: limit
+    port: ssh
+    proto: tcp
+  tags:
+    - config
+
+- name: 'Enable services'
+  systemd:
+    name: "ufw"
+    state: started
+    enabled: yes
+  tags:
+    - config

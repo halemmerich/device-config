@@ -1,0 +1,7 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+for C in accounts live csr archive
+do
+	rsync -r --delete "$MOUNTDIR"/letsencrypt/$C/ /etc/letsencrypt/$C/
+done

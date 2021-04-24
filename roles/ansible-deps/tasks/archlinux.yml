@@ -1,0 +1,8 @@
+- pacman:
+   update_cache: yes
+
+- package:
+    name:
+      - python-lxml
+  tags:
+    - install

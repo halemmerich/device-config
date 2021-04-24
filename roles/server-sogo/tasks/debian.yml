@@ -1,0 +1,23 @@
+- name: Add an Apt key
+  ansible.builtin.apt_key:
+    keyserver: hkp://keys.gnupg.net
+    id: "0x810273C4"
+    state: present
+  register: key_result
+
+- name: 'Add repository'
+  apt_repository:
+    repo: "deb https://packages.inverse.ca/SOGo/nightly/5/debian/ buster buster"
+  register: repo_result
+
+- name: 'Update cache'
+  apt:
+    update_cache: true
+  when: key_result.changed or repo_result.changed
+
+- name: 'Install packages'
+  apt:
+    name:
+    - sogo
+  tags:
+    - install

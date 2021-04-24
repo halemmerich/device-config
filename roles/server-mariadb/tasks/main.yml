@@ -1,0 +1,78 @@
+- name: 'Install'
+  package:
+    name:
+    - mariadb
+    - python-pymysql
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: 'Install'
+  package:
+    name:
+    - mariadb-server
+    - python-mysqldb
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+
+- name: 'Create DB'
+  command: "mysql_install_db --user=mysql --basedir=/usr/ --ldata=/var/lib/mysql"
+  args:
+    creates: /var/lib/mysql/mysql
+  tags:
+    - config
+
+- name: 'Create root password'
+  command: "mysqladmin -u root password {{ mysql_root_password }}"
+  args:
+    creates: /var/lib/mysql/mysql
+  tags:
+    - config
+
+- name: 'Create mysql server config'
+  template:
+    src: server.cnf.j2
+    dest: '/etc/my.cnf'
+    mode: '0600'
+    owner: root
+    group: root
+  tags:
+    - config
+
+- name: 'Enable services'
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  loop:
+    - mariadb
+  notify: restart_mariadb
+  tags:
+    - config
+
+- name: update mysql root password for all root accounts
+  community.mysql.mysql_user:
+    name: root
+    host: "{{ item }}"
+    password: "{{ mysql_root_password }}"
+    check_implicit_admin: yes
+    priv: "*.*:ALL,GRANT"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  loop:
+    - "{{ ansible_hostname }}"
+    - 127.0.0.1
+    - ::1
+    - localhost
+  tags:
+    - config
+    
+- name: 'Create mysql client config for root'
+  template:
+    src: client.cnf.j2
+    dest: '/root/.my.cnf'
+    mode: '0600'
+    owner: root
+    group: root
+  tags:
+    - config

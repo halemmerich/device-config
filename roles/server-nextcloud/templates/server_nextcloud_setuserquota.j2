@@ -1,0 +1,11 @@
+#!/bin/bash
+[ -z "$2" ] && echo nextcloud data needed: UID QUOTA_GIGS && exit 1
+
+ID="$1"
+QUOTA=(( $2 * 1024 * 1024 * 1024 ))
+
+su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ user:setting \"$ID\" \"$QUOTA\""
+
+
+[ "$?" -eq 0 ] && echo New quota is "$QUOTA" || echo Done
+

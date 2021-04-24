@@ -1,0 +1,34 @@
+#!/bin/bash
+[ -z "$1" ] && echo mail data needed: MAIL FULLNAME [QUOTA], PASSWORD from - && exit 1
+
+IFS= read PW
+
+if [ -z "$PW" ]
+then
+	PW=$(pwgen -n 10 | cat)
+fi
+
+PW_HASH='{md5-crypt}'$(echo -n "$PW" | openssl passwd -1 -stdin)
+
+FULLNAME="$2"
+MAIL="$1"
+QUOTA="$3"
+
+if [ -z "$QUOTA" ]
+then
+	QUOTA="{{ server_mail_default_quota }}"
+fi
+
+DOMAIN=$(echo $MAIL | sed -e "s|.*@||g")
+DOMAIN_ID=$(mysql --defaults-file=<(echo "[client]
+user=postfix
+password={{ postfix_db_user_password }}") -u postfix -D postfix -e "SELECT id FROM postfix.virtual_domains WHERE name LIKE '$DOMAIN'" | tail -n 1)
+
+
+QUERY="INSERT IGNORE INTO postfix.virtual_users (domain_id, password, email, quota) VALUES ('$DOMAIN_ID', '$PW_HASH', '$MAIL', '$QUOTA');"
+
+mysql --defaults-file=<(echo "[client]
+user=postfix
+password={{ postfix_db_user_password }}") -u postfix -D postfix -e "$QUERY"
+
+[ "$?" = 0 ] && echo New PWD is "$PW" || echo Done

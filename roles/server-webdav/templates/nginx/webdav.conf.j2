@@ -1,0 +1,62 @@
+server {
+    listen 4445 http2;
+    listen [::]:4445 http2;
+  
+    root /var/lib/webdav/shares;
+    client_body_temp_path   /var/lib/webdav/temp;
+
+    location ~ /([a-zA-Z0-9_\.-]*)(/.*)* {
+        dav_methods  PUT DELETE MKCOL COPY MOVE;
+        dav_ext_methods  PROPFIND OPTIONS;
+        create_full_put_path  on;
+        dav_access  user:rw group:rw all:rw;
+        autoindex  on;
+        client_max_body_size  20G;   # File size limit for new files
+
+        auth_basic  "Authenticate";
+        auth_basic_user_file /var/lib/webdav/cfg/$1.htpasswd;
+    }
+    
+    location / {
+        return 403;
+    }
+}
+
+server {
+    listen {{ server_nginx_port_https_backend }} ssl http2;
+    listen [::]:{{ server_nginx_port_https_backend }} ssl http2;
+    server_name webdav.{{ domain }};
+  
+    root /var/lib/webdav/shares;
+    client_body_temp_path   /var/lib/webdav/temp;
+
+    ssl_certificate /etc/letsencrypt/live/webdav.{{ domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/webdav.{{ domain }}/privkey.pem;
+    ssl_session_cache shared:SSL:10m;
+
+    location ~ /([a-zA-Z0-9_\.-]*)(/.*)* {
+        proxy_pass http://127.0.0.1:4445;
+        proxy_redirect http://127.0.0.1:4445 default;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $host;
+        proxy_set_header x-webobjects-server-protocol HTTP/1.0;
+        proxy_set_header x-webobjects-remote-host 127.0.0.1;
+        proxy_set_header x-webobjects-server-name $server_name;
+        proxy_set_header x-webobjects-server-url $scheme://$host;
+        proxy_connect_timeout 90;
+        proxy_send_timeout 90;
+        proxy_read_timeout 90;
+        proxy_buffer_size 4k;
+        proxy_buffers 4 32k;
+        proxy_busy_buffers_size 64k;
+        proxy_temp_file_write_size 64k;
+        client_max_body_size 50m;
+        client_body_buffer_size 128k;
+    }
+    
+    location / {
+        return 403;
+    }
+}
+

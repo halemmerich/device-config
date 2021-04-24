@@ -1,0 +1,282 @@
+- include_vars: "vars/{{ ansible_os_family | lower }}.yml"
+  tags:
+    - config
+    - only
+    
+- include_tasks: "{{ ansible_os_family | lower }}.yml"
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
+  loop:
+    - nextcloud
+  tags:
+    - config
+
+- name: Configure memory limit
+  lineinfile:
+    dest: "{{ php_path }}/php.ini"
+    regexp: "memory_limit ="
+    line: "memory_limit = 1024M"
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create config nginx server'
+  template:
+    src: nginx/nextcloud-server.conf.j2
+    dest: '/etc/nginx/servers.d/nextcloud.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create config nginx upstream'
+  template:
+    src: nginx/nextcloud-upstream.conf.j2
+    dest: '/etc/nginx/upstreams.d/nextcloud.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create config nginx map'
+  template:
+    src: nginx/nextcloud-map.conf.j2
+    dest: '/etc/nginx/upstream_mappings_sni.d/nextcloud.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create configs'
+  template:
+    src: php/nextcloud.conf.j2
+    dest: '{{ php_fpm_path }}/nextcloud.conf'
+    mode: '0600'
+  notify: restart_nginx
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - config
+
+- name: 'Start services'
+  systemd:
+    name: "{{ php_fpm_service }}"
+    state: restarted
+    daemon_reload: yes
+  tags:
+    - config
+
+- name: 'Detect webshares'
+  stat:
+    path: /var/lib/webdav/shares
+  register: webshare_path
+  tags:
+    - config
+
+- name: Configure directories
+  file:
+    path: "/etc/systemd/system/{{ php_fpm_service }}.service.d/"
+    mode: '0700'
+    state: directory
+  tags:
+    - config
+
+- name: 'Create configs'
+  template:
+    src: php/override.conf.j2
+    dest: '/etc/systemd/system/{{ php_fpm_service }}.service.d/override.conf'
+    mode: '0600'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: Create a new database
+  community.mysql.mysql_db:
+    name: nextcloud
+    state: present
+    encoding: utf8mb4
+    collation: utf8mb4_general_ci
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+  tags:
+    - config
+
+- name: Create user with password, all database privileges and 'WITH GRANT OPTION' in DB
+  community.mysql.mysql_user:
+    state: present
+    name: nextcloud
+    password: "{{ nextcloud_db_user_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+    priv:
+      'nextcloud.*': 'ALL'
+  tags:
+    - config
+
+- name: 'Create config'
+  template:
+    src: config.php.j2
+    dest: '{{ nextcloud_config_path }}'
+    mode: '0640'
+    owner: "{{ nextcloud_user }}"
+    group: "{{ nextcloud_user }}"
+    force: no
+  tags:
+    - config
+
+- name: Install
+  become_user: "{{ nextcloud_user }}"
+  command:
+    cmd: "php {{ nextcloud_path }}/occ maintenance:install --database mysql --database-name nextcloud --database-host localhost --database-user nextcloud --database-pass={{ nextcloud_db_user_password }} --admin-pass={{ nextcloud_admin_user_password }} --data-dir /var/lib/nextcloud/data/ --no-interaction"
+    creates: "{{ nextcloud_data_path }}/.ocdata"
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: Set config
+  become_user: "{{ nextcloud_user }}"
+  command:
+    cmd: "php {{ nextcloud_path }}/occ config:system:set trusted_domains {{ item.index }} --value {{ item.host }}"
+  loop:
+    - { index: "0", host: "nextcloud.{{ domain }}" }
+    - { index: "1", host: "localhost" }
+  tags:
+    - config
+
+- name: Get enabled Apps
+  become_user: "{{ nextcloud_user }}"
+  shell:
+    cmd: 'php {{ nextcloud_path }}/occ app:list | grep - | sed "s/  - \(.*\):.*/\1/" | grep -v -'
+  register: app_list_output
+  tags:
+    - config
+  
+- name: Disable most Apps
+  become_user: "{{ nextcloud_user }}"
+  shell:
+    cmd: 'php {{ nextcloud_path }}/occ app:disable {{ item }}'
+  register: app_disable_output
+  failed_when: app_disable_output.rc != 0 and app_disable_output.rc != 2
+  changed_when: app_disable_output.rc == 0
+  loop: "{{ app_list_output.stdout_lines | difference(nextcloud_enabled_apps) }}"
+  tags:
+    - config
+
+- name: Enable some apps
+  become_user: "{{ nextcloud_user }}"
+  shell:
+    cmd: "php {{ nextcloud_path }}/occ app:enable {{ item }}"
+  loop: "{{ nextcloud_enabled_apps }}"
+  tags:
+    - config
+  
+- name: Set config readonly
+  become_user: "{{ nextcloud_user }}"
+  command:
+    cmd: "php {{ nextcloud_path }}/occ config:system:set config_is_read_only --value true"
+  tags:
+    - config
+
+- name: 'Protect config'
+  file:
+    path: '{{ nextcloud_config_path }}'
+    mode: '0440'
+  tags:
+    - config
+
+- name: 'Create scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  loop:
+    - { src: "server_nextcloud_resetpwd.j2", dest: "/usr/local/bin/server_nextcloud_resetpwd" }
+    - { src: "server_nextcloud_adduser.j2", dest: "/usr/local/bin/server_nextcloud_adduser" }
+    - { src: "server_nextcloud_adminify.j2", dest: "/usr/local/bin/server_nextcloud_adminify" }
+    - { src: "server_nextcloud_addstorage.j2", dest: "/usr/local/bin/server_nextcloud_addstorage" }
+    - { src: "server_nextcloud_setuserquota.j2", dest: "/usr/local/bin/server_nextcloud_setuserquota" }
+    - { src: "server_nextcloud_scanfiles.j2", dest: "/usr/local/bin/server_nextcloud_scanfiles" }
+    - { src: "server_nextcloud_watchstorage.j2", dest: "/usr/local/bin/server_nextcloud_watchstorage" }
+    - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/nextcloud.sh" }
+    - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/nextcloud.sh" }
+  tags:
+    - config
+
+- name: 'Create scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  loop:
+    - { src: "nextcloud-cron.service.j2", dest: "/etc/systemd/system/nextcloud-cron.service" }
+    - { src: "nextcloud-watchstorage.service.j2", dest: "/etc/systemd/system/nextcloud-watchstorage.service" }
+    - { src: "nextcloud-cron.timer.j2", dest: "/etc/systemd/system/nextcloud-cron.timer" }
+  notify:
+    - restart_nextcloud_cron
+  tags:
+    - config
+
+- name: Adds several users
+  vars:
+    password: "{{ item.passwort | default(lookup('password', '/dev/null')) }}"
+  shell:
+    cmd: 'server_nextcloud_adduser "{{ item.name }}" "{{ item.fullname }}" "{{ item.name }}"'
+    stdin: "{{ password }}\n"
+  loop: "{{ nextcloud_server_users }}"
+  tags:
+    - config
+
+- name: Makes users admin
+  shell:
+    cmd: 'server_nextcloud_adminify "{{ item }}"'
+  loop: "{{ nextcloud_server_admins }}"
+  when: nextcloud_server_admins is defined
+  tags:
+    - config
+
+- name: Sets users quotas
+  shell:
+    cmd: "server_nextcloud_setuserquota {{ item.name }} {{ item.quota }}"
+  when: item.quota is defined
+  loop: "{{ nextcloud_server_users }}"
+  tags:
+    - config
+
+- name: Resets passwords
+  shell:
+    cmd: "server_nextcloud_resetpwd {{ item.name }}"
+    stdin: "{{ item.password }}\n"
+  when: item.password is defined
+  loop: "{{ nextcloud_server_users }}"
+  tags:
+    - config
+    
+- name: Adds local storage
+  shell:
+    cmd: 'server_nextcloud_addstorage "{{ item.name }}" "{{ item.bigfileshare }}"'
+  when: item.bigfileshare is defined
+  loop: "{{ nextcloud_server_users }}"
+  tags:
+    - config
+
+- name: 'Scan systemd'
+  systemd:
+    daemon-reload: true
+  tags:
+    - config
+
+- name: 'Enable services'
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+  loop:
+    - "{{ php_fpm_service }}"
+    - nginx
+    - nextcloud-cron.timer
+    - nextcloud-watchstorage
+  notify:
+    - restart_nginx
+  tags:
+    - config

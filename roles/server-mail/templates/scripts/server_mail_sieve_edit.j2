@@ -1,0 +1,84 @@
+#!/bin/bash
+[ -z "$1" ] && echo mail data needed: MAILUSER [SCRIPTNAME] && exit 1
+
+if echo "$1" | grep -v @
+then
+	echo MAILUSER ist not a mail adress
+	exit 1
+fi
+
+DOMAIN=$( echo "$1" | cut -d '@' -f 2)
+LOCAL=$( echo "$1" | cut -d '@' -f 1)
+
+SCRIPT_NAME=.dovecot.sieve
+
+FILTER_BASE="/var/vmail/$DOMAIN/$LOCAL/sieve"
+
+if [ -n "$2" ]
+then
+	if [ -e "$FILTER_BASE/$2" ]
+	then
+		SCRIPT_NAME=$2
+	elif [ -e "$FILTER_BASE/$2.sieve" ]
+	then
+		SCRIPT_NAME=$2.sieve
+	fi
+else
+	if [ -e "$FILTER_BASE/.dovecot.sieve" ]
+	then
+		SCRIPT_NAME=.dovecot.sieve
+	fi
+fi
+
+if [ -z "$SCRIPT_NAME" ]
+then
+	select SCRIPT_NAME in "$FILTER_BASE"/* quit;
+	do
+		if [ "$SCRIPT_NAME" = quit ]
+		then
+			exit 0
+		else
+			echo $SCRIPT_NAME selected
+			break;
+		fi
+	done
+fi
+
+[ -z "$SCRIPT_NAME" ] && echo Could not find anything to edit in "$FILTER_BASE" && exit 1
+
+ACTIVE_PATH="/var/vmail/$DOMAIN/$LOCAL/sieve/$SCRIPT_NAME"
+
+[ ! -e "$ACTIVE_PATH" ] && echo No activated sieve script found at "$ACTIVE_PATH" && exit 1
+
+REAL_PATH=$(realpath "$ACTIVE_PATH")
+
+TMP=$(mktemp)
+cp "$REAL_PATH" "$TMP"
+
+SIEVEC_RESULT=1
+
+while [ 0 -ne "$SIEVEC_RESULT" ]
+do
+	$EDITOR "$TMP"
+	sievec "$TMP"
+	SIEVEC_RESULT=$?
+	if [ "$SIEVEC_RESULT" -ne 0 ]
+	then
+		read -p "Errors during compile, edit again? (Y/N)" VALUE
+		case $VALUE in
+			[Yy]* ) ;;
+			[Nn]* ) echo Changes are in $TMP; exit 0;;
+			* ) echo "Please answer yes or no.";;
+		esac
+	fi
+done
+
+while true
+do
+    read -p "Update sieve script? (Y/N)" VALUE
+    case $VALUE in
+        [Yy]* ) cat "$TMP" > "$ACTIVE_PATH"; break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done

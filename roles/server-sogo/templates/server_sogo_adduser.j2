@@ -1,0 +1,23 @@
+#!/bin/bash
+[ -z "$3" ] && echo sogo data needed: UID FULLNAME MAIL, PASSWORD from - && exit 1
+
+IFS= read PW
+
+if [ -z "$PW" ]
+then
+	PW=$(pwgen -n 10 | cat)
+fi
+
+PW_HASH='{md5-crypt}'$(echo -n "$PW" | openssl passwd -1 -stdin)
+
+ID="$1"
+FULLNAME="$2"
+MAIL="$3"
+
+QUERY="INSERT IGNORE INTO sogo_users (c_uid, c_name, c_password, c_cn, mail) VALUES ('$ID', '$ID', '$PW_HASH', '$FULLNAME', '$MAIL');"
+
+mysql --defaults-file=<(echo "[client]
+user=sogo
+password={{ sogo_db_user_password }}") -u sogo -D sogo -e "$QUERY"
+
+[ "$?" = 0 ] && echo New PWD is "$PW" || echo Done

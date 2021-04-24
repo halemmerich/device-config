@@ -1,0 +1,14 @@
+#!/bin/bash
+echo nextcloud data usable: [UID]
+
+ID="$1"
+
+if [ -n "$ID" ]
+then
+	su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ files:scan \"$ID\""
+else
+	su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ files:scan --all"
+fi
+
+[ "$?" -eq 0 ] && echo Success
+

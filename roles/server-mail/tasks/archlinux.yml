@@ -1,0 +1,9 @@
+- name: 'Install'
+  package:
+    name:
+    - dovecot
+    - postfix
+    - postfix-mysql
+    - pigeonhole
+  tags:
+    - install

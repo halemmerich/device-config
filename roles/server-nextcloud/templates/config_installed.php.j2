@@ -1,0 +1,47 @@
+<?php
+$CONFIG = array (
+  'config_is_read_only' => true,
+  'datadirectory' => '/var/lib/nextcloud/data/',
+  'logfile' => '/var/log/nextcloud/nextcloud.log',
+  'apps_paths' =>
+  array (
+    0 =>
+    array (
+      'path' => '{{ nextcloud_path }}/apps',
+      'url' => '/apps',
+      'writable' => false,
+    ),
+    1 =>
+    array (
+      'path' => '/var/lib/nextcloud/apps',
+      'url' => '/wapps',
+      'writable' => true,
+    ),
+  ),
+  'passwordsalt' => '{{ nextcloud_passwordsalt }}',
+  'secret' => '{{ nextcloud_secret }}',
+  'trusted_domains' =>
+  array (
+    0 => 'localhost',
+    1 => 'nextcloud.{{ domain }}'
+  ),
+  'dbtype' => 'mysql',
+  'version' => '21.0.0.18',
+  'overwrite.cli.url' => 'https://nextcloud.{{ domain }}',
+  'dbname' => 'nextcloud',
+  'dbhost' => 'localhost',
+  'dbport' => '',
+  'dbtableprefix' => 'oc_',
+  'mysql.utf8mb4' => true,
+  'dbuser' => 'nextcloud',
+  'dbpassword' => '{{ nextcloud_db_user_password }}',
+  'installed' => false,
+  'instanceid' => '{{ nextcloud_instanceid }}',
+  'skeletondirectory' => '',
+  'default_language' => 'de',
+  'default_locale' => 'de_DE',
+  'mail_domain' => '{{ domain }}',
+  'mail_smtpmode' => 'smtp',
+  'mail_smtphost' => '127.0.0.1',
+  'mail_smtpport' => 25
+);

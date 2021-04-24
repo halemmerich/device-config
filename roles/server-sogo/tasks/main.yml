@@ -1,0 +1,118 @@
+- include_tasks: "{{ ansible_os_family | lower }}.yml"
+
+- name: Configure directories
+  file:
+    path: "{{ item }}"
+    owner: 'sogo'
+    group: 'sogo'
+    mode: '0700'
+    state: directory
+  loop:
+    - '/var/run/sogo'
+    - '/var/spool/sogo'
+  notify: restart_sogo
+  tags:
+    - config
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
+  loop:
+    - sogo
+  notify: restart_sogo
+  tags:
+    - config
+
+- name: 'Create config nginx'
+  template:
+    src: nginx/sogo.conf.j2
+    dest: '/etc/nginx/servers.d/sogo.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: Create a new database
+  community.mysql.mysql_db:
+    name: sogo
+    state: present
+    encoding: utf8mb4
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+  tags:
+    - config
+
+- name: Create user with password, all database privileges and 'WITH GRANT OPTION' in DB sogo
+  community.mysql.mysql_user:
+    state: present
+    name: sogo
+    password: "{{ sogo_db_user_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+    priv:
+      'sogo.*': 'ALL'
+  tags:
+    - config
+
+- name: Create users table
+  community.mysql.mysql_query:
+    login_db: sogo
+    query: "CREATE TABLE IF NOT EXISTS `sogo`.`sogo_users` (`c_uid` VARCHAR(128) NOT NULL, `c_name` VARCHAR(128) UNIQUE NOT NULL, `c_password` VARCHAR(128) NOT NULL, `c_cn` VARCHAR(128) NOT NULL, `mail` VARCHAR(128) NOT NULL);"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+  tags:
+    - config
+
+- name: 'Create scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  loop:
+    - { src: "server_sogo_resetpwd.j2", dest: "/usr/local/bin/server_sogo_resetpwd" }
+    - { src: "server_sogo_adduser.j2", dest: "/usr/local/bin/server_sogo_adduser" }
+    - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/sogo.sh" }
+    - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/sogo.sh" }
+  tags:
+    - config
+
+
+- name: Adds several users
+  vars:
+    password: "{{ item.passwort | default(lookup('password', '/dev/null')) }}"
+  shell:
+    cmd: 'server_sogo_adduser "{{ item.name }}" "{{ item.fullname }}" "{{ item.mail }}"'
+    stdin: "{{ password }}\n"
+  loop: "{{ sogo_server_users }}"
+  tags:
+    - config
+
+- name: Resets passwords
+  shell:
+    cmd: "server_sogo_resetpwd {{ item.name }}"
+    stdin: "{{ item.password }}\n"
+  when: item.password is defined
+  loop: "{{ sogo_server_users }}"
+
+- name: 'Create config'
+  template:
+    src: sogo/sogo.conf.j2
+    dest: '/etc/sogo/sogo.conf'
+    mode: '0644'
+  notify: restart_sogo
+  tags:
+    - config
+
+- name: 'Enable services'
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+  loop:
+    - sogo
+    - nginx
+  notify:
+    - restart_sogo
+    - restart_nginx
+  tags:
+    - config

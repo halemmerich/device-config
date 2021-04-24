@@ -1,0 +1,6 @@
+#!/bin/bash
+
+while true; do
+  inotifywait -r -e modify,attrib,close_write,move,create,delete /var/lib/webdav/shares
+  server_nextcloud_scanfiles
+done

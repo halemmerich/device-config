@@ -1,0 +1,2 @@
+postfix_daemon_dir: /usr/lib/postfix/sbin
+postfix_command_dir: /usr/sbin

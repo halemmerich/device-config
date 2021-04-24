@@ -1,0 +1,18 @@
+#!/bin/bash
+[ -z "$2" ] && echo webdav data needed: SHARENAME USERNAME, PASSWORD from - && exit 1
+
+IFS= read PW
+
+if [ -z "$PW" ]
+then
+	PW=$(pwgen -n 10 | cat)
+fi
+
+SHARENAME="$1"
+USERNAME="$2"
+
+echo "$PW" | htpasswd -i "/var/lib/webdav/cfg/$SHARENAME.htpasswd" $USERNAME
+
+[ "$?" = 0 ] && echo New PWD is "$PW" || echo Done
+
+systemctl reload nginx

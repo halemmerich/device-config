@@ -1,0 +1,16 @@
+JVB_HOSTNAME=meet.{{ domain }}
+JVB_HOST=
+JVB_PORT=5347
+JVB_SECRET={{ jitsi_secret_jvb_user }}
+JVB_OPTS="--apis=xmpp"
+
+JAVA_SYS_PROPS="\
+  -Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION={{ jitsi_config_jvb_home }}\
+  -Dnet.java.sip.communicator.SC_HOME_DIR_NAME={{ jitsi_config_jvb_name}}\
+  -Dnet.java.sip.communicator.SC_LOG_DIR_LOCATION=/var/log/jitsi-videobridge\
+  -Djava.util.logging.config.file={{ jitsi_config_jvb }}/logging.properties\
+  -Dconfig.file={{ jitsi_config_jvb }}/jvb.conf\
+  -Djava.util.prefs.userRoot={{ jitsi_home_jvb }}\
+"
+
+VIDEOBRIDGE_GC_TYPE=G1GC

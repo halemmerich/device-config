@@ -1,0 +1,17 @@
+#!/bin/bash
+[ -z "$1" ] && echo webdav data needed: SHARENAME [DAYS] && exit 1
+
+SHARENAME="$1"
+DAYS="$2"
+CONFIGPATH="/var/lib/webdav/cfg/cleanup.d/$SHARENAME"
+
+[ -f "$CONFIGPATH" ] && echo Current setting is $(cat "$CONFIGPATH")
+
+if [ -z "$DAYS" ] && [ -f "$CONFIGPATH" ]
+then
+	rm "$CONFIGPATH"
+	echo Removed current setting, no cleanup will happen
+else
+	echo $DAYS > "$CONFIGPATH"
+	echo Set new setting of $DAYS days.
+fi

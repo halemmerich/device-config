@@ -1,0 +1,13 @@
+MOUNTDIR="$1"
+
+systemctl stop prosody
+
+for C in *%2e* http_upload
+do
+	rsync -r --delete "$MOUNTDIR"/prosody/$C/ /var/lib/prosody/$C/
+	chown prosody:prosody -R /var/lib/prosody/$C
+	find /var/lib/prosody/$C -type f -print0 | xargs -0 chmod 644
+	find /var/lib/prosody/$C -type d -print0 | xargs -0 chmod 755
+done
+
+systemctl start prosody

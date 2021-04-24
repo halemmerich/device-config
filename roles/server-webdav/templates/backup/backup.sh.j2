@@ -1,0 +1,8 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+mkdir -p $MOUNTDIR/webdav/cfg; (( RC |= $? ))
+
+rsync_backup /var/lib/webdav/cfg/ webdav/cfg/; (( RC |= $? ))
+
+exit $RC

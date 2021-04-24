@@ -1,0 +1,17 @@
+#!/bin/bash
+[ -z "$1" ] && echo nextcloud data needed: UID, PASSWORT is optional && exit 1
+
+IFS= read PW
+
+if [ -z "$PW" ]
+then
+	PW=$(pwgen -n 10 | cat)
+fi
+
+ID="$1"
+
+export OC_PASS="$PW"
+su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ user:resetpassword --password-from-env \"$ID\""
+
+[ "$?" = 0 ] && echo New PWD is "$PW" || echo Done
+

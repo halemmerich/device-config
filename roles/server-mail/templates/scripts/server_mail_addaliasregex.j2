@@ -1,0 +1,24 @@
+#!/bin/bash
+[ -z "$3" ] && echo alias data needed: DOMAIN SOURCEMAIL DESTINATIONMAIL && exit 1
+
+DOMAIN="$1"
+DOMAIN_ID=$(mysql --defaults-file=<(echo "[client]
+user=postfix
+password={{ postfix_db_user_password }}") -u postfix -D postfix -e "SELECT id FROM postfix.virtual_domains WHERE name LIKE '$DOMAIN'" | tail -n 1)
+SOURCEMAIL="$2"
+DESTINATIONMAIL="$3"
+
+ALIAS_FOUND=$(mysql --defaults-file=<(echo "[client]
+user=postfix
+password={{ postfix_db_user_password }}") -u postfix -D postfix -e "SELECT 1 FROM postfix.virtual_aliases_regexp WHERE source LIKE '$SOURCEMAIL' AND destination LIKE '$DESTINATIONMAIL'" | tail -n 1)
+
+if [ -z "$ALIAS_FOUND"]
+then
+	QUERY="INSERT IGNORE INTO postfix.virtual_aliases_regexp (domain_id, source, destination) VALUES ('$DOMAIN_ID', '$SOURCEMAIL', '$DESTINATIONMAIL');"
+	mysql --defaults-file=<(echo "[client]
+user=postfix
+password={{ postfix_db_user_password }}") -u postfix -D postfix -e "$QUERY"
+else
+	echo Alias existing
+fi
+

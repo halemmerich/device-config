@@ -1,0 +1,3 @@
+turnserver_config_path: '/etc/turnserver.conf'
+turnserver_systemd_name: "coturn"
+turnserver_pid_path: '/run/turnserver.pid'

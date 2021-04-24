@@ -1,0 +1,108 @@
+- include_vars: "vars/{{ ansible_os_family | lower }}.yml"
+  tags:
+    - config
+
+- name: 'Install packages'
+  package:
+    name:
+    - coturn
+  tags:
+    - install
+
+- name: 'Configure'
+  template:
+    src: turnserver.conf.j2
+    dest: '{{ turnserver_config_path }}'
+    mode: '0700'
+    owner: turnserver
+    group: turnserver
+  notify: restart_turn
+  tags:
+    - config
+    
+- name: Change ownership of the folder
+  file:
+    state: directory
+    path: "{{ item }}"
+    mode: "0700"
+    owner: turnserver
+    group: turnserver
+  loop:
+    - /etc/turnserver
+    - /etc/turnserver/certs
+  notify: restart_turn
+
+- name: 'Create nginx upstream'
+  template:
+    src: nginx/turn_upstream.conf.j2
+    dest: '/etc/nginx/upstreams.d/turn.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create nginx map'
+  template:
+    src: nginx/turn_map_sni.conf.j2
+    dest: '/etc/nginx/upstream_mappings_sni.d/turn.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create nginx map'
+  template:
+    src: nginx/turn_map_alpn.conf.j2
+    dest: '/etc/nginx/upstream_mappings_alpn.d/turn.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
+  loop:
+    - turn
+  notify: restart_turn
+  tags:
+    - config
+
+- name: 'Create helper scripts'
+  template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: '0700'
+  loop:
+    - server_turn_gentempcreds
+  tags:
+    - config
+
+- community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto}}"
+  loop:
+    - { port: "{{ turnserver_backend_secure_port }}", proto: "tcp" }
+    - { port: "{{ turnserver_port }}", proto: "udp" }
+    - { port: "{{ turnserver_min_port }}:{{ turnserver_max_port }}", proto: "udp" }
+  when: ufw_enabled is defined
+  tags:
+    - config
+
+- name: 'Create letsencrypt hook'
+  template:
+    src: turnserver.sh.j2
+    dest: '/etc/letsencrypt/renewal-hooks/deploy/turnserver.sh'
+    mode: '0700'
+  tags:
+    - config
+
+- name: 'Enable services'
+  systemd:
+    name: "{{ turnserver_systemd_name }}"
+    enabled: yes
+  notify: restart_turn
+  tags:
+    - config

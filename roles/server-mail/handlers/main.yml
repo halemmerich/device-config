@@ -1,0 +1,11 @@
+- name: restart_mail
+  systemd:
+    name: "{{ item }}"
+    state: restarted
+  loop:
+    - postfix
+    - dovecot
+
+- name: run_newaliases
+  command:
+    cmd: "newaliases"

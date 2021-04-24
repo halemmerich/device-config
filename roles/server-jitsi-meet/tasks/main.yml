@@ -1,0 +1,106 @@
+- include_vars: "vars/{{ ansible_os_family | lower }}.yml"
+  tags:
+    - config
+    
+- include_tasks: '{{ ansible_os_family | lower }}.yml'
+
+- name: 'Create configs videobridge'
+  template:
+    src: "videobridge/{{ item }}.j2"
+    dest: "{{ jitsi_config_jvb }}/{{ item }}"
+    mode: '0700'
+  loop:
+    - config
+    - sip-communicator.properties
+    - jvb.conf
+    - callstats-java-sdk.properties
+    - log4j2.xml
+    - logging.properties
+  notify: restart_jitsi-videobridge
+  tags:
+    - config
+
+- name: 'Create configs jicofo'
+  template:
+    src: "jicofo/{{ item }}.j2"
+    dest: "{{ jitsi_config_jicofo }}/{{ item }}"
+    mode: '0700'
+  loop:
+    - config
+    - sip-communicator.properties
+    - jicofo.conf
+    - logging.properties
+  notify: restart_jicofo
+
+- name: 'Create config meet'
+  template:
+    src: "meet/{{ item }}.j2"
+    dest: '{{ jitsi_config_webapp }}/{{ item }}'
+    mode: '0644'
+  loop:
+    - config.js
+    - interface_config.js
+  tags:
+    - config
+
+- name: 'Create config prosody'
+  template:
+    src: prosody/jitsi-vhost.cfg.lua.j2
+    dest: '/etc/prosody/vhosts.d/jitsi.cfg.lua'
+    mode: '0700'
+    owner: "prosody"
+  notify: restart_prosody
+  tags:
+    - config
+
+- name: Ensure modules are available
+  ansible.builtin.lineinfile:
+    path: /etc/prosody/pluginpath.cfg.lua
+    insertafter: '^plugin_paths'
+    line: '"{{ jitsi_prosody_plugin_path }}",'
+
+- name: "Create prosody users"
+  ansible.builtin.shell:
+    cmd: prosodyctl register {{ item.user }} {{ item.host }} {{ item.password }}
+  loop:
+    - { user: "jvb", host: "auth.meet.{{ domain }}", password: "{{ jitsi_secret_jvb_user }}" }
+    - { user: "focus", host: "auth.meet.{{ domain }}", password: "{{ jitsi_secret_focus_user }}" }
+  tags:
+    - config
+
+- name: 'Create config nginx'
+  template:
+    src: nginx/jitsi.conf.j2
+    dest: '/etc/nginx/servers.d/jitsi.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
+  loop:
+    - meet
+    - auth.meet
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Enable services'
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+  loop:
+    - prosody
+    - "{{ jitsi_service_jvb }}"
+    - jicofo
+    - nginx
+  notify:
+    - restart_prosody
+    - restart_jitsi-videobridge
+    - restart_jicofo
+    - restart_nginx
+  tags:
+    - config

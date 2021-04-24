@@ -1,0 +1,6 @@
+[Service]
+ReadWritePaths=/var/lib/nextcloud/data
+ReadWritePaths={{ nextcloud_path }}
+{% if webshare_path.stat.exists %}
+ReadWritePaths=/var/lib/webdav/shares
+{% endif %}

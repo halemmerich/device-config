@@ -1,0 +1,8 @@
+- name: restart_jitsi-videobridge
+  systemd:
+    name: "{{ jitsi_service_jvb }}"
+    state: restarted
+- name: restart_jicofo
+  systemd:
+    name: jicofo
+    state: restarted

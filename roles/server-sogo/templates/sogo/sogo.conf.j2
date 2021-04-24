@@ -1,0 +1,36 @@
+{
+  SOGoProfileURL = "mysql://sogo:{{ sogo_db_user_password }}@localhost:3306/sogo/sogo_user_profile";
+  OCSFolderInfoURL = "mysql://sogo:{{ sogo_db_user_password }}@localhost:3306/sogo/sogo_folder_info";
+  OCSSessionsFolderURL = "mysql://sogo:{{ sogo_db_user_password }}@localhost:3306/sogo/sogo_sessions_folder";
+
+  SOGoIMAPServer = "imap://127.0.0.1";
+  SOGoSieveServer = "sieve://127.0.0.1:4190";
+  SOGoSMTPServer = "smtp://127.0.0.1";
+  SOGoMailDomain = {{ domain }};
+  SOGoMailingMechanism = smtp;
+
+  SOGoPasswordChangeEnabled = YES;
+
+  SOGoUserSources =
+    (
+      {
+        type = sql;
+        id = directory;
+        viewURL = "mysql://sogo:{{ sogo_db_user_password }}@127.0.0.1:3306/sogo/sogo_users";
+        canAuthenticate = YES;
+        isAddressBook = NO;
+        userPasswordAlgorithm = sha512-crypt;
+        prependPasswordScheme = YES;
+     }
+    );
+
+  SOGoSuperUsernames = ( admin@{{ domain }} );
+
+  SOGoPageTitle = "{{ domain }} SOGo";
+  SOGoMailAuxiliaryUserAccountsEnabled = YES;
+
+  SOGoLanguage = German;
+  SOGoTimeZone = Europe/Berlin;
+
+  MySQL4Encoding = "utf8mb4";
+}
