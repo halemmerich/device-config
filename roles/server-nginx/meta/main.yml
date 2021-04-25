@@ -1,0 +1,3 @@
+dependencies:
+  - role: server-nginx-base
+  - role: server-letsencrypt
