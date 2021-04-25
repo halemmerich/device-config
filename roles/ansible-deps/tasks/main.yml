@@ -1,1 +1,7 @@
 - include_tasks: "{{ ansible_os_family | lower }}.yml"
+
+- package:
+    name:
+      - unzip
+  tags:
+    - install
