@@ -1,0 +1,24 @@
+- name: Install cinnamon
+  package:
+    name:
+    - cinnamon-session
+    - cinnamon
+  tags:
+    - install
+    
+- name: Install cinnamon
+  package:
+    name:
+    - gvfs-backends
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+    
+- name: Install cinnamon
+  package:
+    name:
+    - cinnamon-translations
+    - gvfs-smb
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install

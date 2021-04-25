@@ -4,6 +4,10 @@ staging-server-arch ansible_host=localhost ansible_port=2024 ansible_user=admin 
 [debian]
 staging-server-debian ansible_host=localhost ansible_port=2023 ansible_user=admin ansible_become_pass=admin
 
+[desktop]
+staging-desktop-arch ansible_host=localhost ansible_port=2021 ansible_user=admin ansible_become_pass=admin
+staging-desktop-debian ansible_host=localhost ansible_port=2025 ansible_user=admin ansible_become_pass=admin
+
 [server_arch]
 staging-server-arch ansible_host=localhost ansible_port=2024 ansible_user=admin ansible_become_pass=admin
 

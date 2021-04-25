@@ -1,0 +1,22 @@
+- name: Install generic UI components
+  package:
+    name:
+    - lightdm
+    - lightdm-gtk-greeter
+  tags:
+    - install
+
+- name: enable lightdm
+  systemd:
+    name: lightdm
+    enabled: yes
+  tags:
+    - config
+
+- name: Install sound support
+  package:
+    name:
+    - alsa-utils
+    - pipewire
+  tags:
+    - install

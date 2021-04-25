@@ -62,3 +62,11 @@
   - server-sogo
   - server-fail2ban
   - util-run-letsencrypt-hooks
+
+- hosts: desktop
+  become: yes
+  roles:
+  - X11
+  - desktop
+  - desktop-cinnamon
+  - default-apps

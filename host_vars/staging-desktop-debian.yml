@@ -1,0 +1,36 @@
+domain: "staging.debian"
+hostname: "staging-desktop-debian"
+fqdn: "{{ hostname }}.{{ domain }}"
+
+public_ip_v4: "10.0.2.14"
+public_ip_v6: "fd17:625c:f037:2:555a:8c0a:2fea:c726"
+
+hosts_entries:
+  - name: staging-server-arch
+    ip: "{{ hostvars['staging-server-arch'].public_ip_v4 }}"
+    domain: staging.arch
+    subdomains:
+    - turn
+    - meet
+    - xmpp
+    - nextcloud
+    - sogo
+    - webdav
+    - xmpp
+    - remote
+  - name: staging-server-debian
+    ip: "{{ hostvars['staging-server-debian'].public_ip_v4 }}"
+    domain: staging.debian
+    subdomains:
+    - turn
+    - meet
+    - xmpp
+    - nextcloud
+    - sogo
+    - webdav
+    - xmpp
+    - remote
+
+#hosts_entries:
+#  - ip: "123.123.123.1"
+#    hostnames: "canonical alias1 alias2"

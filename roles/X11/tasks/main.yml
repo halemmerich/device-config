@@ -1,0 +1,29 @@
+- include_tasks: "{{ ansible_os_family | lower }}.yml"
+
+- name: Install generic UI components
+  package:
+    name:
+    - arandr
+  tags:
+    - install
+
+- name: Configure XOrg keyboard layout
+  template:
+    src: files/xorg/00-keyboard.conf
+    dest: /etc/X11/xorg.conf.d/00-keyboard.conf
+  tags:
+    - config
+
+- name: Configure XOrg monitor sleep
+  template:
+    src: files/xorg/10-monitor.conf
+    dest: /etc/X11/xorg.conf.d/10-monitor.conf
+  tags:
+    - config
+
+- name: Configure XOrg Touchpad
+  template:
+    src: files/xorg/30-libinput.conf
+    dest: /etc/X11/xorg.conf.d/30-libinput.conf
+  tags:
+    - config

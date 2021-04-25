@@ -1,0 +1,89 @@
+- name: Install browser
+  package:
+    name:
+    - firefox
+    - firefox-i18n-de
+    - firefox-ublock-origin
+    - chromium
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+    
+- name: Install browser
+  package:
+    name:
+    - firefox-esr
+    - firefox-esr-l10n-de
+    - webext-ublock-origin-firefox
+    - chromium
+    - chromium-l10n
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+
+- name: Install
+  aur:
+    name:
+    - chromium-widevine
+  become_user: aur_builder
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: Install communication utilities
+  package:
+    name:
+    - gajim
+    - evolution
+  tags:
+    - install
+
+- name: Install communication utilities
+  package:
+    name:
+    - thunderbird
+    - thunderbird-i18n-de
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: Install communication utilities
+  package:
+    name:
+    - thunderbird
+    - thunderbird-l10n-de
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+
+- name: Install media utilities
+  package:
+    name:
+    - vlc
+    - eom
+    - mpv
+  tags:
+    - install
+
+- name: Install file utilities
+  package:
+    name:
+    - engrampa
+  tags:
+    - install
+
+- name: Install java
+  package:
+    name:
+    - jre-openjdk
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: Install java
+  package:
+    name:
+    - default-jre
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
