@@ -1,0 +1,7 @@
+netconf:
+  staging-server-arch:
+    ip_v4: "10.0.0.1"
+    ip_v6: "fc00::1"
+  staging-server-debian:
+    ip_v4: "10.0.0.2"
+    ip_v6: "fc00::2"

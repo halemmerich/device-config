@@ -1,1 +1,5 @@
-ansible-playbook -i staging site.yml --skip-tags upgrade -l $@
+#!/bin/bash
+
+[ -e "staging_hosts" ] && STAGING_HOSTS="-i staging_hosts"
+
+ansible-playbook $STAGING_HOSTS -i staging site.yml -e@staging_netconf.yml --skip-tags upgrade -l $@

@@ -1,3 +1,5 @@
 secret.yml
 credentials
 *.retry
+staging_netconf.yml
+staging_hosts

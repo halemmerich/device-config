@@ -2,9 +2,6 @@ domain: "staging.arch"
 hostname: "staging-desktop-arch"
 fqdn: "{{ hostname }}.{{ domain }}"
 
-public_ip_v4: "10.0.2.14"
-public_ip_v6: "fd17:625c:f037:2:555a:8c0a:2fea:c726"
-
 hosts_entries:
   - name: staging-server-arch
     ip: "{{ hostvars.staging_server_arch.public_ip_v4 }}"

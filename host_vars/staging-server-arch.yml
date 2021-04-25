@@ -2,8 +2,8 @@ domain: "staging.arch"
 hostname: "staging-server-arch"
 fqdn: "{{ hostname }}.{{ domain }}"
 
-public_ip_v4: "10.0.2.15"
-public_ip_v6: "fd17:625c:f037:2:1214:13bc:f676:c5a4"
+public_ip_v4: "{{ netconf[hostname].ip_v4 }}"
+public_ip_v6: "{{ netconf[hostname].ip_v6 }}"
 
 letsencrypt_mail: "hostmaster@{{ domain }}"
 letsencrypt_port: "8000"

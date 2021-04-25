@@ -1,23 +1,27 @@
 [arch]
-staging-server-arch ansible_host=localhost ansible_port=2024 ansible_user=admin ansible_become_pass=admin
+staging-server-arch
 
 [debian]
-staging-server-debian ansible_host=localhost ansible_port=2023 ansible_user=admin ansible_become_pass=admin
+staging-server-debian
 
 [desktop]
-staging-desktop-arch ansible_host=localhost ansible_port=2021 ansible_user=admin ansible_become_pass=admin
-staging-desktop-debian ansible_host=localhost ansible_port=2025 ansible_user=admin ansible_become_pass=admin
+staging-desktop-arch
+staging-desktop-debian
 
 [server_arch]
-staging-server-arch ansible_host=localhost ansible_port=2024 ansible_user=admin ansible_become_pass=admin
+staging-server-arch
 
 [server]
-staging-server-arch ansible_host=localhost ansible_port=2024 ansible_user=admin ansible_become_pass=admin
-staging-server-debian ansible_host=localhost ansible_port=2023 ansible_user=admin ansible_become_pass=admin
+staging-server-arch
+staging-server-debian
 
 [server_teamspeak]
-staging-server-arch ansible_host=localhost ansible_port=2024 ansible_user=admin ansible_become_pass=admin
-staging-server-debian ansible_host=localhost ansible_port=2023 ansible_user=admin ansible_become_pass=admin
+staging-server-arch
+staging-server-debian
+
+[server_remotely]
+staging-server-arch
+staging-server-debian
 
 [server_syncplay]
-staging-server-arch ansible_host=localhost ansible_port=2024 ansible_user=admin ansible_become_pass=admin
+staging-server-arch

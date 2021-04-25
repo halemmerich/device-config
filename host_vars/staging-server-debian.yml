@@ -2,8 +2,8 @@ domain: "staging.debian"
 hostname: "staging-server-debian"
 fqdn: "{{ hostname }}.{{ domain }}"
 
-public_ip_v4: "10.0.2.13"
-public_ip_v6: "2a02:180:6:1::3d81"
+public_ip_v4: "{{ netconf[hostname].ip_v4 }}"
+public_ip_v6: "{{ netconf[hostname].ip_v6 }}"
 
 letsencrypt_mail: "hostmaster@{{ domain }}"
 letsencrypt_port: "8000"
