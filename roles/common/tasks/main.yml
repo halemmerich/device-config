@@ -52,6 +52,7 @@
       - iotop
       - rsync
       - time
+      - net-tools
   tags:
     - install
 
