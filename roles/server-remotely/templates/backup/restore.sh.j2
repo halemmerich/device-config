@@ -1,0 +1,6 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+cp "$MOUNTDIR"/remotely/Remotely.db /opt/remotely/Remotely.db
+
+chown remotely:remotely /opt/remotely/Remotely.db

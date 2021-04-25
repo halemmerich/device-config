@@ -15,6 +15,7 @@ hosts_entries:
     - webdav
     - xmpp
     - remote
+    - remotely
   - name: staging-server-debian
     ip: "{{ hostvars['staging-server-debian'].public_ip_v4 }}"
     domain: staging.debian
@@ -27,6 +28,7 @@ hosts_entries:
     - webdav
     - xmpp
     - remote
+    - remotely
 
 #hosts_entries:
 #  - ip: "123.123.123.1"

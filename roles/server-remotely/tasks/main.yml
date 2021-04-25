@@ -1,0 +1,152 @@
+- name: "Install dependencies"
+  package:
+    name:
+    - aspnet-runtime
+  tags:
+    - install
+    
+- name: 'Create user remotely'
+  user:
+    name: 'remotely'
+    state: present
+    shell: /bin/false
+    create_home: yes
+    home: '/var/remotely'
+
+- name: Configure directories
+  file:
+    path: '/opt/remotely/server'
+    owner: 'remotely'
+    mode: '0700'
+    state: directory
+
+- name: 'Create scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  loop:
+    - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/remotely.sh" }
+    - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/remotely.sh" }
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
+  loop:
+    - remotely
+  tags:
+    - config
+
+- name: 'Create service remotely'
+  template:
+    src: remotely.service.j2
+    dest: '/etc/systemd/system/remotely.service'
+    mode: '0644'
+  register: systemd
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  when: systemd.changed
+  tags:
+    - systemd
+
+- name: Create temporary file
+  tempfile:
+    state: file
+  register: download_repo
+
+- name: 'Get index.html'
+  get_url:
+    url: 'https://github.com/lucent-sea/Remotely/releases'
+    dest: '{{ download_repo.path }}'
+    force: yes
+  when: download_repo.path is defined
+
+- name: Determine latest available version
+  shell: 'grep -Eo "v[0-9]{4,4}\.[0-9]{2}\.[0-9]{2}\.[0-9]{4}" {{ download_repo.path }} | sort -uV | tail -n1'
+  register: latest_determined
+  when: download_repo.path is defined
+
+- name: Remove temporary file
+  file:
+    path: "{{ download_repo.path }}"
+    state: absent
+  when: download_repo.path is defined
+
+- name: Check installed version
+  stat:
+    path: '/opt/remotely/server/latest'
+  register: latest_stat
+
+- name: Set latest installed version 
+  set_fact:
+    latest_installed: '{{ latest_stat.stat.lnk_source | basename }}'
+  when: latest_stat.stat.exists is defined and latest_stat.stat.exists == true
+
+- name: Upgrade remotely server
+  block:
+    - name: 'Create destination for version {{ latest_determined.stdout }}'
+      file:
+        path: '/opt/remotely/server/{{ latest_determined.stdout }}'
+        state: directory
+        owner: 'remotely'
+        mode: '0700'
+      when: latest_determined.stdout is defined
+
+    - name: 'Deploy remotely {{ latest_determined.stdout }}'
+      unarchive:
+        src: 'https://github.com/lucent-sea/Remotely/releases/download/{{ latest_determined.stdout }}/Remotely_Server_Linux-x64.zip'
+        dest: '/opt/remotely/server/{{ latest_determined.stdout }}'
+        remote_src: yes
+      when: latest_determined.stdout is defined
+
+    - name: 'Stop service'
+      systemd:
+        name: 'remotely'
+        state: stopped
+
+    - name: 'Set symlink'
+      file:
+        src: '/opt/remotely/server/{{ latest_determined.stdout }}'
+        dest: '/opt/remotely/server/latest'
+        owner: 'remotely'
+        state: link
+        force: yes
+      when: latest_determined.stdout is defined
+
+    - name: 'Lookup DB'
+      stat:
+        path: '/opt/remotely/Remotely.db'
+      register: db
+
+    - name: Link DB to remotely
+      file:
+        src: '/opt/remotely/Remotely.db'
+        dest: '/opt/remotely/server/latest/Remotely.db'
+        owner: 'remotely'
+        state: link
+        force: yes
+      when: db.stat.exists is defined and db.stat.exists == true
+
+  when: (latest_stat.stat.exists is defined and latest_stat.stat.exists == false) or (latest_determined.stdout is defined and latest_installed is defined and latest_determined.stdout is version(latest_installed, ">"))
+
+- name: 'Create production config'
+  template:
+    src: appsettings.Production.json.j2
+    dest: '/opt/remotely/appsettings.Production.json'
+    mode: '0640'
+    
+- name: 'Create production config'
+  template:
+    src: nginx/remotely.conf.j2
+    dest: '/etc/nginx/servers.d/remotely.conf'
+    mode: '0700'
+  notify:
+    - restart_nginx
+
+- name: 'Start service'
+  systemd:
+    name: 'remotely'
+    state: started

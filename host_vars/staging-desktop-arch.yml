@@ -14,6 +14,7 @@ hosts_entries:
     - sogo
     - webdav
     - xmpp
+    - remotely
     aliases:
     - server-arch
   - name: staging-server-debian
@@ -27,6 +28,7 @@ hosts_entries:
     - sogo
     - webdav
     - xmpp
+    - remotely
     aliases:
     - server-debian
 

@@ -1,0 +1,14 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+mkdir -p "$MOUNTDIR"/remotely/db; (( RC |= $? ))
+
+rsync_backup /opt/remotely/Remotely.db remotely/db/
+
+systemctl stop remotely; (( RC |= $? ))
+
+rsync_backup /opt/remotely/Remotely.db remotely/db/; (( RC |= $? ))
+
+systemctl start remotely
+
+exit $RC

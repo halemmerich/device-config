@@ -85,7 +85,7 @@
     - { port: "5222", proto: "tcp" }
     - { port: "5223", proto: "tcp" }
     - { port: "5269", proto: "tcp" }
-    - { port: "5000", proto: "tcp" }
+    - { port: "5001", proto: "tcp" }
     - { port: "5281", proto: "tcp" }
   when: ufw_enabled is defined
   tags:

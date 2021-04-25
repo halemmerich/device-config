@@ -21,7 +21,6 @@ staging-server-debian
 
 [server_remotely]
 staging-server-arch
-staging-server-debian
 
 [server_syncplay]
 staging-server-arch

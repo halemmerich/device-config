@@ -34,6 +34,13 @@
   - ufw
   - server-backup
   - server-syncplay
+
+- hosts: server_remotely
+  become: yes
+  remote_user: admin
+  roles:
+  - ufw
+  - server-remotely
   
 - hosts: server_arch
   become: yes
