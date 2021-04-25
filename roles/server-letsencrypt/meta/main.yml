@@ -1,2 +1,3 @@
 dependencies:
+  - role: server-backup
   - role: server-nginx-base
