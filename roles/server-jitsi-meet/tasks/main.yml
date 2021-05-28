@@ -68,6 +68,12 @@
   tags:
     - config
 
+- name: "Subscribe prosody users"
+  ansible.builtin.shell:
+    cmd: "prosodyctl mod_roster_command subscribe focus.meet.{{ domain }} focus@auth.meet.{{ domain }}"
+  tags:
+    - config
+
 - name: 'Create config nginx'
   template:
     src: nginx/jitsi.conf.j2

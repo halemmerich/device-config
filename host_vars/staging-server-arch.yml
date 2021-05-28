@@ -5,6 +5,10 @@ fqdn: "{{ hostname }}.{{ domain }}"
 public_ip_v4: "{{ netconf[hostname].ip_v4 }}"
 public_ip_v6: "{{ netconf[hostname].ip_v6 }}"
 
+hosts_additional_aliases:
+  - "auth.meet.{{ domain }}"
+  - "focus.meet.{{ domain }}"
+
 letsencrypt_mail: "hostmaster@{{ domain }}"
 letsencrypt_port: "8000"
 letsencrypt_fake: true

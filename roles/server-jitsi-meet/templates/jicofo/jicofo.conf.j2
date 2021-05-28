@@ -128,7 +128,8 @@ jicofo {
   }
 
   octo {
-    enabled = true
+    enabled = false
+    id = 1337
   }
 
   rest {
@@ -150,6 +151,8 @@ jicofo {
       hostname = "localhost"
       port = 5222
       username = "focus"
+      conference-muc-jid = "conference.meet.{{ domain }}"
+      client-proxy = "focus.meet.{{ domain }}"
 
       reply-timeout = 15 seconds
       disable-certificate-verification = false
