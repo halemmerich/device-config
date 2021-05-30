@@ -6,6 +6,7 @@ JICOFO_AUTH_DOMAIN=auth.meet.{{ domain }}
 JICOFO_AUTH_USER=focus
 JICOFO_AUTH_PASSWORD={{ jitsi_secret_focus_user }}
 JICOFO_OPTS=""
+JICOFO_MAX_MEMORY={{ jitsi_jicofo_max_mem | default('2048m') }}
 JAVA_SYS_PROPS="\
  -Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION={{ jitsi_config_jicofo_home }}\
  -Dnet.java.sip.communicator.SC_HOME_DIR_NAME={{ jitsi_config_jicofo_name }}\

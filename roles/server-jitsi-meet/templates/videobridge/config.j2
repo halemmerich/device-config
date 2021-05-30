@@ -3,7 +3,7 @@ JVB_HOST=
 JVB_PORT=5347
 JVB_SECRET={{ jitsi_secret_jvb_user }}
 JVB_OPTS="--apis=xmpp"
-
+VIDEOBRIDGE_MAX_MEMORY={{ jitsi_jvb_max_mem | default('4096m') }}
 JAVA_SYS_PROPS="\
   -Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION={{ jitsi_config_jvb_home }}\
   -Dnet.java.sip.communicator.SC_HOME_DIR_NAME={{ jitsi_config_jvb_name}}\

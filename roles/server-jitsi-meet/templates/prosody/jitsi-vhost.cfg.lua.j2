@@ -22,7 +22,6 @@ VirtualHost "meet.{{ domain }}"
 
     c2s_require_encryption = false
     s2s_require_encryption = false
-    allow_anonymous_s2s = true
 
 	turncredentials_secret = "{{ turnserver_secret }}";
 	turncredentials = {
@@ -86,7 +85,6 @@ Component "internal.auth.meet.{{ domain }}" "muc"
     muc_room_default_public_jids = true
 
 VirtualHost "auth.meet.{{ domain }}"
-    allow_anonymous_s2s = true
     authentication = "internal_plain"
 
 Component "focus.meet.{{ domain }}" "client_proxy"
