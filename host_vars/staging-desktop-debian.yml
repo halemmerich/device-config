@@ -2,31 +2,28 @@ domain: "staging.debian"
 hostname: "staging-desktop-debian"
 fqdn: "{{ hostname }}.{{ domain }}"
 
+server_subdomains:
+  - turn
+  - meet
+  - xmpp
+  - nextcloud
+  - sogo
+  - webdav
+  - remotely
+  
 hosts_entries:
   - name: staging-server-arch
     ip: "{{ hostvars['staging-server-arch'].public_ip_v4 }}"
     domain: staging.arch
-    subdomains:
-    - turn
-    - meet
-    - xmpp
-    - nextcloud
-    - sogo
-    - webdav
-    - xmpp
-    - remotely
+    subdomains: "{{ server_subdomains }}"
+    aliases:
+    - server-arch
   - name: staging-server-debian
     ip: "{{ hostvars['staging-server-debian'].public_ip_v4 }}"
     domain: staging.debian
-    subdomains:
-    - turn
-    - meet
-    - xmpp
-    - nextcloud
-    - sogo
-    - webdav
-    - xmpp
-    - remotely
+    subdomains: "{{ server_subdomains }}"
+    aliases:
+    - server-debian
 
 #hosts_entries:
 #  - ip: "123.123.123.1"
