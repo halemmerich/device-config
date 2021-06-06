@@ -127,18 +127,16 @@
     - config
 
 - name: Install
-  become_user: "{{ nextcloud_user }}"
   command:
-    cmd: "php {{ nextcloud_path }}/occ maintenance:install --database mysql --database-name nextcloud --database-host localhost --database-user nextcloud --database-pass={{ nextcloud_db_user_password }} --admin-pass={{ nextcloud_admin_user_password }} --data-dir /var/lib/nextcloud/data/ --no-interaction"
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ maintenance:install --database mysql --database-name nextcloud --database-host localhost --database-user nextcloud --database-pass={{ nextcloud_db_user_password }} --admin-pass={{ nextcloud_admin_user_password }} --data-dir /var/lib/nextcloud/data/ --no-interaction"'
     creates: "{{ nextcloud_data_path }}/.ocdata"
   notify: restart_nginx
   tags:
     - config
 
 - name: Set config
-  become_user: "{{ nextcloud_user }}"
   command:
-    cmd: "php {{ nextcloud_path }}/occ config:system:set trusted_domains {{ item.index }} --value {{ item.host }}"
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set trusted_domains {{ item.index }} --value {{ item.host }}"'
   loop:
     - { index: "0", host: "nextcloud.{{ domain }}" }
     - { index: "1", host: "localhost" }
@@ -146,17 +144,15 @@
     - config
 
 - name: Get enabled Apps
-  become_user: "{{ nextcloud_user }}"
   shell:
-    cmd: 'php {{ nextcloud_path }}/occ app:list | grep - | sed "s/  - \(.*\):.*/\1/" | grep -v -'
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ app:list | grep - | sed \"s/  - \(.*\):.*/\1/\" | grep -v -"'
   register: app_list_output
   tags:
     - config
   
 - name: Disable most Apps
-  become_user: "{{ nextcloud_user }}"
   shell:
-    cmd: 'php {{ nextcloud_path }}/occ app:disable {{ item }}'
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ app:disable {{ item }}"'
   register: app_disable_output
   failed_when: app_disable_output.rc != 0 and app_disable_output.rc != 2
   changed_when: app_disable_output.rc == 0
@@ -165,17 +161,15 @@
     - config
 
 - name: Enable some apps
-  become_user: "{{ nextcloud_user }}"
   shell:
-    cmd: "php {{ nextcloud_path }}/occ app:enable {{ item }}"
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ app:enable {{ item }}"'
   loop: "{{ nextcloud_enabled_apps }}"
   tags:
     - config
   
 - name: Set config readonly
-  become_user: "{{ nextcloud_user }}"
   command:
-    cmd: "php {{ nextcloud_path }}/occ config:system:set config_is_read_only --value true"
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set config_is_read_only --value true"'
   tags:
     - config
 
