@@ -4,7 +4,7 @@ fqdn: "{{ hostname }}.{{ domain }}"
 
 hosts_entries:
   - name: staging-server-arch
-    ip: "{{ hostvars.staging_server_arch.public_ip_v4 }}"
+    ip: "{{ hostvars['staging-server-arch'].public_ip_v4 }}"
     domain: staging.arch
     subdomains:
     - turn
@@ -18,7 +18,7 @@ hosts_entries:
     aliases:
     - server-arch
   - name: staging-server-debian
-    ip: "{{ hostvars.staging_server_debian.public_ip_v4 }}"
+    ip: "{{ hostvars['staging-server-debian'].public_ip_v4 }}"
     domain: staging.debian
     subdomains:
     - turn

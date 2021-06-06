@@ -23,8 +23,12 @@ The following virtual machines can be configured:
 
 - staging-server-arch and staging-desktop-arch
   These machines are installed using the arch bootstrapper
+  - LUKS password is luks
+  - admin user password is admin
 - staging-server-debian and staging-desktop-debian
-  These machines are installed as a debian chicken install. They additionally need a user *admin* created with password *admin* which ist able to use sudo with password
+  These machines are installed as a debian chicken install.
+  - They additionally need a user *admin* created with password *admin* which ist able to use sudo with password
+- hostnames need to be set accordingly
   
 Network configuration as defined in the staging inventory.
   

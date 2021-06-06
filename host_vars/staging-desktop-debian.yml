@@ -14,7 +14,6 @@ hosts_entries:
     - sogo
     - webdav
     - xmpp
-    - remote
     - remotely
   - name: staging-server-debian
     ip: "{{ hostvars['staging-server-debian'].public_ip_v4 }}"
@@ -27,7 +26,6 @@ hosts_entries:
     - sogo
     - webdav
     - xmpp
-    - remote
     - remotely
 
 #hosts_entries:
