@@ -11,7 +11,7 @@ server {
         create_full_put_path  on;
         dav_access  user:rw group:rw all:rw;
         autoindex  on;
-        client_max_body_size  20G;   # File size limit for new files
+        client_max_body_size  0;
 
         auth_basic  "Authenticate";
         auth_basic_user_file /var/lib/webdav/cfg/$1.htpasswd;
