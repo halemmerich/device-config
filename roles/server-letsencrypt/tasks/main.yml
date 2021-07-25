@@ -30,7 +30,21 @@
       loop:
         - '/etc/letsencrypt/'
         - '/etc/letsencrypt/live/'
+        - '/etc/letsencrypt/fake-ca/'
         - '/etc/letsencrypt/renewal-hooks/deploy'
+      tags:
+        - config
+        
+    - name: Send CA
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: 'root'
+        group: 'root'
+        mode: '0700'
+      loop:
+        - { src: "fake-ca/ca.pem", dest: "/etc/letsencrypt/fake-ca/" }
+        - { src: "fake-ca/ca.key", dest: "/etc/letsencrypt/fake-ca/" }
       tags:
         - config
 

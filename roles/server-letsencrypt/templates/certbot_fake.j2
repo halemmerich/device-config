@@ -24,13 +24,20 @@ DEST=/etc/letsencrypt/live/$CN/
 
 mkdir -p $DEST
 
-openssl req -newkey rsa:4096 \
-            -x509 \
-            -sha256 \
+openssl genrsa -out $DEST/privkey.pem 4096
+openssl req -new \
+            -key $DEST/privkey.pem \
+            -subj "/C=FK/ST=FAKE/L=FAKE/O=FAKE/OU=LEAF/CN=$CN" \
+            -out $DEST/request.csr
+
+openssl x509 -req \
             -days 3650 \
-            -nodes \
-            -out $DEST/fullchain.pem \
-            -keyout $DEST/privkey.pem \
-            -subj "/C=FK/ST=LFAKE/L=LFake/O=Security/OU=IT Department/CN=$CN"
+            -in $DEST/request.csr \
+            -CA /etc/letsencrypt/fake-ca/ca.pem\
+            -CAkey /etc/letsencrypt/fake-ca/ca.key\
+            -CAcreateserial -CAserial /etc/letsencrypt/fake-ca/serial.srl \
+            -out $DEST/cert.pem
+            
+rm /etc/letsencrypt/fake-ca/serial.srl
 
-
+cat $DEST/cert.pem /etc/letsencrypt/fake-ca/ca.pem > $DEST/fullchain.pem
