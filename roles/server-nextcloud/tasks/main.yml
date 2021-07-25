@@ -18,6 +18,7 @@
     - { src: "server_nextcloud_setuserquota.j2", dest: "/usr/local/bin/server_nextcloud_setuserquota" }
     - { src: "server_nextcloud_scanfiles.j2", dest: "/usr/local/bin/server_nextcloud_scanfiles" }
     - { src: "server_nextcloud_watchstorage.j2", dest: "/usr/local/bin/server_nextcloud_watchstorage" }
+    - { src: "server_nextcloud_WORKAROUND_allow_compressed_rw.j2", dest: "/usr/local/bin/server_nextcloud_WORKAROUND_allow_compressed_rw" }
     - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/nextcloud.sh" }
     - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/nextcloud.sh" }
   tags:

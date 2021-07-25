@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# See:
+# https://wiki.archlinux.org/title/Nextcloud#Issues_with_MariaDB_%3E=_10.6
+# https://github.com/nextcloud/server/issues/25436#issuecomment-883213001
+
+QUERY="set global innodb_read_only_compressed = OFF;"
+mysql -e "$QUERY"
+
+echo Done
