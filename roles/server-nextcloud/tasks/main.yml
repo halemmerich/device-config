@@ -5,6 +5,24 @@
     
 - include_tasks: "{{ ansible_os_family | lower }}.yml"
 
+- name: 'Create scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  loop:
+    - { src: "server_nextcloud_resetpwd.j2", dest: "/usr/local/bin/server_nextcloud_resetpwd" }
+    - { src: "server_nextcloud_adduser.j2", dest: "/usr/local/bin/server_nextcloud_adduser" }
+    - { src: "server_nextcloud_adminify.j2", dest: "/usr/local/bin/server_nextcloud_adminify" }
+    - { src: "server_nextcloud_addstorage.j2", dest: "/usr/local/bin/server_nextcloud_addstorage" }
+    - { src: "server_nextcloud_setuserquota.j2", dest: "/usr/local/bin/server_nextcloud_setuserquota" }
+    - { src: "server_nextcloud_scanfiles.j2", dest: "/usr/local/bin/server_nextcloud_scanfiles" }
+    - { src: "server_nextcloud_watchstorage.j2", dest: "/usr/local/bin/server_nextcloud_watchstorage" }
+    - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/nextcloud.sh" }
+    - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/nextcloud.sh" }
+  tags:
+    - config
+
 - name: 'Create certificates'
   command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
   args:
@@ -177,24 +195,6 @@
   file:
     path: '{{ nextcloud_config_path }}'
     mode: '0440'
-  tags:
-    - config
-
-- name: 'Create scripts'
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    mode: '0700'
-  loop:
-    - { src: "server_nextcloud_resetpwd.j2", dest: "/usr/local/bin/server_nextcloud_resetpwd" }
-    - { src: "server_nextcloud_adduser.j2", dest: "/usr/local/bin/server_nextcloud_adduser" }
-    - { src: "server_nextcloud_adminify.j2", dest: "/usr/local/bin/server_nextcloud_adminify" }
-    - { src: "server_nextcloud_addstorage.j2", dest: "/usr/local/bin/server_nextcloud_addstorage" }
-    - { src: "server_nextcloud_setuserquota.j2", dest: "/usr/local/bin/server_nextcloud_setuserquota" }
-    - { src: "server_nextcloud_scanfiles.j2", dest: "/usr/local/bin/server_nextcloud_scanfiles" }
-    - { src: "server_nextcloud_watchstorage.j2", dest: "/usr/local/bin/server_nextcloud_watchstorage" }
-    - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/nextcloud.sh" }
-    - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/nextcloud.sh" }
   tags:
     - config
 
