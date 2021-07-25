@@ -1,5 +1,6 @@
 [arch]
 staging-server-arch
+staging-desktop-arch
 
 [debian]
 staging-server-debian
