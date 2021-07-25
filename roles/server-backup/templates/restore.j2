@@ -2,15 +2,15 @@
 
 MOUNTDIR=$(mktemp -d)
 
-sshfs -p {{ backup_server_port }} {{ backup_server_user }}@{{ backup_server_host }}:{{ backup_server_path }} "$MOUNTDIR"
+sshfs -o ro -p {{ restore_server_port }} {{ restore_server_user }}@{{ restore_server_host }}:{{ restore_server_path }} "$MOUNTDIR"
 
 SSHFS_RC=$?
 
-function rsync_backup {
-        rsync --info=progress2 -r -l --delete -e "ssh -p {{ backup_server_port }}" "$1" {{ backup_server_user }}@{{ backup_server_host }}:{{ backup_server_path }}/"$2"
+function rsync_restore {
+        rsync --info=progress2 -r -l --delete -e "ssh -p {{ restore_server_port }}" "$2" {{ restore_server_user }}@{{ restore_server_host }}:{{ restore_server_path }}/"$1"
 }
 
-export -f rsync_backup
+export -f rsync_restore
 
 REPORT_MAIL_DIR=$(mktemp -d)
 REPORT_FILE=$REPORT_MAIL_DIR/report
@@ -20,12 +20,21 @@ REPORT_MAIL_FILE=$REPORT_MAIL_DIR/mail
 CURRENT_TIMER_FILE=$REPORT_MAIL_DIR/timer
 
 
-echo "Backup report for {{ fqdn }}" >> $REPORT_FILE
+echo "Restore report for {{ fqdn }}" >> $REPORT_FILE
 echo "To: admin@{{ domain }}" > $REPORT_MAIL_FILE
 echo "From: backup@{{ domain }}" >> $REPORT_MAIL_FILE
 echo "Subject: Backup report {{ fqdn }} - $(date)" >> $REPORT_MAIL_FILE
 
 OVERALL_RC=$SSHFS_RC
+
+COMMAND=$1.sh
+	
+if [ -z "$COMMAND" ]
+then
+	echo Possible restores:
+	ls /usr/local/lib/restore/ | sed -e "s|.sh||"
+	exit 1
+fi
 
 if [ 0 -eq "$SSHFS_RC" ]
 then
