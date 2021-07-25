@@ -6,7 +6,7 @@
 
 {% if hosts_entries is defined %}
 {% for host in hosts_entries %}
-{{ host.ip }}	{{ host.name }}.{{ host.domain }}{% for alias in host.subdomains %} {{ alias }}.{{ host.domain }} {% endfor %} {% if host.aliases is defined %} {% for alias in host.aliases %} {{ alias }} {% endfor %} {% endif %}{{ "\n" }}
+{{ host.ip }}	{{ host.name }}.{{ host.domain }}{% if host.subdomains is defined %}{% for alias in host.subdomains %} {{ alias }}.{{ host.domain }} {% endfor %}{% endif %} {% if host.aliases is defined %} {% for alias in host.aliases %} {{ alias }} {% endfor %} {% endif %}{{ "\n" }}
 {% endfor %}
 {% endif %}
 
