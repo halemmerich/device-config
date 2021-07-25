@@ -1,32 +1,44 @@
-- name: 'Install dependencies'
-  package:
-    name:
-    - certbot
+- name: "Real certbot"
+  block:
+    - name: Remove fake executable
+      file:
+        path: /usr/local/bin/certbot
+        state: absent
+    - name: 'Install dependencies'
+      package:
+        name:
+        - certbot
   when: not (letsencrypt_fake | default(false))
   tags:
     - install
 
 - name: "Fake certbot"
   block:
-  - name: Configure directories
-    file:
-      path: "{{ item }}"
-      owner: 'root'
-      group: 'root'
-      mode: '0700'
-      state: directory
-    loop:
-      - '/etc/letsencrypt/'
-      - '/etc/letsencrypt/live/'
-      - '/etc/letsencrypt/renewal-hooks/deploy'
-    tags:
-      - config
+    - name: 'Remove certbot'
+      package:
+        name:
+        - certbot
+        state: absent
+        
+    - name: Configure directories
+      file:
+        path: "{{ item }}"
+        owner: 'root'
+        group: 'root'
+        mode: '0700'
+        state: directory
+      loop:
+        - '/etc/letsencrypt/'
+        - '/etc/letsencrypt/live/'
+        - '/etc/letsencrypt/renewal-hooks/deploy'
+      tags:
+        - config
 
-  - name: Create executable
-    template:
-      src: certbot_fake.j2
-      dest: /usr/local/bin/certbot
-      mode: '0700'
+    - name: Create executable
+      template:
+        src: certbot_fake.j2
+        dest: /usr/local/bin/certbot
+        mode: '0700'
   when: letsencrypt_fake | default(false)
 
 - name: 'Create service'
