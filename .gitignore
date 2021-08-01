@@ -3,3 +3,5 @@ credentials
 *.retry
 staging_netconf.yml
 staging_hosts
+files/fake-ca/ca.key
+files/fake-ca/ca.pem
