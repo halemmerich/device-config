@@ -25,16 +25,19 @@ jicofo {
         enabled = true
         pt = 100
         rtx-pt = 96
+        enable-remb = true
       }
       vp9 {
         enabled = true
         pt = 101
         rtx-pt = 97
+        enable-remb = true
       }
       h264 {
         enabled = true
         pt = 107
         rtx-pt = 99
+        enable-remb = true
       }
     }
 
@@ -141,10 +144,6 @@ jicofo {
     enabled = true
   }
 
-  task-pools {
-    shared-pool-max-threads = 1500
-  }
-
   xmpp {
     client {
       enabled = true
@@ -163,6 +162,7 @@ jicofo {
       port = 6222
       reply-timeout = 15 seconds
       disable-certificate-verification = false
+      use-tls = false
     }
   }
 }
