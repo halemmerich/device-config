@@ -20,29 +20,27 @@ REPORT_MAIL_FILE=$REPORT_MAIL_DIR/mail
 CURRENT_TIMER_FILE=$REPORT_MAIL_DIR/timer
 
 
-echo "Restore report for {{ fqdn }}" >> $REPORT_FILE
+echo "Restore report for $TO_RESTORE on {{ fqdn }}" >> $REPORT_FILE
 echo "To: admin@{{ domain }}" > $REPORT_MAIL_FILE
 echo "From: backup@{{ domain }}" >> $REPORT_MAIL_FILE
 echo "Subject: Backup report {{ fqdn }} - $(date)" >> $REPORT_MAIL_FILE
 
 OVERALL_RC=$SSHFS_RC
 
-COMMAND=$1.sh
+COMMAND=/usr/local/lib/backupscripts/restore/$1.sh
 	
-if [ -z "$COMMAND" ]
+if [ -z "$1" ]
 then
 	echo Possible restores:
-	ls /usr/local/lib/restore/ | sed -e "s|.sh||"
+	ls /usr/local/lib/backupscripts/restore/ | sed -e "s|.sh||"
 	exit 1
 fi
 
 if [ 0 -eq "$SSHFS_RC" ]
 then
-	for C in /usr/local/lib/backupscripts/backup/*
-	do
-		echo Running $C
+		echo Running $COMMAND
 		
-		\time -o $CURRENT_TIMER_FILE --format="%E %x" -- bash -c "bash $C $MOUNTDIR 2>&1 | tee $CURRENT_LOG_FILE; exit ${PIPESTATUS[0]}"
+		\time -o $CURRENT_TIMER_FILE --format="%E %x" -- bash -c "bash $COMMAND $MOUNTDIR 2>&1 | tee $CURRENT_LOG_FILE; exit ${PIPESTATUS[0]}"
 		
 		DURATION=$(cat $CURRENT_TIMER_FILE | cut -d ' ' -f 1)
 		RC=$(cat $CURRENT_TIMER_FILE | cut -d ' ' -f 2)
@@ -51,14 +49,13 @@ then
 		
 		if [ 0 -eq "$RC" ]
 		then
-			echo "OK  - $(basename "$C") - $DURATION" | tee -a $REPORT_FILE
+			echo "OK  - $(basename "$COMMAND") - $DURATION" | tee -a $REPORT_FILE
 		else
-			echo "ERR - $(basename "$C") - RC: $RC" - $DURATION | tee -a $REPORT_FILE
+			echo "ERR - $(basename "$COMMAND") - RC: $RC" - $DURATION | tee -a $REPORT_FILE
 			echo -e "BEGIN OUTPUT $(basename "$C")\n" | tee -a $LOGS_FILE
 			cat $CURRENT_LOG_FILE | tee $LOGS_FILE
 			echo -e "END OUTPUT $(basename "$C")\n\n" | tee -a $LOGS_FILE
 		fi
-	done
 else
 	echo "ERR - mounting backup destination failed - RC: $SSHFS_RC"  | tee -a $REPORT_FILE
 fi

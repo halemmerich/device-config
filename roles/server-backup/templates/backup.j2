@@ -2,6 +2,8 @@
 
 MOUNTDIR=$(mktemp -d)
 
+COMMAND=$1
+
 sshfs -p {{ backup_server_port }} {{ backup_server_user }}@{{ backup_server_host }}:{{ backup_server_path }} "$MOUNTDIR"
 
 SSHFS_RC=$?
@@ -31,6 +33,9 @@ if [ 0 -eq "$SSHFS_RC" ]
 then
 	for C in /usr/local/lib/backupscripts/backup/*
 	do
+		
+		[ -n "$COMMAND" -a "$COMMAND" != "$C" ] && continue 
+		
 		echo Running $C
 		
 		\time -o $CURRENT_TIMER_FILE --format="%E %x" -- bash -c "bash $C $MOUNTDIR 2>&1 | tee $CURRENT_LOG_FILE; exit ${PIPESTATUS[0]}"

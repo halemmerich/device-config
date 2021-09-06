@@ -17,7 +17,7 @@
 - name: 'Create script'
   template:
     src: restore.j2
-    dest: '/usr/local/lib/restore'
+    dest: '/usr/local/bin/restore'
     mode: '0700'
   tags:
     - config
