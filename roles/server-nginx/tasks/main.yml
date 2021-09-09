@@ -76,6 +76,7 @@
 
 - name: "Get certs for all default domains"
   command: certbot certonly --standalone {{ letsencrypt_additional_options | default('') }} --http-01-port {{ letsencrypt_port }} -d {{ item }} -m {{ letsencrypt_mail }} --agree-tos -n
+  when: not privkey_file.stat.exists
   loop: "{{ server_nginx_default_domains }}"
 
 - name: 'Enable services'
