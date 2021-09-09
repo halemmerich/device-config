@@ -13,10 +13,19 @@
     state: directory
   loop:
     - '/var/lib/webdav'
-    - '/var/lib/webdav/shares'
     - '/var/lib/webdav/cfg'
     - '/var/lib/webdav/cfg/cleanup.d'
     - '/var/lib/webdav/temp'
+  tags:
+    - config
+
+- name: Configure share directory
+  file:
+    path: /var/lib/webdav/shares
+    owner: '{{ server_nginx_user }}'
+    group: 'webshare'
+    mode: '0750'
+    state: directory
   tags:
     - config
 
