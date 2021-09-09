@@ -10,7 +10,7 @@ mkdir -p "$MOUNTDIR"/"$NEXTCLOUD_DATA_TARGET"; (( RC |= $? ))
 
 rsync_backup "$NEXTCLOUD_DATA" "$NEXTCLOUD_DATA_TARGET"
 
-su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ maintenance:mode --on"; (( RC |= $? ))
+server_nextcloud_maintenance_on (( RC |= $? ))
 
 mysqldump --defaults-file=<(echo "[mysqldump]
 user=nextcloud
@@ -18,6 +18,6 @@ password={{ nextcloud_db_user_password }}") --lock-tables -h localhost -u nextcl
 
 rsync_backup "$NEXTCLOUD_DATA" "$NEXTCLOUD_DATA_TARGET"; (( RC |= $? ))
 
-su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }} maintenance:mode --off"; (( RC |= $? ))
+server_nextcloud_maintenance_off (( RC |= $? ))
 
 exit $RC
