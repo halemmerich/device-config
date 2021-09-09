@@ -4,6 +4,10 @@
       file:
         path: /usr/local/bin/certbot
         state: absent
+    - name: Remove fake ca
+      file:
+        path: /etc/letsencrypt/fake-ca
+        state: absent
     - name: 'Install dependencies'
       package:
         name:
