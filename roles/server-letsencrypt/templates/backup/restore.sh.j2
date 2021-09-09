@@ -1,7 +1,13 @@
 #!/bin/bash
 MOUNTDIR="$1"
 
-for C in accounts live csr archive
+for C in accounts live csr archive keys renewal
 do
-	rsync -r --delete "$MOUNTDIR"/letsencrypt/$C/ /etc/letsencrypt/$C/
+	mkdir -p /etc/letsencrypt/$C/
+	rsync_restore letsencrypt/$C/ /etc/letsencrypt/$C/
+done
+
+for C in /etc/letsencrypt/renewal-hooks/deploy/*
+do
+	$C
 done

@@ -12,6 +12,7 @@ do
 	mkdir -p /var/lib/webdav/shares/$NAME
 done
 
-chown http:http -R /var/lib/webdav
-find /var/lib/webdav -type f -print0 | xargs -0 chmod 640
-find /var/lib/webdav -type d -print0 | xargs -0 chmod 750
+chown {{ server_nginx_user }}:webshare -R /var/lib/webdav
+chmod -R 700 /var/lib/webdav/cfg
+find /var/lib/webdav/shares -type f -print0 | xargs -0 chmod 660
+find /var/lib/webdav/shares -type d -print0 | xargs -0 chmod 770

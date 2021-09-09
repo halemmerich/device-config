@@ -10,6 +10,7 @@ AUTOCONF_TARGET=mail/autoconf/config-v1.1.xml
 
 mkdir -p "$MOUNTDIR"/$MAILDIR_TARGET; (( RC |= $? ))
 mkdir -p "$MOUNTDIR"/$SPOOL_TARGET; (( RC |= $? ))
+mkdir -p "$MOUNTDIR"/$( dirname $AUTOCONF_TARGET ); (( RC |= $? ))
 
 rsync_backup $MAILDIR $MAILDIR_TARGET
 rsync_backup $SPOOL $SPOOL_TARGET
@@ -18,8 +19,9 @@ rsync_backup $AUTOCONF $AUTOCONF_TARGET; (( RC |= $? ))
 systemctl stop dovecot; (( RC |= $? ))
 systemctl stop postfix; (( RC |= $? ))
 
-export MYSQL_PWD={{ postfix_db_user_password }}; (( RC |= $? ))
-mysqldump --lock-tables -h localhost -u postfix postfix > "$MOUNTDIR/mail/dbdump.sql"; (( RC |= $? ))
+mysqldump --defaults-file=<(echo "[mysqldump]
+user=postfix
+password={{ postfix_db_user_password }}") --lock-tables -h localhost -u postfix postfix > "$MOUNTDIR/mail/dbdump.sql"; (( RC |= $? ))
 
 rsync_backup $MAILDIR $MAILDIR_TARGET; (( RC |= $? ))
 rsync_backup $SPOOL $SPOOL_TARGET; (( RC |= $? ))

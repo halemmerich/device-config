@@ -3,11 +3,14 @@ MOUNTDIR="$1"
 
 systemctl stop sogo
 
-export MYSQL_PWD={{ sogo_db_user_password }}
-mysql -h localhost -u sogo sogo < "$MOUNTDIR/sogo/dbdump.sql"
+DEFAULTS_FILE="[client]
+user=sogo
+password={{ sogo_db_user_password }}"
+
+mysql --defaults-file=<(echo "$DEFAULTS_FILE") -u sogo -D sogo < "$MOUNTDIR/sogo/dbdump.sql"
 
 mkdir -p /var/spool/sogo
-rsync -r "$MOUNTDIR"/sogo/spool/ /var/spool/sogo/
+rsync_restore sogo/spool/ /var/spool/sogo/
 
 chown sogo:sogo -R /var/spool/sogo
 find /var/spool/sogo -type f -print0 | xargs -0 chmod 640
