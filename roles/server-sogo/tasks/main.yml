@@ -111,8 +111,16 @@
   loop:
     - sogo
     - nginx
+    - memcached
   notify:
     - restart_sogo
     - restart_nginx
+  tags:
+    - config
+
+- name: 'Start services'
+  systemd:
+    name: memcached
+    state: started
   tags:
     - config
