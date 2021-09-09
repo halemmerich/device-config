@@ -1,7 +1,4 @@
 - include_vars: "vars/{{ ansible_os_family | lower }}.yml"
-  tags:
-    - config
-    - only
     
 - include_tasks: "{{ ansible_os_family | lower }}.yml"
 
@@ -289,3 +286,4 @@
     - restart_nextcloud_watchstorage
   tags:
     - config
+    
