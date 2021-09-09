@@ -1,8 +1,10 @@
 #!/bin/bash
 
+systemctl stop nextcloud-cron.timer
 chmod 640 {{ nextcloud_config_path }}
 su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ upgrade"
 chmod 440 {{ nextcloud_config_path }}
+systemctl start nextcloud-cron.timer
 
 echo Done
 
