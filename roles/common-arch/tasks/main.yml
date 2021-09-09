@@ -42,6 +42,7 @@
       - linux-headers
       - linux
       - base-devel
+      - pacman-contrib
   tags:
     - install
 
