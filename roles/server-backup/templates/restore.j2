@@ -7,7 +7,7 @@ sshfs -o ro -p {{ restore_server_port }} {{ restore_server_user }}@{{ restore_se
 SSHFS_RC=$?
 
 function rsync_restore {
-        rsync --info=progress2 -r -l --delete -e "ssh -p {{ restore_server_port }}" "$2" {{ restore_server_user }}@{{ restore_server_host }}:{{ restore_server_path }}/"$1"
+        rsync --info=progress2 -t -r -l --delete -e "ssh -p {{ restore_server_port }}" {{ restore_server_user }}@{{ restore_server_host }}:{{ restore_server_path }}/"$1"  "$2"
 }
 
 export -f rsync_restore

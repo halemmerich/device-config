@@ -9,7 +9,7 @@ sshfs -p {{ backup_server_port }} {{ backup_server_user }}@{{ backup_server_host
 SSHFS_RC=$?
 
 function rsync_backup {
-        rsync --info=progress2 -r -l --delete -e "ssh -p {{ backup_server_port }}" "$1" {{ backup_server_user }}@{{ backup_server_host }}:{{ backup_server_path }}/"$2"
+        rsync --info=progress2 -t -r -l --delete -e "ssh -p {{ backup_server_port }}" "$1" {{ backup_server_user }}@{{ backup_server_host }}:{{ backup_server_path }}/"$2"
 }
 
 export -f rsync_backup
