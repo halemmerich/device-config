@@ -94,6 +94,16 @@
   tags:
     - config
 
+- community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto}}"
+  loop:
+    - { port: "10000:20000", proto: "udp" }
+  when: ufw_enabled is defined
+  tags:
+    - config
+
 - name: 'Enable services'
   systemd:
     name: "{{ item }}"
