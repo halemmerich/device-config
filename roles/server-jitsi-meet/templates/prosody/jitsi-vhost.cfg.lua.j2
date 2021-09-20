@@ -86,6 +86,12 @@ Component "internal.auth.meet.{{ domain }}" "muc"
 
 VirtualHost "auth.meet.{{ domain }}"
     authentication = "internal_plain"
+    -- WORKAROUND START, certificate detection should work
+    ssl = {
+      certificate = "/etc/prosody/certs/auth.meet.{{ domain }}.crt";
+      key = "/etc/prosody/certs/auth.meet.{{ domain }}.key";
+    }
+    -- WORKAROUND END
 
 Component "focus.meet.{{ domain }}" "client_proxy"
     target_address = "focus@auth.meet.{{ domain }}"
