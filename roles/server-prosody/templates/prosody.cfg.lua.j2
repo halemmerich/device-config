@@ -14,10 +14,18 @@ modules_enabled = {
 
 ports = { 5222, 5269, 5347, 5280 }
 ssl_ports = { 5223 }
+legacy_ssl_ports = { }
 c2s_ports = { }
 http_ports = { }
 http_external_url = "https://upload.{{ domain }}/"
 trusted_proxies = { "127.0.0.1", "::1" }
+    
+-- WORKAROUND START, certificate detection should work
+legacy_ssl_ssl = {
+    certificate = "/etc/prosody/certs/{{ domain }}.crt";
+    key = "/etc/prosody/certs/{{ domain }}.key";
+}
+-- WORKAROUND END
 
 contact_info = {
   abuse = { "mailto:abuse@{{ domain }}"};
