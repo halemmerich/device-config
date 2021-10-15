@@ -1,8 +1,8 @@
 server_names_hash_bucket_size 64;
 
 server {
-    listen {{ server_nginx_port_https_backend }} ssl http2;
-    listen [::]:{{ server_nginx_port_https_backend }} ssl http2;
+    listen {{ server_nginx_port_https_backend }};
+    listen [::]:{{ server_nginx_port_https_backend }};
     server_name meet.{{ domain }};
 
     # Mozilla Guideline v5.4, nginx 1.17.7, OpenSSL 1.1.1d, intermediate configuration

@@ -1,6 +1,6 @@
 server {
-    listen {{ server_nginx_port_https_backend }}      ssl http2;
-    listen [::]:{{ server_nginx_port_https_backend }} ssl http2;
+    listen {{ server_nginx_port_https_backend_proxy }};
+    listen [::]:{{ server_nginx_port_https_backend_proxy }};
     server_name nextcloud.{{ domain }};
 
     ssl_certificate /etc/letsencrypt/live/nextcloud.{{ domain }}/fullchain.pem;
@@ -25,6 +25,7 @@ server {
     add_header X-Permitted-Cross-Domain-Policies    "none"          always;
     add_header X-Robots-Tag                         "none"          always;
     add_header X-XSS-Protection                     "1; mode=block" always;
+
 
     fastcgi_hide_header X-Powered-By;
 
@@ -65,6 +66,7 @@ server {
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_param PATH_INFO $path_info;
         fastcgi_param HTTPS on;
+        fastcgi_param HTTP_X_FORWARDED_FOR $proxy_protocol_addr;
 
         fastcgi_param modHeadersAvailable true;
         fastcgi_param front_controller_active true;

@@ -1,6 +1,6 @@
 server {
-    listen {{ server_nginx_port_https_backend }} ssl http2;
-    listen [::]:{{ server_nginx_port_https_backend }} ssl http2;
+    listen {{ server_nginx_port_https_backend }};
+    listen [::]:{{ server_nginx_port_https_backend }};
     server_name remotely.{{ domain }};
     
     ssl_certificate /etc/letsencrypt/live/remotely.{{ domain }}/fullchain.pem;

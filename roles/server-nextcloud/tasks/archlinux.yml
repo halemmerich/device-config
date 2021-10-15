@@ -4,6 +4,7 @@
     - nextcloud
     - php-fpm
     - php-intl
+    - pwgen
   tags:
     - install
 

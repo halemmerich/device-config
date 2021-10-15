@@ -21,11 +21,14 @@
 
 - name: Configure share directory
   file:
-    path: /var/lib/webdav/shares
+    path: "{{ item }}"
     owner: '{{ server_nginx_user }}'
     group: 'webshare'
-    mode: '0750'
+    mode: '0770'
     state: directory
+  loop:
+    - '/var/lib/webdav'
+    - '/var/lib/webdav/shares'
   tags:
     - config
 

@@ -26,9 +26,13 @@
 
 - name: 'Create config nginx'
   template:
-    src: nginx/sogo.conf.j2
-    dest: '/etc/nginx/servers.d/sogo.conf'
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
     mode: '0700'
+  loop:
+    - { src: "nginx/sogo.conf.j2", dest: "/etc/nginx/servers.d/sogo.conf" }
+    - { src: "nginx/sogo-ppmap.conf.j2", dest: "/etc/nginx/proxy_protocol_mappings.d/sogo.conf" }
+    - { src: "nginx/sogo-map.conf.j2", dest: "/etc/nginx/upstream_mappings_sni.d/sogo.conf" }
   notify: restart_nginx
   tags:
     - config

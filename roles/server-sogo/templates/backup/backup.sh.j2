@@ -13,6 +13,8 @@ mysqldump --defaults-file=<(echo "[mysqldump]
 user=sogo
 password={{ sogo_db_user_password }}") --lock-tables -h localhost -u sogo sogo > "$MOUNTDIR/sogo/dbdump.sql"; (( RC |= $? ))
 
+sogo-tool backup "$MOUNTDIR/sogo/sogo-tool-backup" ALL
+
 rsync_backup $SOGO_SPOOL $SOGO_SPOOL_TARGET; (( RC |= $? ))
 
 systemctl restart sogo; (( RC |= $? ))

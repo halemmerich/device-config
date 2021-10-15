@@ -20,14 +20,24 @@ $CONFIG = array (
   ),
   'passwordsalt' => '{{ nextcloud_passwordsalt }}',
   'secret' => '{{ nextcloud_secret }}',
+  'trusted_proxies' => ['127.0.0.1', '::1'],
+  'forwarded_for_headers' => array(
+    'HTTP_X_FORWARDED_FOR'
+  ),
   'trusted_domains' =>
   array (
     0 => 'localhost',
     1 => 'nextcloud.{{ domain }}'
   ),
+  'trusted_proxies' =>
+  array (
+	  0 => '127.0.0.1',
+  ),
   'dbtype' => 'mysql',
   'version' => '21.0.0.18',
   'overwrite.cli.url' => 'https://nextcloud.{{ domain }}',
+  'overwriteprotocol' => 'https',
+  'overwritehost' => 'nextcloud.{{ domain }}',
   'dbname' => 'nextcloud',
   'dbhost' => 'localhost',
   'dbport' => '',

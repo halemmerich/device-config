@@ -11,6 +11,7 @@
     - php-mysql
     - php-curl
     - php-json
+    - pwgen
   tags:
     - install
 

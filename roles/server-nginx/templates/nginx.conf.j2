@@ -14,7 +14,11 @@ events {
     worker_connections  1024;
 }
 
+error_log  /var/log/nginx/error.log;
+
 http {
+    access_log  /var/log/nginx/http_access.log;
+
     types_hash_max_size 4096;
 
     include       mime.types;
@@ -39,6 +43,17 @@ http {
         location '/' {
             return 301 https://$host$request_uri;
         }
+    }
+    
+    server {
+	listen {{ server_nginx_port_https_backend }} ssl http2;
+	listen [::]:{{ server_nginx_port_https_backend }} ssl http2;
+	listen {{ server_nginx_port_https_backend_proxy }} ssl http2 proxy_protocol;
+	listen [::]:{{ server_nginx_port_https_backend_proxy }} ssl http2 proxy_protocol;
+	ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+	
+	server_name "dummy";
     }
 
     {% for current in server_nginx_default_domains %}
@@ -72,6 +87,13 @@ http {
 }
 
 stream {
+    log_format proxy '$remote_addr [$time_local] '
+                 '$protocol $status $bytes_sent $bytes_received '
+                 '$session_time "$upstream_addr" '
+                 '"$upstream_bytes_sent" "$upstream_bytes_received" "$upstream_connect_time"';
+
+    access_log /var/log/nginx/stream_access.log proxy;
+
     map_hash_bucket_size 128;
 
     map $ssl_preread_server_name $sni_target {
@@ -80,15 +102,28 @@ stream {
     }
 
     map $ssl_preread_alpn_protocols $target {
-		include /etc/nginx/upstream_mappings_alpn.d/*.conf;
-		default $sni_target;
+	include /etc/nginx/upstream_mappings_alpn.d/*.conf;
+	    default $sni_target;
     }
 
     upstream web_backend {
         server 127.0.0.1:{{ server_nginx_port_https_backend }};
     }
 
+    upstream backend_unproxy {
+	server 127.0.0.1:{{ server_nginx_port_tls_no_pp }};
+    }
+
+    upstream web_backend_proxy {
+        server 127.0.0.1:{{ server_nginx_port_https_backend_proxy }};
+    }
+
     include /etc/nginx/upstreams.d/*.conf;
+
+    map $target $target_proxy_protocol {
+	include /etc/nginx/proxy_protocol_mappings.d/*.conf;
+	default backend_unproxy;
+    }
 
     server {
         listen {{ server_nginx_port_tls }};
@@ -96,6 +131,18 @@ stream {
 
         ssl_preread on;
 
+	proxy_protocol on;
+	proxy_pass $target_proxy_protocol;
+        proxy_buffer_size 10m;
+    }
+    
+    server {
+        listen {{ server_nginx_port_tls_no_pp }} proxy_protocol;
+        listen [::]:{{ server_nginx_port_tls_no_pp }} proxy_protocol;
+
+        ssl_preread on;
+
+	proxy_protocol off;
         proxy_pass $target;
         proxy_buffer_size 10m;
     }

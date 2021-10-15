@@ -35,6 +35,7 @@
     - upstreams.d
     - upstream_mappings_sni.d
     - upstream_mappings_alpn.d
+    - proxy_protocol_mappings.d
     - locations_http.d
   tags:
     - config

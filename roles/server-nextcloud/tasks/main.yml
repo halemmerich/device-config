@@ -71,6 +71,15 @@
   tags:
     - config
 
+- name: 'Create config nginx map'
+  template:
+    src: nginx/nextcloud-ppmap.conf.j2
+    dest: '/etc/nginx/proxy_protocol_mappings.d/nextcloud.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
 - name: 'Create configs'
   template:
     src: php/nextcloud.conf.j2

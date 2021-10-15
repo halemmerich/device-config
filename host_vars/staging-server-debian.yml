@@ -16,8 +16,10 @@ letsencrypt_fake: true
 server_nginx_user: "www-data"
 server_nginx_group: "www-data"
 server_nginx_port_https_backend: "4444"
+server_nginx_port_https_backend_proxy: "4445"
 server_nginx_port_http: "80"
 server_nginx_port_tls: "443"
+server_nginx_port_tls_no_pp: "4440"
 server_nginx_default_domains:
   - "{{ domain }}"
 
