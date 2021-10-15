@@ -1,7 +1,7 @@
 - name: 'Install packages'
   aur:
     name:
-    - jre11-openjdk-headless
+    - jre11-openjdk
     - jitsi-meet-bin
     - jitsi-videobridge-bin
     - jitsi-meet-prosody-bin
