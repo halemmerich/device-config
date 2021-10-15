@@ -1,9 +1,24 @@
-- name: enable multilib
+- name: Repos by Include
   ini_file:
-    path: /etc/pacman.d/multilib.conf
-    section: multilib
+    path: /etc/pacman.conf
+    section: "{{ item.name }}"
     option: Include
-    value: /etc/pacman.d/mirrorlist
+    value: "{{ item.include }}"
+  when: item.include is defined
+  loop: "{{ pacman_repos }}"
+  tags:
+    - config
+
+- name: Repos by server
+  ini_file:
+    path: /etc/pacman.conf
+    section: "{{ item.name }}"
+    option: Server
+    value: "{{ item.server }}"
+  when: item.server is defined
+  loop: "{{ pacman_repos }}"
+  tags:
+    - config
 
 - name: 'Install'
   template:
