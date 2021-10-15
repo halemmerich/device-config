@@ -95,6 +95,10 @@ jicofo {
         enabled = false
         id = 9
       }
+      mid {
+        enabled = false
+        id = 10
+      }
     }
   }
 
@@ -106,6 +110,8 @@ jicofo {
     single-participant-timeout = 20 seconds
     min-participants = 2
     enable-lip-sync = false
+    strip-simulcast = false
+    use-json-encoded-sources = true
     shared-document {
       use-random-name = false
     }
@@ -122,12 +128,14 @@ jicofo {
   jibri {
     num-retries = 5
     pending-timeout = 90 seconds
+    xmpp-connection-name = Client
   }
 
   jibri-sip {
   }
 
   jigasi {
+    xmpp-connection-name = Client
   }
 
   octo {
@@ -150,12 +158,14 @@ jicofo {
       hostname = "localhost"
       port = 5222
       username = "focus"
-      conference-muc-jid = "conference.meet.{{ domain }}"
       client-proxy = "focus.meet.{{ domain }}"
 
       reply-timeout = 15 seconds
+      conference-muc-jid = "conference.meet.{{ domain }}"
       disable-certificate-verification = false
+      use-tls = true
     }
+    
     service {
       enabled = false
       hostname = "localhost"
@@ -164,5 +174,7 @@ jicofo {
       disable-certificate-verification = false
       use-tls = false
     }
+    
+    trusted-domains = []
   }
 }
