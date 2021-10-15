@@ -25,6 +25,10 @@ hosts_entries:
     aliases:
     - server-debian
 
+pacman_repos:
+  - name: "multilib"
+    include: "/etc/pacman.d/mirrorlist"
+
 #hosts_entries:
 #  - ip: "123.123.123.1"
 #    hostnames: "canonical alias1 alias2"

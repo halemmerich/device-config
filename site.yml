@@ -35,6 +35,13 @@
   - server-backup
   - server-syncplay
 
+- hosts: server_pacman_repo
+  become: yes
+  remote_user: admin
+  roles:
+  - ufw
+  - server-pacman-repo
+
 - hosts: server_remotely
   become: yes
   remote_user: admin

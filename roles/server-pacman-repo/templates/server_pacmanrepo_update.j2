@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cd /var/lib/pacman-repo
+
+rm {{ server_pacmanrepo_name }}.db
+rm {{ server_pacmanrepo_name }}.db.tar.zst
+rm {{ server_pacmanrepo_name }}.files
+rm {{ server_pacmanrepo_name }}.files.tar.zst
+
+
+repo-add {{ server_pacmanrepo_name }}.db.tar.zst *
+

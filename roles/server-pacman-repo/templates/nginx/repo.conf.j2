@@ -1,0 +1,16 @@
+server {
+    listen {{ server_nginx_port_https_backend }};
+    listen [::]:{{ server_nginx_port_https_backend }};
+    server_name repo.{{ domain }};
+
+    root /var/lib/pacman-repo;
+
+    ssl_certificate /etc/letsencrypt/live/repo.{{ domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/repo.{{ domain }}/privkey.pem;
+
+    ssl_prefer_server_ciphers on;
+    
+    location / {
+        autoindex on;
+    }
+}

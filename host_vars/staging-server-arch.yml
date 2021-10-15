@@ -30,6 +30,8 @@ jitsi_secret_jvb_user: "password_jvb_user"
 jitsi_secret_focus_user: "password_focus_user"
 jitsi_secret_focus_component: "secret_focus_component"
 
+server_pacmanrepo_name: "testrepo"
+
 turnserver_dns: "turn.{{ domain }}"
 turnserver_port: "3478"
 turnserver_secure_dns: "turn.{{ domain }}"

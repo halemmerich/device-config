@@ -1,0 +1,41 @@
+- name: Configure directories
+  file:
+    path: "{{ item }}"
+    owner: '{{ server_nginx_user }}'
+    group: '{{ server_nginx_user }}'
+    mode: '0555'
+    state: directory
+  loop:
+    - '/var/lib/pacman-repo'
+  tags:
+    - config
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
+  loop:
+    - repo
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create config nginx'
+  template:
+    src: nginx/repo.conf.j2
+    dest: '/etc/nginx/servers.d/pacman-repo.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  loop:
+    - { src: "server_pacmanrepo_update.j2", dest: "/usr/local/bin/server_pacmanrepo_update" }
+    - { src: "server_pacmanrepo_collect.j2", dest: "/usr/local/bin/server_pacmanrepo_collect" }
+  tags:
+    - config

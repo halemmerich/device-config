@@ -23,5 +23,9 @@ staging-server-debian
 [server_remotely]
 staging-server-arch
 
+[server_pacman_repo]
+staging-server-arch
+
 [server_syncplay]
 staging-server-arch
+
