@@ -54,7 +54,7 @@ var interfaceConfig = {
     MOBILE_DOWNLOAD_LINK_IOS: 'https://itunes.apple.com/us/app/jitsi-meet/id1165103905',
 
     NATIVE_APP_NAME: 'Jitsi Meet',
-    OPTIMAL_BROWSERS: [ 'chrome', 'chromium', 'nwjs', 'electron', 'safari' ],
+    OPTIMAL_BROWSERS: [ 'chrome', 'chromium', 'firefox', 'nwjs', 'electron', 'safari' ],
 
     POLICY_LOGO: null,
     PROVIDER_NAME: '{{ domain }}',
@@ -62,7 +62,7 @@ var interfaceConfig = {
     RECENT_LIST_ENABLED: true,
     REMOTE_THUMBNAIL_RATIO: 1, // 1:1
 
-    SETTINGS_SECTIONS: [ 'devices', 'language', 'moderator', 'profile', 'calendar' ],
+    SETTINGS_SECTIONS: [ 'devices', 'language', 'moderator', 'profile', 'calendar', 'sounds' ],
     SHOW_BRAND_WATERMARK: false,
 
     SHOW_CHROME_EXTENSION_BANNER: false,
@@ -90,9 +90,6 @@ var interfaceConfig = {
     VIDEO_LAYOUT_FIT: 'both',
     VIDEO_QUALITY_LABEL_DISABLED: false,
     TILE_VIEW_MAX_COLUMNS: 5,
-
-    APP_SCHEME: 'org.jitsi.meet',
-	ANDROID_APP_PACKAGE: 'org.jitsi.meet',
 
     makeJsonParserHappy: 'even if last key had a trailing comma'
 };

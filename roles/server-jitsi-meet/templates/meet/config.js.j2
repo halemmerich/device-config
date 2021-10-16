@@ -10,12 +10,13 @@ var config = {
 
 	openBridgeChannel: 'websocket',
 	clientNode: 'http://jitsi.org/jitsimeet',
-
+	
 	enableNoAudioDetection: true,
 	enableNoisyMicDetection: true,
 
 	opusMaxAverageBitrate: 20000,
 	enableOpusRed: true,
+
 
 	resolution: 720,
 
@@ -25,23 +26,13 @@ var config = {
 			height: {
 				ideal: 720,
 				max: 720,
-				min: 180
-			},
-			width: {
-				ideal: 1280,
-				max: 1280,
-				min: 320
+				min: 240
 			}
 		}
 	},
 
 	disableSimulcast: false,
 	enableLayerSuspension: true,
-
-	desktopSharingFrameRate: {
-		min: 10,
-		max: 60
-	},
 
 	fileRecordingsEnabled: false,
 	liveStreamingEnabled: false,
@@ -55,9 +46,21 @@ var config = {
 		preferredCodec: 'VP8',
 
 		maxBitratesVideo: {
-			low: 200000,
-			standard: 1500000,
-			high: 5000000
+		      H264: {
+			  low: 200000,
+			  standard: 500000,
+			  high: 1500000
+		      },
+		      VP8 : {
+			  low: 200000,
+			  standard: 500000,
+			  high: 1500000
+		      },
+		      VP9: {
+			  low: 100000,
+			  standard: 300000,
+			  high: 1200000
+		      }
 		},
 
 		minHeightForQualityLvl: {
@@ -65,6 +68,11 @@ var config = {
 			720: 'high'
 		},
 		resizeDesktopForPresenter: false
+	},
+
+	desktopSharingFrameRate: {
+		min: 10,
+		max: 60
 	},
 
 	useTurnUdp: false,
@@ -96,7 +104,11 @@ var config = {
 		enabled: true,
 		useStunTurn: true,
 		iceTransportPolicy: 'all',
-		backToP2PDelay: 5
+		backToP2PDelay: 5,
+                stunServers: [
+                    { urls: 'stun:turn.{{ domain }}:3478' },
+                    { urls: 'stun:turn.{{ domain }}:443' }
+                ]
 	},
 
 	analytics: {

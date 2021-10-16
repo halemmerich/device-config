@@ -21,7 +21,7 @@ videobridge {
     onstage-preferred-height-px=360
     onstage-preferred-framerate=30
     allow-oversend-onstage=true
-    enable-onstage-video-suspend=false
+    max-oversend-bitrate=500 kbps
     trust-bwe=true
 
     padding-period=15ms
@@ -31,7 +31,7 @@ videobridge {
   apis {
     xmpp-client {
       presence-interval = ${videobridge.stats.interval}
-
+      jid-cache-size = 1000
       configs {
       }
     }
@@ -62,8 +62,6 @@ videobridge {
       tls-port = -1
     }
     private {
-      port = -1
-      tls-port = -1
       host = 127.0.0.1
     }
   }
@@ -86,7 +84,7 @@ videobridge {
         reduction-scale = .75
         recover-scale = 1.25
         impact-time = 1 minute
-        minimum-last-n-value = 0
+        minimum-last-n-value = 1
         maximum-enforced-last-n-value = 40
       }
     }
@@ -106,6 +104,7 @@ videobridge {
   websockets {
     enabled=true
     server-id="jvb"
+    enable-compression = true
     tls=true
     domain="meet.{{ domain }}:{{ server_nginx_port_tls }}"
   }
