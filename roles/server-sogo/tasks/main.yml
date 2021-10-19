@@ -37,6 +37,19 @@
   tags:
     - config
 
+- name: 'Create config nginx - WORKAROUND'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  loop:
+    - { src: "nginx/filter.js.j2", dest: "/etc/nginx/servers.d/filter.js" }
+    - { src: "nginx/js.conf.j2", dest: "/etc/nginx/modules.d/js.conf" }
+  notify: restart_nginx
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - config
+
 - name: Create a new database
   community.mysql.mysql_db:
     name: sogo

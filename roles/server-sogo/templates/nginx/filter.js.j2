@@ -1,0 +1,18 @@
+var body = new Array();
+var newBodyLength = null;
+
+function filterBody(r, data, flags){
+        body.push(data);
+        if (flags.last){
+                data = body.join('');
+                data = data.replace(/&#65279;/g, '');
+                newBodyLength = data.length;
+                r.sendBuffer(data, flags);
+        }
+}
+
+function filterHeader(r){
+        r.headersOut['Content-Length'] = newBodyLength;
+}
+
+export default {filterBody, filterHeader};
