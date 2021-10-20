@@ -1,29 +1,50 @@
 EXITCODE=0
 
-MAJOR_UPGRADES=""
-LINUX_KERNELS=""
+MAJOR_UPGRADES=()
+MINOR_UPGRADES=()
+LINUX_KERNELS=()
+
+export CHECKMINOR=("mariadb")
 
 while read CURRENT; do
-	PACKAGE=$(echo $CURRENT | cut -d ' ' -f 1)
-	MAJOR_CURRENT=$(echo $CURRENT | cut -d ' ' -f 2 | sed -e "s|[.:_-].*$||")
-	MAJOR_NEW=$(echo $CURRENT | cut -d ' ' -f 4 | sed -e "s|[.:_-].*$||")
+	PACKAGE=$(echo "$CURRENT" | cut -d ' ' -f 1)
+
+	VERSION_CURRENT=$(echo "$CURRENT" | cut -d ' ' -f 2)
+	VERSION_NEW=$(echo "$CURRENT" | cut -d ' ' -f 4)
+
+	MAJOR_CURRENT=$(echo "$CURRENT" | cut -d ' ' -f 2 | sed -e "s|[.:_-].*$||")
+	MAJOR_NEW=$(echo "$CURRENT" | cut -d ' ' -f 4 | sed -e "s|[.:_-].*$||")
+
+	MINOR_CURRENT=$(echo "$CURRENT" | cut -d ' ' -f 2 | sed -e "s|^[^.:_-]*[.:_-]||" | sed -e "s|[.:_-].*||")
+	MINOR_NEW=$(echo "$CURRENT" | cut -d ' ' -f 4 | sed -e "s|^[^.:_-]*[.:_-]||"| sed -e "s|[.:_-].*||")
 
 	if [ "$MAJOR_CURRENT" != "$MAJOR_NEW" ]
 	then
-		MAJOR_UPGRADES="$MAJOR_UPGRADES $PACKAGE"
+		MAJOR_UPGRADES+=("$PACKAGE $VERSION_CURRENT -> $VERSION_NEW")
 		EXITCODE=$(( EXITCODE | 1 ))
 	fi
 
-	if echo "$PACKAGE" | grep -q linux
+	if printf '%s\n' "${CHECKMINOR[@]}" | grep -q -P '^'"$PACKAGE"'$' && [ "$MINOR_CURRENT" != "$MINOR_NEW" ]
 	then
-		LINUX_KERNELS="$LINUX_KERNELS $PACKAGE"
+		MINOR_UPGRADES+=("$PACKAGE $VERSION_CURRENT -> $VERSION_NEW")
+		EXITCODE=$(( EXITCODE | 1 ))
+	fi
+
+	if echo "$PACKAGE" | grep -q "^linux"
+	then
+		LINUX_KERNEL+=("$PACKAGE $VERSION_CURRENT -> $VERSION_NEW")
 		EXITCODE=$(( EXITCODE | 2 ))
 	fi
 done < <(checkupdates)
 
 echo Packages with major upgrade:
-echo $MAJOR_UPGRADES
+printf '%s\n' "${MAJOR_UPGRADES[@]}" | column -t
+echo
+echo Packages with watched minor upgrade:
+printf '%s\n' "${MINOR_UPGRADES[@]}" | column -t
+echo
 echo Linux kernels:
-echo $LINUX_KERNELS
+printf '%s\n' "${LINUX_KERNEL[@]}" | column -t
+
 
 exit $EXITCODE
