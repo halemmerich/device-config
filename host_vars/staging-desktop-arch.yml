@@ -9,6 +9,7 @@ server_subdomains:
   - nextcloud
   - sogo
   - webdav
+  - xmpp
   - remotely
 
 hosts_entries:
