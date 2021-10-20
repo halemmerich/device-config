@@ -19,6 +19,11 @@
     - { src: "server_nextcloud_scanfiles.j2", dest: "/usr/local/bin/server_nextcloud_scanfiles" }
     - { src: "server_nextcloud_watchstorage.j2", dest: "/usr/local/bin/server_nextcloud_watchstorage" }
     - { src: "server_nextcloud_WORKAROUND_allow_compressed_rw.j2", dest: "/usr/local/bin/server_nextcloud_WORKAROUND_allow_compressed_rw" }
+    - { src: "server_nextcloud_upgrade.j2", dest: "/usr/local/bin/server_nextcloud_upgrade" }
+    - { src: "server_nextcloud_maintenance_on.j2", dest: "/usr/local/bin/server_nextcloud_maintenance_on" }
+    - { src: "server_nextcloud_maintenance_off.j2", dest: "/usr/local/bin/server_nextcloud_maintenance_off" }
+    - { src: "server_nextcloud_app_disable.j2", dest: "/usr/local/bin/server_nextcloud_app_disable" }
+    - { src: "server_nextcloud_app_enable.j2", dest: "/usr/local/bin/server_nextcloud_app_enable" }
     - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/nextcloud.sh" }
     - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/nextcloud.sh" }
   tags:
