@@ -140,8 +140,19 @@
     dest: '{{ nextcloud_config_path }}'
     mode: '0640'
     owner: "{{ nextcloud_user }}"
-    group: "{{ nextcloud_user }}"
-    force: no
+    group: "{{ nextcloud_group }}"
+    force: yes
+  tags:
+    - config
+
+- name: Make sure config is not write protected
+  file:
+    path: "{{ nextcloud_config_path }}"
+    mode: '640'
+
+- name: Set config writable
+  command:
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set config_is_read_only --value false"'
   tags:
     - config
 
@@ -153,12 +164,9 @@
   tags:
     - config
 
-- name: Set config
-  command:
-    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set trusted_domains {{ item.index }} --value {{ item.host }}"'
-  loop:
-    - { index: "0", host: "nextcloud.{{ domain }}" }
-    - { index: "1", host: "localhost" }
+- name: Run upgrade to update database
+  shell:
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ upgrade"'
   tags:
     - config
 

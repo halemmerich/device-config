@@ -1,6 +1,6 @@
 <?php
 $CONFIG = array (
-  'config_is_read_only' => true,
+  'config_is_read_only' => false,
   'datadirectory' => '/var/lib/nextcloud/data/',
   'logfile' => '/var/log/nextcloud/nextcloud.log',
   'apps_paths' =>
@@ -35,7 +35,7 @@ $CONFIG = array (
   'mysql.utf8mb4' => true,
   'dbuser' => 'nextcloud',
   'dbpassword' => '{{ nextcloud_db_user_password }}',
-  'installed' => false,
+  'installed' => true,
   'instanceid' => '{{ nextcloud_instanceid }}',
   'skeletondirectory' => '',
   'default_language' => 'de',
