@@ -3,6 +3,12 @@ credentials
 *.retry
 staging_netconf.yml
 staging_hosts
+production
+production_hosts
 files/fake-ca/ca.key
 files/fake-ca/ca.pem
 files/fake-ca/ca.crt
+run_limited
+run_limited_upgrade
+host_vars/*
+!host_vars/staging*
