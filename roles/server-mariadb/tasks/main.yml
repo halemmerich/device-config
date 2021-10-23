@@ -11,7 +11,7 @@
   package:
     name:
     - mariadb-server
-    - python-mysqldb
+    - python3-mysqldb
   when: ansible_os_family == "Debian"
   tags:
     - install

@@ -3,7 +3,7 @@
 
 - package:
     name:
-      - python-lxml
+      - python3-lxml
       - apt-transport-https
   tags:
     - install

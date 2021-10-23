@@ -26,7 +26,7 @@ The following virtual machines can be configured:
   - LUKS password is luks
   - admin user password is admin
 - staging-server-debian and staging-desktop-debian
-  These machines are installed as a debian chicken install.
+  These machines are installed as a debian bullseye chicken install.
   - They additionally need a user *admin* created with password *admin* which ist able to use sudo with password
 - hostnames need to be set accordingly
   
