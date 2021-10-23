@@ -28,6 +28,7 @@ openssl genrsa -out $DEST/privkey.pem 4096
 openssl req -new \
             -key $DEST/privkey.pem \
             -subj "/C=FK/ST=FAKE/L=FAKE/O=FAKE/OU=LEAF/CN=$CN" \
+            -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=DNS:$CN")) \
             -out $DEST/request.csr
 
 openssl x509 -req \
@@ -36,6 +37,8 @@ openssl x509 -req \
             -CA /etc/letsencrypt/fake-ca/ca.pem\
             -CAkey /etc/letsencrypt/fake-ca/ca.key\
             -CAcreateserial -CAserial /etc/letsencrypt/fake-ca/serial.srl \
+            -extfile <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=DNS:$CN")) \
+            -extensions SAN \
             -out $DEST/cert.pem
             
 rm /etc/letsencrypt/fake-ca/serial.srl

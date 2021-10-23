@@ -5,3 +5,4 @@ staging_netconf.yml
 staging_hosts
 files/fake-ca/ca.key
 files/fake-ca/ca.pem
+files/fake-ca/ca.crt
