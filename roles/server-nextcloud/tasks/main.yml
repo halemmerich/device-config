@@ -161,17 +161,35 @@
     path: "{{ nextcloud_config_path }}"
     mode: '640'
 
+- name: Check ocdata path
+  stat:
+    path: "{{ nextcloud_data_path }}/.ocdata"
+  register: ocdata_path
+
+- name: Run install command
+  block:
+  - name: Allow install in config
+    lineinfile:
+      path: "{{ nextcloud_config_path }}"
+      regexp: "^.*installed.*=>"
+      line: "'installed' => false,"
+  - name: Install
+    command:
+      cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ maintenance:install --database mysql --database-name nextcloud --database-host localhost --database-user nextcloud --database-pass={{ nextcloud_db_user_password }} --admin-pass={{ nextcloud_admin_user_password }} --data-dir /var/lib/nextcloud/data/ --no-interaction"'
+  when: not ocdata_path.stat.exists
+  notify: restart_nginx
+  tags:
+    - config
+
 - name: Set config writable
   command:
     cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set config_is_read_only --value false"'
   tags:
     - config
 
-- name: Install
+- name: Set config writable
   command:
-    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ maintenance:install --database mysql --database-name nextcloud --database-host localhost --database-user nextcloud --database-pass={{ nextcloud_db_user_password }} --admin-pass={{ nextcloud_admin_user_password }} --data-dir /var/lib/nextcloud/data/ --no-interaction"'
-    creates: "{{ nextcloud_data_path }}/.ocdata"
-  notify: restart_nginx
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set installed --value true"'
   tags:
     - config
 
