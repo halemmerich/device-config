@@ -1,6 +1,6 @@
 server {
-    listen 4445;
-    listen [::]:4445;
+    listen 8081;
+    listen [::]:8081;
   
     root /var/lib/webdav/shares;
     client_body_temp_path   /var/lib/webdav/temp;
@@ -23,8 +23,8 @@ server {
 }
 
 server {
-    listen {{ server_nginx_port_https_backend }} ssl http2;
-    listen [::]:{{ server_nginx_port_https_backend }} ssl http2;
+    listen {{ server_nginx_port_https_backend }};
+    listen [::]:{{ server_nginx_port_https_backend }};
     server_name webdav.{{ domain }};
   
     root /var/lib/webdav/shares;
@@ -35,7 +35,7 @@ server {
     ssl_session_cache shared:SSL:10m;
 
     location ~ /([a-zA-Z0-9_\.-]*)(/.*)* {
-        proxy_pass http://127.0.0.1:4445;
+        proxy_pass http://127.0.0.1:8081;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
