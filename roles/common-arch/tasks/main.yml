@@ -54,8 +54,6 @@
 - name: Utilites
   package:
     name:
-      - linux-headers
-      - linux
       - base-devel
       - pacman-contrib
   tags:
