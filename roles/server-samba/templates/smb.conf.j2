@@ -1,0 +1,25 @@
+[global]
+	workgroup = WORKGROUP
+	server string = Samba Server
+	server role = standalone server
+	logging = systemd
+	max log size = 50
+	dns proxy = no 
+	allow insecure wide links = yes
+	unix extensions  = yes
+
+{% if server_samba_shares is defined %}
+{% for share in server_samba_shares %}
+[{{ share.name }}]
+	path = {{ share.path }}
+	browseable = {{ share.browseable | default('no') }}
+	read only = {{ share.readonly | default('yes') }}
+	create mask = {{ share.createmask | default('755') }}
+	guest ok = {{ share.guestok | default('no') }}
+	follow symlinks = {{ share.followsymlinks | default('no') }}
+	wide links = {{ share.widelinks | default('no') }}
+	{% if share.validusers is defined %}valid users ={% for item in share.validusers %} {{item}}{% endfor %}{% endif %}
+	
+	
+{% endfor %}
+{% endif %}

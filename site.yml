@@ -31,6 +31,12 @@
   roles:
     - users
 
+- hosts: staging_local
+  become: yes
+  remote_user: admin
+  roles:
+    - users
+
 - hosts: arch
   become: yes
   roles:
@@ -46,6 +52,13 @@
   remote_user: admin
   roles:
   - users
+
+- hosts: nas
+  become: yes
+  remote_user: admin
+  roles:
+  - users
+  - server-samba
 
 - hosts: server_teamspeak
   become: yes

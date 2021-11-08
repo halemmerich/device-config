@@ -1,3 +1,8 @@
+[staging_local]
+staging-desktop-arch
+staging-desktop-debian
+staging-nas-arch
+
 [staging_fakeca]
 staging-desktop-arch
 staging-desktop-debian
