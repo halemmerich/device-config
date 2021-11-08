@@ -1,3 +1,9 @@
+- hosts: staging_fakeca
+  become: yes
+  remote_user: admin
+  roles:
+    - client-fakeca
+
 - hosts: all
   become: yes
   remote_user: admin

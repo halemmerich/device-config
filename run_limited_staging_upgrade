@@ -1,9 +1,21 @@
 #!/bin/bash
 
+if [ ! -e files/fake-ca/ca.key ]
+then
+        bash -c "cd files/fake-ca/; ./createCA.sh"
+fi
+
+FILTER='*-*-*'
+if [ -n "$1" ]
+then
+	FILTER=$1
+	shift
+fi
+
 STAGING_HOSTS="-i staging_hosts.example"
 [ -e "staging_hosts" ] && STAGING_HOSTS="-i staging_hosts"
 
 STAGING_NETCONF="staging_netconf.yml.example"
 [ -e "staging_netconf.yml" ] && STAGING_NETCONF="staging_netconf.yml"
 
-ansible-playbook $STAGING_HOSTS -i staging site.yml -e@$STAGING_NETCONF -l $@
+ansible-playbook $STAGING_HOSTS -i staging site.yml -e@$STAGING_NETCONF -l "$FILTER" $@

@@ -1,0 +1,132 @@
+- name: "Fake ca install arch"
+  block:        
+    - name: Send CA
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: 'root'
+        group: 'root'
+        mode: '0700'
+      loop:
+        - { src: "fake-ca/ca.crt", dest: "/tmp/ca.crt" }
+      tags:
+        - config
+
+    - name: Update stores
+      command: "trust anchor --store /tmp/ca.crt"
+  when: letsencrypt_fake | default(false) and ansible_os_family == "Archlinux"
+
+- name: "Fake ca install debian"
+  block:
+    - name: Install dependencies
+      package:
+        name:
+          - libnss3-tools
+      tags:
+        - install
+  
+    - name: Configure directories
+      file:
+        path: "{{ item }}"
+        mode: '0755'
+        state: directory
+      loop:
+        - '/usr/local/share/ca-certificates/fake-ca/'
+        - '/etc/pki'
+        - '/etc/pki/nssdb'
+      tags:
+        - config        
+        
+    - name: Send CA
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: 'root'
+        group: 'root'
+        mode: '0744'
+      loop:
+        - { src: "fake-ca/ca.crt", dest: "/usr/local/share/ca-certificates/fake-ca/ca.crt" }
+      tags:
+        - config
+
+    - name: Update stores
+      command: "update-ca-certificates"
+
+    - name: Create system wide nssdb
+      command: 'certutil -d "sql:/etc/pki/nssdb" -A -i /usr/local/share/ca-certificates/fake-ca/ca.crt -n "FAKE CA" -t C,,'
+
+    - name: Get all homedirs
+      find:
+        paths: /home/
+        file_type: directory
+      register: result_of_find
+
+    - name: Configure directories
+      file:
+        path: "{{ item.0.path }}/{{ item.1 }}"
+        mode: '0750'
+        state: directory
+      loop: "{{ result_of_find.files|flatten(levels=1) | product(['.thunderbird/default.profile','.mozilla/firefox/default.profile','.pki/nssdb']) }}"
+      tags:
+        - config  
+      
+    - name: Create .pki/nssdb database
+      shell: "certutil -N -f <(echo '') -d sql:{{ item.path }}/.pki/nssdb"
+      args:
+        creates: "{{item.path}}/.pki/nssdb/key4.db"
+        executable: /bin/bash
+      loop: "{{ result_of_find.files|flatten(levels=1) }}"
+      
+    - name: Add cert to firefox profile nssdb
+      shell: "certutil -d sql:{{ item.path }}/.pki/nssdb -A -i /usr/local/share/ca-certificates/fake-ca/ca.crt -n 'FAKE CA' -t C,,"
+      args:
+        executable: /bin/bash
+      loop: "{{ result_of_find.files|flatten(levels=1) }}"
+      
+    - name: Update .pki/nssdb database access rights
+      shell: "USERNAME=$(basename {{ item. path }}); chown -R $USERNAME:$USERNAME {{ item. path }}/.pki"
+      args:
+        executable: /bin/bash
+      loop: "{{ result_of_find.files|flatten(levels=1) }}"
+
+    - name: Creating firefox profile config
+      copy:
+        dest: "{{ item.0.path }}/{{ item.1 }}/profiles.ini"
+        content: |
+          [Profile0]
+          Name=default
+          IsRelative=1
+          Path=default.profile
+          Default=1
+          
+          [General]
+          StartWithLastProfile=0
+      loop: "{{ result_of_find.files|flatten(levels=1) | product([ '.mozilla/firefox', '.thunderbird']) }}"
+      
+    - name: Create firefox profile nssdb
+      shell: "certutil -N -f <(echo '') -d sql:{{ item.path }}/.mozilla/firefox/default.profile"
+      args:
+        creates: "{{item.path}}/.mozilla/firefox/default.profile/key4.db"
+        executable: /bin/bash
+      loop: "{{ result_of_find.files|flatten(levels=1) }}"
+      
+    - name: Add cert to firefox profile nssdb
+      shell: "certutil -d sql:{{ item.path }}/.mozilla/firefox/default.profile -A -i /usr/local/share/ca-certificates/fake-ca/ca.crt -n 'FAKE CA' -t C,,"
+      args:
+        executable: /bin/bash
+      loop: "{{ result_of_find.files|flatten(levels=1) }}"
+      
+    - name: Create symbolic link for database
+      file:
+        src: "{{ item.0.path }}/.mozilla/firefox/default.profile/{{ item.1 }}"
+        dest: "{{ item.0.path }}/.thunderbird/default.profile/{{ item.1 }}"
+        state: link
+      loop: "{{ result_of_find.files|flatten(levels=1) | product( [ 'cert9.db', 'key4.db', 'pkcs11.txt'] )|list }}"
+      
+    - name: Update config access rights
+      shell: "USERNAME=$(basename {{ item.0.path }}); chown -R $USERNAME:$USERNAME {{ item.0.path }}/{{ item.1 }}"
+      args:
+        executable: /bin/bash
+      loop: "{{ result_of_find.files|flatten(levels=1) | product([ '.mozilla', '.thunderbird', '.pki'])  }}"
+      
+  when: letsencrypt_fake | default(false) and ansible_os_family == "Debian"

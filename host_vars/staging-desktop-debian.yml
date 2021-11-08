@@ -7,6 +7,8 @@ locales:
 keymaps:
   - en-latin1-nodeadkeys
 
+letsencrypt_fake: true
+
 server_subdomains:
   - turn
   - meet

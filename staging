@@ -1,3 +1,9 @@
+[staging_fakeca]
+staging-desktop-arch
+staging-desktop-debian
+staging-server-arch
+staging-server-debian
+
 [arch]
 staging-server-arch
 staging-desktop-arch
