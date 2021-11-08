@@ -1,0 +1,10 @@
+users:
+  user:
+    password: $1$VlYfGDBM$F1JtBzG44XaGHXuZRmpCe1
+    groups:
+    uid: 2000
+    fullname: Test User
+    mail: tester@not.real
+
+sway_users:
+  - user

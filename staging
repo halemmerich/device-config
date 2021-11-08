@@ -1,7 +1,6 @@
 [staging_local]
 staging-desktop-arch
 staging-desktop-debian
-staging-nas-arch
 
 [staging_fakeca]
 staging-desktop-arch
@@ -14,6 +13,7 @@ staging-testclient-arch
 staging-testclient-debian
 staging-gameserver-arch
 staging-gameserver-debian
+staging-repocache-arch
 
 [server_dns]
 staging-dns-arch
@@ -21,6 +21,7 @@ staging-dns-debian
 
 [server_is]
 staging-repo-arch
+staging-repocache-arch
 staging-dns-arch
 staging-dns-debian
 
@@ -29,6 +30,7 @@ staging-server-arch
 staging-gameserver-arch
 staging-desktop-arch
 staging-repo-arch
+staging-repocache-arch
 staging-dns-arch
 
 [debian]
@@ -52,6 +54,9 @@ staging-repo-arch
 
 [builder_pacman_repo]
 staging-repo-arch
+
+[server_pacman_cache]
+staging-repocache-arch
 
 [nas]
 staging-nas-arch
