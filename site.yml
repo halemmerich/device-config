@@ -10,14 +10,12 @@
   become: yes
   remote_user: admin
   roles:
-  - ufw
   - server-pacman-repo
 
 - hosts: builder_pacman_repo
   become: yes
   remote_user: admin
   roles:
-  - ufw
   - pacman-repo-builder
 
 - hosts: arch
@@ -33,11 +31,11 @@
   roles:
   - common-debian
 
+
 - hosts: server_teamspeak
   become: yes
   remote_user: admin
   roles:
-  - ufw
   - server-backup
   - server-teamspeak
 
@@ -45,17 +43,16 @@
   become: yes
   remote_user: admin
   roles:
-  - ufw
   - server-backup
   - server-syncplay
 
+  
 - hosts: server_remotely
   become: yes
   remote_user: admin
   roles:
-  - ufw
   - server-remotely
-  
+
 - hosts: server_arch
   become: yes
   remote_user: admin
@@ -66,7 +63,6 @@
   become: yes
   remote_user: admin
   roles:
-  - ufw
   - server-sshtunnel
   - server-backup
   - server-nginx-base
@@ -84,6 +80,9 @@
   - server-fail2ban
   - util-run-letsencrypt-hooks
 
+- hosts: ufw
+  roles:
+  - ufw
 
 - hosts: desktop
   become: yes
@@ -92,3 +91,4 @@
   - desktop
   - desktop-cinnamon
   - default-apps
+
