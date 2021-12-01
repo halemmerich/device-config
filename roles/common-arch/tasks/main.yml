@@ -36,7 +36,12 @@
   tags:
     - upgrade
     - install
-    
+
+- name: Update keyring first
+  shell: pacman -S --noconfirm archlinux-keyring
+  tags:
+    - upgrade
+
 - name: Upgrade packages
   pacman:
     upgrade: yes
