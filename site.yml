@@ -2,8 +2,8 @@
   become: yes
   remote_user: admin
   roles:
-  - ansible-deps
   - hosts
+  - ansible-deps
   - common
 
 - hosts: server_pacman_repo
