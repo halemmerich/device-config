@@ -2,6 +2,11 @@ domain: "staging.debian"
 hostname: "staging-desktop-debian"
 fqdn: "{{ hostname }}.{{ domain }}"
 
+locales:
+  - en_US.UTF-8
+keymaps:
+  - en-latin1-nodeadkeys
+
 server_subdomains:
   - turn
   - meet

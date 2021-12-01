@@ -2,6 +2,12 @@ domain: "staging.arch"
 hostname: "staging-desktop-arch"
 fqdn: "{{ hostname }}.{{ domain }}"
 
+
+locales:
+  - en_US.UTF-8
+keymaps:
+  - en-latin1-nodeadkeys
+
 pacman_repos:
   - name: "testrepo"
     server: "https://repo.staging.arch"

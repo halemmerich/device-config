@@ -5,13 +5,15 @@
 
 - name: Set locale
   locale_gen:
-    name: de_DE.UTF-8
+    name: "{{ item }}"
     state: present
+  loop: "{{ locales }}"
 
 - name: Set locale
   locale_gen:
-    name: en_US.UTF-8
+    name: "{{ item }}"
     state: present
+  loop: "{{ locales }}"
 
 - name: create locale.conf
   file:
@@ -21,7 +23,8 @@
 - name: locale.conf file
   lineinfile:
     path: /etc/locale.conf
-    line: "LANG=de_DE.UTF-8"
+    line: "LANG={{ item }}"
+  loop: "{{ locales }}"
 
 - name: create vconsole.conf
   file:
@@ -31,7 +34,8 @@
 - name: vconsole.conf file
   lineinfile:
     path: /etc/vconsole.conf
-    line: "KEYMAP=de-latin1-nodeadkeys"
+    line: "KEYMAP={{ item }}"
+  loop: "{{ keymaps }}"
 
 - name: Utilites
   package:
