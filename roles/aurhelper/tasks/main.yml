@@ -5,7 +5,7 @@
     - config
 
 - lineinfile:
-    path: /etc/sudoers
+    path: /etc/sudoers.d/aur_builder
     line: 'aur_builder ALL=(ALL) NOPASSWD: {{ item }}'
     create: yes
     validate: 'visudo -cf %s'
