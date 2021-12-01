@@ -1,0 +1,10 @@
+[Unit]
+Description=Nextcloud DB Workaround
+After=mariadb.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/server_nextcloud_WORKAROUND_allow_compressed_rw
+
+[Install]
+WantedBy=multi-user.target

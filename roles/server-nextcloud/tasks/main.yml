@@ -23,6 +23,22 @@
     - { src: "server_nextcloud_app_enable.j2", dest: "/usr/local/bin/server_nextcloud_app_enable" }
     - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/nextcloud.sh" }
     - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/nextcloud.sh" }
+    - { src: "nextcloud-WORKAROUND.service.j2", dest: "/etc/systemd/system/nextcloud-WORKAROUND.service" }
+  tags:
+    - config
+
+- name: 'Scan systemd for workaround'
+  systemd:
+    daemon-reload: true
+  tags:
+    - config
+    
+- name: Enable workaround
+  systemd:
+    name: "nextcloud-WORKAROUND"
+    enabled: yes
+    state: restarted
+  when: ansible_os_family == "Archlinux"
   tags:
     - config
 
@@ -62,7 +78,7 @@
   tags:
     - config
 
-- name: 'Create config nginx map'
+- name: 'Create config nginx map sni'
   template:
     src: nginx/nextcloud-map.conf.j2
     dest: '/etc/nginx/upstream_mappings_sni.d/nextcloud.conf'
@@ -71,7 +87,7 @@
   tags:
     - config
 
-- name: 'Create config nginx map'
+- name: 'Create config nginx map proxy protocol'
   template:
     src: nginx/nextcloud-ppmap.conf.j2
     dest: '/etc/nginx/proxy_protocol_mappings.d/nextcloud.conf'
