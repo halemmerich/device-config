@@ -1,0 +1,22 @@
+FROM archlinux:latest
+ARG PASSWORD="ansible"
+ARG SSH_PUBKEY=""
+ARG TIMEZONE=Europe/Berlin
+
+RUN pacman -Syu --noconfirm openssh python sudo
+RUN mkdir /etc/systemd/system/multi-user.target.wants
+RUN ln -s /usr/lib/systemd/system/sshd.service /etc/systemd/system/multi-user.target.wants/sshd.service
+RUN ln -s /usr/share/zoneinfo/$TIMEZONE /etc/localtime
+
+RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == systemd-tmpfiles-setup.service ] || rm -f $i; done);
+RUN rm -f /lib/systemd/system/local-fs.target.wants/*;
+RUN rm -f /lib/systemd/system/sockets.target.wants/*udev*;
+
+RUN useradd -m ansible
+RUN usermod -aG wheel ansible
+RUN mkdir /home/ansible/.ssh
+RUN echo -e "$PASSWORD\n$PASSWORD\n" | passwd ansible
+RUN echo "$SSH_PUBKEY" > /home/ansible/.ssh/authorized_keys
+RUN echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
+
+CMD ["/sbin/init"]
