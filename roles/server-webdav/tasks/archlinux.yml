@@ -1,6 +1,7 @@
 - name: 'Install'
   kewlfft.aur.aur:
     name:
+    - apache-tools
     - nginx-mod-dav-ext
   become: yes
   become_user: aur_builder

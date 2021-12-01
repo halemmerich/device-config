@@ -6,16 +6,6 @@
     - install
 
 - name: 'Install'
-  kewlfft.aur.aur:
-    name:
-    - apache-tools
-  become: yes
-  become_user: aur_builder
-  when: ansible_os_family == "Archlinux"
-  tags:
-    - install
-
-- name: 'Install'
   package:
     name:
     - apache-tools
