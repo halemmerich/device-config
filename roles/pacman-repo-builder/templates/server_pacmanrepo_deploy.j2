@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ -f /etc/pacmanrepo.conf ]
+then
+	. /etc/pacmanrepo.conf
+fi
+
+if [ -z "$TARGET" ]
+then
+	TARGET=$1
+fi
+
+if [ -z "$TARGET" ]
+then
+	echo Repo rsync target is needed as first parameter
+	exit 1
+fi
+
+cd ~
+
+rsync -rl /var/lib/pacman-repo-builder/repo/ "$TARGET"

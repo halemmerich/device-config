@@ -1,12 +1,20 @@
-- name: Configure directories
+- user:
+    name: pacmanrepo
+    create_home: yes
+    home: /var/lib/pacman-repo
+  tags:
+    - config
+    
+- name: Configure pacmanrepo dir
   file:
     path: "{{ item }}"
-    owner: '{{ server_nginx_user }}'
-    group: '{{ server_nginx_user }}'
-    mode: '0555'
+    owner: pacmanrepo
+    group: pacmanrepo
+    mode: '{{ server_pacmanrepo_access_rights | default("0555") }}'
     state: directory
   loop:
     - '/var/lib/pacman-repo'
+    - '/var/lib/pacman-repo/packages'
   tags:
     - config
 
@@ -28,14 +36,9 @@
   notify: restart_nginx
   tags:
     - config
-
-- name: 'Create scripts'
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    mode: '0700'
-  loop:
-    - { src: "server_pacmanrepo_update.j2", dest: "/usr/local/bin/server_pacmanrepo_update" }
-    - { src: "server_pacmanrepo_collect.j2", dest: "/usr/local/bin/server_pacmanrepo_collect" }
-  tags:
-    - config
+    
+- name: 'Create empty repo'
+  command: 'repo-add /var/lib/pacman-repo/packages/{{ server_pacmanrepo_name }}.db.tar.zst'
+  args:
+    creates: /var/lib/pacman-repo/packages/{{ server_pacmanrepo_name }}.db.tar.zst
+  when: server_pacmanrepo_name is defined

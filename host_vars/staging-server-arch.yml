@@ -8,6 +8,20 @@ public_ip_v6: "{{ netconf[hostname].ip_v6 }}"
 hosts_additional_aliases:
   - "auth.meet.{{ domain }}"
   - "focus.meet.{{ domain }}"
+  
+pacman_repos:
+  - name: "testrepo"
+    server: "https://repo.staging.arch"
+    siglevel: Optional
+
+hosts_entries:
+  - name: staging-repo-arch
+    ip: "{{ hostvars['staging-repo-arch'].public_ip_v4 }}"
+    domain: staging.arch
+    subdomains:
+      - repo
+    aliases:
+    - repo-arch
 
 letsencrypt_mail: "hostmaster@{{ domain }}"
 letsencrypt_port: "8000"

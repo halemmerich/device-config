@@ -1,6 +1,7 @@
 [arch]
 staging-server-arch
 staging-desktop-arch
+staging-repo-arch
 
 [debian]
 staging-server-debian
@@ -8,6 +9,12 @@ staging-server-debian
 [desktop]
 staging-desktop-arch
 staging-desktop-debian
+
+[server_pacman_repo]
+staging-repo-arch
+
+[builder_pacman_repo]
+staging-repo-arch
 
 [server_arch]
 staging-server-arch
@@ -21,9 +28,6 @@ staging-server-arch
 staging-server-debian
 
 [server_remotely]
-staging-server-arch
-
-[server_pacman_repo]
 staging-server-arch
 
 [server_syncplay]

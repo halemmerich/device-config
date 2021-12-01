@@ -1,9 +1,0 @@
-#!/bin/bash
-
-if [ -d /home/aur_builder/.cache/yay ]
-then
-	find /home/aur_builder/.cache/yay -name "*.tar.zst" -exec cp {} /var/lib/pacman-repo \;
-fi
-
-chown {{ server_nginx_user }}:{{ server_nginx_user }} -R /var/lib/pacman-repo
-chmod 444 /var/lib/pacman-repo/*

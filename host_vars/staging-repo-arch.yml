@@ -1,0 +1,54 @@
+domain: "staging.arch"
+hostname: "staging-repo-arch"
+fqdn: "{{ hostname }}.{{ domain }}"
+public_ip_v4: "{{ netconf[hostname].ip_v4 }}"
+public_ip_v6: "{{ netconf[hostname].ip_v6 }}"
+
+locales:
+  - en_US.UTF-8
+keymaps:
+  - en-latin1-nodeadkeys
+  
+letsencrypt_mail: "hostmaster@{{ domain }}"
+letsencrypt_port: "8000"
+letsencrypt_fake: true
+
+backup_server_port: "22"
+backup_server_user: "admin"
+backup_server_host: "localhost"
+backup_server_path: "/backup"
+restore_server_port: "{{ backup_server_port }}"
+restore_server_user: "{{ backup_server_user }}"
+restore_server_host: "{{ backup_server_host}}"
+restore_server_path: "{{ backup_server_path}}"
+
+server_nginx_user: "http"
+server_nginx_group: "http"
+server_nginx_port_https_backend: "4444"
+server_nginx_port_https_backend_proxy: "4445"
+server_nginx_port_http: "80"
+server_nginx_port_tls: "443"
+server_nginx_port_tls_no_pp: "4440"
+server_nginx_default_domains:
+  - "{{ domain }}"
+  
+server_pacmanrepo_name: "testrepo"
+server_pacmanrepo_target: "/var/lib/pacman-repo/packages"
+server_pacmanrepo_keys:
+  - 0FDE7BE0E88F5E48
+server_pacmanrepo_deps:
+  - sope
+  - libwbxml
+server_pacmanrepo_packages:
+  - yay
+  - sogo
+  - apache-tools
+  - jitsi-meet-bin
+  - jitsi-videobridge-bin
+  - jitsi-meet-prosody-bin
+  - jitsi-meet-turnserver-bin
+  - jicofo-bin
+  - prosody-modules-hg
+  - lua-event
+  - wlr-randr
+  - xboxdrv

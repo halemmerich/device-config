@@ -6,6 +6,20 @@
   - hosts
   - common
 
+- hosts: server_pacman_repo
+  become: yes
+  remote_user: admin
+  roles:
+  - ufw
+  - server-pacman-repo
+
+- hosts: builder_pacman_repo
+  become: yes
+  remote_user: admin
+  roles:
+  - ufw
+  - pacman-repo-builder
+
 - hosts: arch
   become: yes
   remote_user: admin
@@ -34,13 +48,6 @@
   - ufw
   - server-backup
   - server-syncplay
-
-- hosts: server_pacman_repo
-  become: yes
-  remote_user: admin
-  roles:
-  - ufw
-  - server-pacman-repo
 
 - hosts: server_remotely
   become: yes
@@ -76,6 +83,7 @@
   - server-sogo
   - server-fail2ban
   - util-run-letsencrypt-hooks
+
 
 - hosts: desktop
   become: yes

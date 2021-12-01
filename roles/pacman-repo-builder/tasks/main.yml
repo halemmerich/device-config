@@ -1,0 +1,90 @@
+- name: Install requirements
+  package:
+    name:
+    - base-devel
+    - git
+  tags:
+    - install
+
+- user:
+    name: pacmanrepobuilder
+    create_home: yes
+    home: /var/lib/pacman-repo-builder
+  tags:
+    - config
+
+- lineinfile:
+    path: /etc/sudoers.d/pacmanrepobuilder
+    line: 'pacmanrepobuilder ALL=(ALL) NOPASSWD: {{ item }}'
+    create: yes
+    validate: 'visudo -cf %s'
+  loop:
+    - /usr/bin/pacman
+  tags:
+    - config
+
+- name: Configure dir
+  file:
+    path: "{{ item }}"
+    owner: pacmanrepobuilder
+    group: pacmanrepobuilder
+    mode: '{{ server_pacmanrepo_access_rights | default("u=rwX,g=rX,o=rX") }}'
+    recurse: yes
+    state: directory
+  loop:
+    - '/var/lib/pacman-repo-builder'
+  tags:
+    - config
+
+- name: 'Create scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0755'
+  loop:
+    - { src: "server_pacmanrepo_build.j2", dest: "/usr/local/bin/server_pacmanrepo_build" }
+    - { src: "server_pacmanrepo_deploy.j2", dest: "/usr/local/bin/server_pacmanrepo_deploy" }
+  tags:
+    - config
+    
+- name: Set preconfigured keys
+  ansible.builtin.lineinfile:
+    path: /var/lib/pacman-repo-builder/keys.list
+    line: '{{ item }}'
+    create: yes
+  loop: "{{ server_pacmanrepo_keys }}"
+  when: server_pacmanrepo_keys is defined
+    
+- name: Set preconfigured package deps
+  ansible.builtin.lineinfile:
+    path: /var/lib/pacman-repo-builder/deps.list
+    line: '{{ item }}'
+    create: yes
+  loop: "{{ server_pacmanrepo_deps }}"
+  when: server_pacmanrepo_deps is defined
+  
+- name: Set preconfigured packages
+  ansible.builtin.lineinfile:
+    path: /var/lib/pacman-repo-builder/packages.list
+    line: '{{ item }}'
+    create: yes
+  loop: "{{ server_pacmanrepo_packages }}"
+  when: server_pacmanrepo_packages is defined
+
+- name: Ensure config is set
+  ansible.builtin.lineinfile:
+    path: /etc/pacmanrepo.conf
+    line: 'TARGET={{ server_pacmanrepo_target | default("") }}'
+    create: yes
+
+- name: Ensure config is set
+  ansible.builtin.lineinfile:
+    path: /etc/pacmanrepo.conf
+    line: 'REPO_NAME={{ server_pacmanrepo_name | default("") }}'
+    create: yes
+
+- name: Build
+  command: "server_pacmanrepo_build {{ server_pacmanrepo_name }}"
+  
+- name: Deploy
+  command: server_pacmanrepo_deploy
