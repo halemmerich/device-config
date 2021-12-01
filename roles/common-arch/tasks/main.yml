@@ -20,6 +20,17 @@
   tags:
     - config
 
+- name: Repos by Siglevel
+  ini_file:
+    path: /etc/pacman.conf
+    section: "{{ item.name }}"
+    option: SigLevel
+    value: "{{ item.siglevel }}"
+  when: item.siglevel is defined
+  loop: "{{ pacman_repos }}"
+  tags:
+    - config
+
 - name: 'Install'
   template:
     src: checkupdatesafety.j2
