@@ -6,3 +6,12 @@
   become_user: aur_builder
   tags:
     - install
+    
+- name: 'Install nginx - WORKAROUND'
+  kewlfft.aur.aur:
+    name:
+    - nginx-mod-njs
+  become: yes
+  become_user: aur_builder
+  tags:
+    - install
