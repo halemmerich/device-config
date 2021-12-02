@@ -4,6 +4,7 @@
 - package:
     name:
       - python3-lxml
+      - python3-pymysql
       - apt-transport-https
   tags:
     - install
