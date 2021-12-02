@@ -19,9 +19,9 @@
   stat:
     path: '{{ nextcloud_path }}'
   register: install_path
-
+    
 - name: Install nextcloud
-  block:      
+  block:
   - name: Create temporary file
     tempfile:
       state: file
@@ -41,7 +41,6 @@
     file:
       path: "{{ download_repo.path }}"
       state: absent
-
   - name: Install
     block:
       - name: Configure directories
@@ -66,6 +65,7 @@
           group: '{{ server_nginx_user }}'
           extra_opts: [--strip-components=1]
         when: latest_determined.stdout is defined
+        
   when: not install_path.stat.exists
   tags:
     - install

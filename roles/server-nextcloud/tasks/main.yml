@@ -2,6 +2,16 @@
     
 - include_tasks: "{{ ansible_os_family | lower }}.yml"
 
+- name: Check config file
+  stat:
+    path: '{{ nextcloud_config_path }}'
+  register: config_path
+
+- name: Determine installed version from config
+  shell: 'grep version {{ nextcloud_config_path }} | grep -Eo "[0-9]{1,2}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" || true'
+  register: nextcloud_version_from_config
+  when: config_path.stat.exists
+
 - name: 'Create scripts'
   template:
     src: "{{ item.src }}"

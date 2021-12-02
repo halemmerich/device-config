@@ -34,7 +34,7 @@ $CONFIG = array (
 	  0 => '127.0.0.1',
   ),
   'dbtype' => 'mysql',
-  'version' => '21.0.0.18',
+  'version' => '{{ nextcloud_version_from_config.stdout | default( "" ) }}',
   'overwrite.cli.url' => 'https://nextcloud.{{ domain }}',
   'overwriteprotocol' => 'https',
   'overwritehost' => 'nextcloud.{{ domain }}',
