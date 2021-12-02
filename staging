@@ -16,6 +16,9 @@ staging-server-debian
 staging-desktop-arch
 staging-desktop-debian
 
+[desktop_arch]
+staging-desktop-arch
+
 [server_pacman_repo]
 staging-repo-arch
 
