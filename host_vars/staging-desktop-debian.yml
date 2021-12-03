@@ -18,6 +18,7 @@ server_subdomains:
   - webdav
   - xmpp
   - remotely
+  - mail
   
 hosts_entries:
   - name: staging-server-arch
