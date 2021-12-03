@@ -47,7 +47,7 @@ turnserver_backend_secure_port: "5349"
 turnserver_min_port: "50000"
 turnserver_max_port: "60000"
 
-server_mail_dh_param_size: "1024"
+server_mail_dh_param_size: "2048"
 
 mysql_root_password: "password_db_root_user"
 
