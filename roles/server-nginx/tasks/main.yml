@@ -79,6 +79,12 @@
   when: not privkey_file.stat.exists
   loop: "{{ server_nginx_default_domains }}"
 
+- name: "Create hook for letsencrypt cert deployment"
+  copy:
+    dest: "/etc/letsencrypt/renewal-hooks/post/nginx.sh"
+    mode: "0700"
+    content: "systemctl nginx reload"
+
 - name: 'Enable services'
   systemd:
     name: nginx
