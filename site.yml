@@ -28,7 +28,6 @@
   become: yes
   remote_user: admin
   roles:
-  - aurhelper
   - common-arch
 
 - hosts: debian
@@ -87,8 +86,14 @@
   - util-run-letsencrypt-hooks
 
 - hosts: ufw
+  become: yes
   roles:
   - ufw
+  
+- hosts: desktop_arch
+  become: yes
+  roles:
+  - aurhelper
 
 - hosts: desktop
   become: yes

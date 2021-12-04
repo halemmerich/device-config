@@ -58,14 +58,6 @@
     upgrade: yes
   tags:
     - upgrade
-    
-- name: Upgrade aur packages
-  kewlfft.aur.aur:
-    upgrade: yes
-  become: yes
-  become_user: aur_builder
-  tags:
-    - upgrade
 
 - name: Utilites
   package:
