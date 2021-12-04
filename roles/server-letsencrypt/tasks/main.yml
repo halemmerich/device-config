@@ -36,6 +36,8 @@
         - '/etc/letsencrypt/live/'
         - '/etc/letsencrypt/fake-ca/'
         - '/etc/letsencrypt/renewal-hooks/deploy'
+        - '/etc/letsencrypt/renewal-hooks/post'
+        - '/etc/letsencrypt/renewal-hooks/pre'
       tags:
         - config
         
