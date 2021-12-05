@@ -8,6 +8,11 @@ staging-server-debian
 staging-dns-arch
 staging-dns-debian
 
+[server_is]
+staging-repo-arch
+staging-dns-arch
+staging-dns-debian
+
 [arch]
 staging-server-arch
 staging-desktop-arch
