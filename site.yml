@@ -152,5 +152,6 @@
   - kernel
   - desktop
   - desktop-cinnamon
+  - desktop-sway
   - default-apps
 

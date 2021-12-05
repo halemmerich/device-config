@@ -1,0 +1,15 @@
+[LightDM]
+log-directory=/var/log/lightdm
+run-directory=/run/lightdm
+sessions-directory=/usr/share/lightdm/sessions:/usr/share/xsessions:/usr/share/wayland-sessions
+
+[Seat:*]
+{% if ansible_os_family == 'Archlinux' %}
+greeter-session=lightdm-elephant-greeter
+{% else %}
+greeter-session=lightdm-gtk-greeter
+{% endif %}
+session-wrapper=/etc/lightdm/Xsession
+
+[XDMCPServer]
+[VNCServer]

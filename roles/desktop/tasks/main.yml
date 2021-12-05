@@ -5,6 +5,16 @@
     - lightdm-gtk-greeter
   tags:
     - install
+    
+- name: Install arch UI components
+  kewlfft.aur.aur:
+    name:
+    - lightdm-elephant-greeter-git
+  when: ansible_os_family == "Archlinux"
+  become: yes
+  become_user: aur_builder
+  tags:
+    - install
 
 - name: enable lightdm
   systemd:
@@ -20,3 +30,24 @@
     - pipewire
   tags:
     - install
+
+- name: 'Create config'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0644'
+  loop:
+    - { src: "lightdm.conf.j2", dest: "/etc/lightdm/lightdm.conf" }
+  tags:
+    - config
+
+- name: 'Create config for elephant'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0644'
+  loop:
+    - { src: "elephant-greeter.conf.j2", dest: "/etc/lightdm/elephant-greeter.conf" }
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - config

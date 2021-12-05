@@ -1,0 +1,145 @@
+- name: Install software for sway desktop
+  package:
+    name:
+    - sway
+    - dmenu
+    - gnome-keyring
+    - pavucontrol
+    - dex
+    - gammastep
+    - wf-recorder
+    - waybar
+    - xdg-desktop-portal-wlr
+    - wofi
+    - qt5ct
+    - nemo
+  tags:
+    - install
+
+- name: Install generic UI components
+  package:
+    name:
+    - gdm
+    - gvfs-smb
+    - qt5-wayland
+    - libgnome-keyring
+    - ttf-dejavu
+    - swaylock
+    - pipewire-media-session
+    - libpipewire02
+    - otf-font-awesome
+    - xorg-xwayland
+  tags:
+    - install
+  when: ansible_os_family == "Archlinux"
+
+- name: Install generic UI components
+  package:
+    name:
+    - gdm3
+    - gvfs-backends
+    - qtwayland5
+    - ttf-bitstream-vera
+    - xwayland
+    - wlr-randr
+  tags:
+    - install
+  when: ansible_os_family == "Debian"
+
+- name: Install software for sway desktop
+  kewlfft.aur.aur:
+    name:
+    - wlr-randr
+  become: yes
+  become_user: aur_builder
+  tags:
+    - install
+  when: ansible_os_family == "Archlinux"
+
+- name: Create config dir waybar
+  file:
+    path: /home/{{item}}/.config/waybar
+    state: directory
+    owner: "{{ item }}"
+    group: "{{ item }}"
+  loop: "{{ sway_users }}"
+  tags:
+    - config
+
+- name: Create config dir sway
+  file:
+    path: /home/{{item}}/.config/sway
+    state: directory
+    owner: "{{ item }}"
+    group: "{{ item }}"
+  loop: "{{ sway_users }}"
+  tags:
+    - config
+
+- name: Configure waybar
+  template:
+    src: waybar/config.j2
+    dest: /home/{{item}}/.config/waybar/config
+    owner: "{{ item }}"
+    group: "{{ item }}"
+  loop: "{{ sway_users }}"
+  tags:
+    - config
+
+- name: Start user managers
+  systemd:
+    name: 'user@{{ users[item].uid }}.service'
+    state: started
+  loop: "{{ sway_users }}"
+  tags:
+    - config
+
+- name: Configure desktop capturing
+  become_user: "{{ item }}"
+  systemd:
+    name: pipewire-media-session
+    scope: user
+    enabled: yes
+  loop: "{{ sway_users }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ users[item].uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ users[item].uid }}/bus"
+  tags:
+    - config
+  when: ansible_os_family == "Archlinux"
+
+- name: Configure desktop capturing
+  become_user: "{{ item }}"
+  systemd:
+    name: xdg-desktop-portal
+    scope: user
+    enabled: yes
+  loop: "{{ sway_users }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ users[item].uid }}"
+  tags:
+    - config
+
+- name: Configure sway
+  template:
+    src: config.j2
+    dest: /home/{{item}}/.config/sway/config
+    owner: "{{ item }}"
+    group: "{{ item }}"
+  loop: "{{ sway_users }}"
+  tags:
+    - config
+
+- name: Session launcher
+  template:
+    src: sway.sh.j2
+    dest: /usr/local/bin/sway-session
+  tags:
+    - config
+
+- name: Session launcher
+  template:
+    src: custom-sway.desktop.j2
+    dest: /usr/share/wayland-sessions/custom-sway.desktop
+  tags:
+    - config

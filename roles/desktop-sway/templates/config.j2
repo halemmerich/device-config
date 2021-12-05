@@ -1,0 +1,176 @@
+input * xkb_layout de
+
+input * drag enabled
+input * tap enabled
+
+{% if sway_outputs is defined %}
+{% for current in sway_outputs %}
+{% if current.position is defined %}
+output {{ current.output }} position {{ current.position }}
+{% endif %}
+{% if current.mode is defined %}
+output {{ current.output }} mode {{ current.mode }}
+{% endif %}
+{% if current.scale is defined %}
+output {{ current.output }} scale {{ current.scale }}
+{% endif %}
+{% if current.scale_filter is defined %}
+output {{ current.output }} scale_filter {{ current.scale_filter }}
+{% endif %}
+{% if current.adaptive is defined %}
+output {{ current.output }} adaptive_sync {{ current.adaptive }}
+{% endif %}
+
+{% endfor %}
+{% endif %}
+
+set $cl_fore #ffffff
+set $cl_blue #2980b9
+set $cl_indi #e1c600
+set $cl_lgrey #4c555c
+set $cl_dgrey #35383d
+set $cl_urge #eb4d4b
+
+# Colors                border    bg       text     indi     childborder
+client.focused          $cl_dgrey $cl_blue $cl_fore $cl_indi $cl_dgrey
+client.focused_inactive $cl_lgrey $cl_lgrey $cl_fore $cl_indi $cl_dgrey
+client.unfocused        $cl_dgrey $cl_dgrey $cl_fore $cl_indi $cl_dgrey
+client.urgent           $cl_urge $cl_urge $cl_fore $cl_urge $cl_urge
+
+focus_follows_mouse no
+
+set $mod Mod4
+set $secondmod Mod1
+
+font pango:monospace 8
+
+floating_modifier $mod
+
+bindsym $mod+Return exec i3-sensible-terminal
+
+bindsym $mod+Shift+q kill
+
+bindsym $mod+d exec "wofi --show=drun -G"
+
+bindsym $mod+j focus left
+bindsym $mod+k focus down
+bindsym $mod+l focus up
+bindsym $mod+odiaeresis focus right
+
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+bindsym $mod+Shift+j move left
+bindsym $mod+Shift+k move down
+bindsym $mod+Shift+l move up
+bindsym $mod+Shift+odiaeresis move right
+
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+bindsym --whole-window $mod+Mod1+button1 mark --add quickswap
+bindsym --whole-window $mod+button1 swap container with mark quickswap; [con_mark="quickswap"] focus
+
+bindsym $mod+Mod1+x mark --add quickswap
+bindsym $mod+x swap container with mark quickswap; [con_mark="quickswap"] focus
+
+bindsym $mod+h split h
+
+bindsym $mod+v split v
+
+bindsym $mod+f fullscreen toggle
+
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+
+bindsym $mod+Shift+space floating toggle
+bindsym $mod+b border toggle
+
+bindsym $mod+space focus mode_toggle
+
+bindsym $mod+a focus parent
+
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+set $ws5 "5"
+set $ws6 "6"
+set $ws7 "7"
+set $ws8 "8"
+set $ws9 "9"
+set $ws10 "10"
+
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+bindsym $mod+5 workspace $ws5
+bindsym $mod+6 workspace $ws6
+bindsym $mod+7 workspace $ws7
+bindsym $mod+8 workspace $ws8
+bindsym $mod+9 workspace $ws9
+bindsym $mod+0 workspace $ws10
+
+bindsym $mod+Shift+1 move container to workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws2
+bindsym $mod+Shift+3 move container to workspace $ws3
+bindsym $mod+Shift+4 move container to workspace $ws4
+bindsym $mod+Shift+5 move container to workspace $ws5
+bindsym $mod+Shift+6 move container to workspace $ws6
+bindsym $mod+Shift+7 move container to workspace $ws7
+bindsym $mod+Shift+8 move container to workspace $ws8
+bindsym $mod+Shift+9 move container to workspace $ws9
+bindsym $mod+Shift+0 move container to workspace $ws10
+
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+r restart
+bindsym $mod+Shift+e exec "swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your X session.' -B 'Yes, exit sway' 'swaymsg exit'"
+
+mode "resize" {
+        bindsym j resize shrink width 10 px or 10 ppt
+        bindsym k resize grow height 10 px or 10 ppt
+        bindsym l resize shrink height 10 px or 10 ppt
+        bindsym odiaeresis resize grow width 10 px or 10 ppt
+
+        bindsym Left resize shrink width 10 px or 10 ppt
+        bindsym Down resize grow height 10 px or 10 ppt
+        bindsym Up resize shrink height 10 px or 10 ppt
+        bindsym Right resize grow width 10 px or 10 ppt
+
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+        bindsym $mod+r mode "default"
+}
+
+bindsym $mod+r mode "resize"
+
+mode passthrough {
+        bindsym $mod+p mode default
+}
+bindsym $mod+p mode passthrough
+
+bar {
+        swaybar_command waybar
+}
+
+bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+bindsym XF86MonBrightnessUp exec brightnessctl set +5%
+bindsym XF86AudioPlay exec playerctl play-pause
+bindsym XF86AudioNext exec playerctl next
+bindsym XF86AudioPrev exec playerctl previous
+
+for_window [app_id="launcher"] floating enable
+
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
+exec dex --autostart
+
