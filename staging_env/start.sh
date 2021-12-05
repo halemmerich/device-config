@@ -1,4 +1,8 @@
 #!/bin/bash
+command -v yq >/dev/null 2>&1 || { echo yq for yaml parsing is missing && exit 1; }
+command -v docker-compose >/dev/null 2>&1 || { echo docker-compose is missing && exit 1; }
+command -v ssh-keygen >/dev/null 2>&1 || { echo ssh-keygen is missing && exit 1; }
+
 KEY_SOURCE=/root/.ssh/id_rsa.pub
 
 if [ -f "staging.conf" ]
