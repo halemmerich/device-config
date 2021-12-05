@@ -75,7 +75,7 @@
 - name: Install java
   package:
     name:
-    - jre-openjdk
+    - jre11-openjdk
   when: ansible_os_family == "Archlinux"
   tags:
     - install
@@ -83,7 +83,7 @@
 - name: Install java
   package:
     name:
-    - default-jre
+    - openjdk-11-jre
   when: ansible_os_family == "Debian"
   tags:
     - install
