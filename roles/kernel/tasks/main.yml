@@ -1,0 +1,57 @@
+- name: Install Kernel and Headers
+  pacman:
+    name:
+      - linux
+      - linux-headers
+    state: present
+  tags:
+    - install
+
+- name: Detect systemd loader
+  stat:
+    path: /boot/loader
+  register: systemd_loader_folder
+  tags:
+    - config
+
+- name: Config systemd loader
+  block:
+  - name: Copy loader file for systemd boot
+    copy:
+      src: /boot/loader/entries/arch-lts.conf
+      dest: /boot/loader/entries/arch.conf
+      remote_src: yes
+    tags:
+      - config
+
+  - lineinfile:
+      path: /boot/loader/entries/arch.conf
+      regexp: 'linux /vmlinuz-linux'
+      line: 'linux /vmlinuz-linux'
+    tags:
+      - config
+
+  - lineinfile:
+      path: /boot/loader/entries/arch.conf
+      regexp: 'title'
+      line: 'Arch Linux'
+    tags:
+      - config
+
+  - lineinfile:
+      path: /boot/loader/entries/arch.conf
+      regexp: 'initrd /initramfs-linux'
+      line: 'initrd /initramfs-linux.img'
+    tags:
+      - config
+  when: systemd_loader_folder.stat.exists
+
+- name: Detect grub
+  stat:
+    path: /boot/grub/grub.cfg
+  register: grub_config_file
+  
+- name: Reconfig grub
+  shell:
+    cmd: "grub-mkconfig -o /boot/grub/grub.cfg"
+  when: grub_config_file.stat.exists

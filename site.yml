@@ -148,6 +148,8 @@
   become: yes
   roles:
   - X11
+  - kernel-zen
+  - kernel
   - desktop
   - desktop-cinnamon
   - default-apps

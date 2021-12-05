@@ -1,9 +1,8 @@
-- name: Install LTS Kernel and Headers
+- name: Install zen kernel
   pacman:
     name:
-      - linux-lts
-      - linux-lts-headers
-    state: present
+    - linux-zen
+    - linux-zen-headers
   tags:
     - install
 
@@ -11,30 +10,35 @@
   stat:
     path: /boot/loader
   register: systemd_loader_folder
-  tags:
-    - config
 
 - name: Config systemd loader
   block:
   - name: Copy loader file for systemd boot
     copy:
-      src: /boot/loader/entries/arch.conf
-      dest: /boot/loader/entries/arch-lts.conf
+      src: /boot/loader/entries/arch-lts.conf
+      dest: /boot/loader/entries/arch-zen.conf
       remote_src: yes
     tags:
       - config
 
   - lineinfile:
-      path: /boot/loader/entries/arch-lts.conf
+      path: /boot/loader/entries/arch-zen.conf
       regexp: 'linux /vmlinuz-linux'
-      line: 'linux /vmlinuz-linux-lts'
+      line: 'linux /vmlinuz-linux-zen'
     tags:
       - config
 
   - lineinfile:
-      path: /boot/loader/entries/arch-lts.conf
+      path: /boot/loader/entries/arch-zen.conf
+      regexp: 'title'
+      line: 'Arch Linux Zen'
+    tags:
+      - config
+
+  - lineinfile:
+      path: /boot/loader/entries/arch-zen.conf
       regexp: 'initrd /initramfs-linux.img'
-      line: 'initrd /initramfs-linux-lts.img'
+      line: 'initrd /initramfs-linux-zen.img'
     tags:
       - config
   when: systemd_loader_folder.stat.exists
