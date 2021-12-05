@@ -1,9 +1,0 @@
-
-
-STAGING_HOSTS="-i staging_hosts.example"
-[ -e "staging_hosts" ] && STAGING_HOSTS="-i staging_hosts"
-
-STAGING_NETCONF="staging_netconf.yml.example"
-[ -e "staging_netconf.yml" ] && STAGING_NETCONF="staging_netconf.yml"
-
-ansible-playbook $STAGING_HOSTS -i staging site.yml -e@$STAGING_NETCONF --skip-tags upgrade -l $@
