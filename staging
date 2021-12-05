@@ -57,6 +57,10 @@ staging-repo-arch
 staging-nas-arch
 staging-nas-debian
 
+[nas]
+staging-nas-arch
+staging-nas-debian
+
 [server_arch]
 staging-server-arch
 
