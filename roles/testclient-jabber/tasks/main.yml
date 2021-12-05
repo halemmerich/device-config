@@ -1,0 +1,42 @@
+- name: Install java
+  package:
+    name:
+    - jdk11-openjdk
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: Install java
+  package:
+    name:
+    - openjdk-11-jdk
+    - uuid-runtime
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+
+- name: 'Install dependencies'
+  package:
+    name:
+    - git
+    - maven
+  tags:
+    - install
+
+- name: 'Create script'
+  template:
+    src: jabber.j2
+    dest: '/usr/local/lib/testclient/jabber'
+    mode: '0755'
+  tags:
+    - config
+
+- name: Configure directories
+  file:
+    path: "{{ item }}"
+    mode: '0777'
+    state: directory
+  loop:
+    - '/var/lib/testclient/jabber'
+  tags:
+    - config

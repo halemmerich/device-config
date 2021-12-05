@@ -1,0 +1,25 @@
+#!/bin/bash
+. /etc/testclient/jabber
+mkdir -p "$TESTCLIENT_WORKDIR"/jabber/
+cd "$TESTCLIENT_WORKDIR"/jabber/
+
+EXPECTED_FAILURES=1
+
+if [ ! -d caas ]
+then
+	git clone https://github.com/iNPUTmice/caas.git
+	cd caas
+	JAVA_HOME={{ java_home }} mvn package
+	cd ..
+fi
+
+cd caas
+JABBER_USER="$USER@$DOMAIN"
+
+OUTPUT=$({{ java_home }}/bin/java -jar caas-app/target/caas-app.jar "$JABBER_USER" "$PASSWORD")
+RC=$?
+
+COUNT=$( echo "$OUTPUT" | grep FAILED | wc -l )
+
+echo "$OUTPUT"
+exit $(( $RC + $COUNT - $EXPECTED_FAILURES ))
