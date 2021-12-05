@@ -1,0 +1,8 @@
+[Unit]
+Description=Snapraid sync
+ 
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/
+ExecStart=bash /usr/local/bin/storage_maintenance full

@@ -1,0 +1,101 @@
+#!/bin/bash
+
+. /usr/local/bin/storage_helpers
+
+# check for dependencies
+
+STORAGE_META_DIR="$2"
+
+function openDevices {
+	STORAGE_META_DIR="$1"
+	KEYFILES="$(ls -A "$STORAGE_META_DIR/keyfiles" | grep keyfile_)"
+	DEVICES=""
+	
+	if [ -n "$KEYFILES" ]
+	then
+		storage_block_crypto map "$STORAGE_META_DIR/keyfiles" || return 1
+	fi
+	
+	pvscan
+	vgscan
+	lvscan
+}
+function closeDevices {
+	STORAGE_META_DIR="$1"
+	KEYFILES="$(ls -A "$STORAGE_META_DIR/keyfiles" | grep keyfile_)"
+	DEVICES=""
+	
+	if [ -n "$KEYFILES" ]
+	then
+		storage_block_crypto umap "$STORAGE_META_DIR/keyfiles"
+	fi
+	
+	pvscan
+	vgscan
+	lvscan
+}
+
+function defer {
+	STORAGE_META_DIR="$1"
+	[ "$(cat $STORAGE_META_DIR/.created)" == "btrfs" ] && storage_pool_btrfs $COMMAND "$@"
+	[ "$(cat $STORAGE_META_DIR/.created)" == "snapraid" ] && storage_pool_snapraid $COMMAND "$@"
+}
+
+function create {
+	STORAGE_META_DIR="$1"
+	[ -f "$STORAGE_META_DIR/.created" ] && echo Already initialized, exiting && exit 1
+
+	mkdir -p "$STORAGE_META_DIR/keyfiles"
+	touch "$STORAGE_META_DIR/devices"
+	touch "$STORAGE_META_DIR/.created"
+}
+
+function addPlain {
+	STORAGE_META_DIR="$1"
+	DEVICE="$2"
+	[ ! -f "$STORAGE_META_DIR/.created" ] && echo This is not a storage meta dir && exit 1
+	[ -z "$DEVICE" ] && echo Device to add is needed && exit 1
+	DEVICE_ID="$(getDeviceId $DEVICE)" || ( echo Could not get device ID; return 1 )
+	[ -z "$DEVICE_ID" ] && echo Device ID empty && return 1
+	echo "$DEVICE_ID" >> "$STORAGE_META_DIR"/devices
+}
+
+function automount {
+	[ ! -f /etc/storage/automount ] && { echo Storage automount config not found; exit 1; }
+	COMMAND=mount
+	for C in $(cat /etc/storage/automount)
+	do
+		defer "$C"
+	done
+}
+
+COMMAND=$1
+shift
+
+set +e
+ 
+[ -z "$COMMAND" ] && echo "Usage:
+storage_pool <mount|umount> <metadir>
+storage_pool scrub <metadir> <type>
+	Scrub the pool for errors, read only
+storage_pool maintenance <metadir> <type>
+	Regular maintenance of the pool, performs scrubbing and fixing of found errors
+storage_pool fix <metadir>
+	Repairs easy to fix errors
+storage_pool status <metadir> <type>
+storage_pool addPlain <metadir> <device>
+storage_pool automount <metadir>
+storage_pool openDevices <metadir>
+storage_pool closeDevices <metadir>"
+
+echo -e "\n"
+
+case $COMMAND in
+	addPlain) addPlain "$@" ;;
+	create) create "$@" ;;
+	automount) automount "$@" ;;
+	openDevices) openDevices "$@" ;;
+	closeDevices) closeDevices "$@" ;;
+	*) defer "$@" ;;
+esac
+

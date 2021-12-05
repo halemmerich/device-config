@@ -1,0 +1,301 @@
+#!/bin/bash
+
+. /usr/local/bin/storage_helpers
+
+# check for dependencies
+
+! command -v mkfs.btrfs 2>&1 > /dev/null && echo xfsprogs missing && exit 1
+! command -v mkfs.xfs 2>&1 > /dev/null && echo btrfs-progs missing && exit 1
+! command -v mergerfs 2>&1 > /dev/null && echo mergerfs missing && exit 1
+! command -v snapraid 2>&1 > /dev/null && echo snapraid missing && exit 1
+! command -v snapraid-btrfs 2>&1 > /dev/null && echo snapraid-btrfs missing && exit 1
+! command -v snapper 2>&1 > /dev/null && echo snapper missing && exit 1
+
+function snapraid_wrap {
+	CONFIG="$1"
+	shift
+	COMMAND="$1"
+	shift
+	case $COMMAND in
+		smart|up|down|status) ionice -c 3 snapraid -c "$CONFIG" "$COMMAND" "$@" ;;
+		*) ionice -c 3 snapraid-btrfs -c "$CONFIG" "$COMMAND" "$@" ;;
+	esac
+	return $?
+}
+
+function create {	
+	STORAGE_META_DIR="$1"
+	MERGERFS_OPTS="$2"
+	
+	[ ! -f "$STORAGE_META_DIR/.created" ] && storage_pool create "$@"
+	
+	[ -z "$MERGERFS_OPTS" ] && MERGERFS_OPTS="-ominfreespace=50G,fsname=$(basename $(pwd $STORAGE_META_DIR)),category.create=mfs,allow_other"
+	[ ! -d "$STORAGE_META_DIR/keyfiles" ] && echo Keyfiles missing, invalid meta data dir && exit 1
+	[ -f "$STORAGE_META_DIR/.created" ] && [ "$(cat "$STORAGE_META_DIR/.created")" == "snapraid" ] && echo Already initialized, exiting && exit 1
+	
+	touch "$STORAGE_META_DIR/data"
+	touch "$STORAGE_META_DIR/parity"
+	echo "exclude /.snapshots/" > "$STORAGE_META_DIR/snapraid.conf"
+	echo "$MERGERFS_OPTS" > "$STORAGE_META_DIR/mergerfs"
+	
+	echo "snapraid" > "$STORAGE_META_DIR/.created"
+}
+
+function add {
+	TYPE="$1"
+	STORAGE_META_DIR="$2"
+	DEVICE="$3"
+	ID="$(getDeviceId "$DEVICE")"
+	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
+	
+	[ ! -f "$STORAGE_META_DIR/.created" ] || [ ! "$(cat "$STORAGE_META_DIR/.created")" == "snapraid" ] && { echo Snapraid pool marker file missing, invalid meta data dir && exit 1; }
+	
+	umountPool "$STORAGE_META_DIR"
+	
+	DEVICES=""
+	
+	grep -q "$ID" "$STORAGE_META_DIR/devices" || echo "$ID" >> "$STORAGE_META_DIR/devices"
+	
+	storage_pool openDevices "$STORAGE_META_DIR" || return 1
+	
+	echo "$ID" >> "$STORAGE_META_DIR/$TYPE"
+	
+	FS=xfs
+	
+	[ "$TYPE" == "data" ] && [ ! -e /dev/mapper/${ID}_integrity ] && FS=btrfs
+	
+	mkfs.$FS "$(getTopDevice "$DEVICE")"
+	
+	mkdir -p "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID"
+	
+	mount "$(getTopDevice "$DEVICE")" "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID"
+	ORIGDIR=$(pwd)
+	cd "$STORAGE_META_DIR"
+	if [ "$TYPE" == data ]
+	then
+		echo "content $(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/snapraid.content" >> "snapraid.conf"
+		echo "data $ID $(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data" >> "snapraid.conf"
+		btrfs subvolume create "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data"
+		
+		snapper -c snapraid_$(getPoolName "$STORAGE_META_DIR")_$ID create-config --template snapraid "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data"
+		mkdir "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data/pool"
+		! [ -d $(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data/.snapshots ] && echo WARNING: snapshot subvolume was not created && btrfs subvolume create "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data/.snapshots"
+	else
+		echo "$TYPE $(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/snapraid.parity" >> "snapraid.conf"
+	fi
+	cd "$ORIGDIR"
+	
+	umount "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID" 2>&1 > /dev/null
+	
+	storage_block_crypto umap "$STORAGE_META_DIR/keyfiles"
+
+	storage_pool closeDevices "$STORAGE_META_DIR"
+}
+
+function mountPool {
+	STORAGE_META_DIR="$1"
+	
+	storage_pool openDevices "$STORAGE_META_DIR"
+	
+	btrfs device scan
+	
+	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
+
+
+	for C in $(cat "$STORAGE_META_DIR"/data)
+	do
+	        mkdir -p $(getMountpoint "$STORAGE_META_DIR" "pools")/$C
+	        mount $(getTopDevice "$(getDeviceForId "$C")") $(getMountpoint "$STORAGE_META_DIR" "pools")/$C
+	        MERGERFS_PARTS="$MERGERFS_PARTS":$(getMountpoint "$STORAGE_META_DIR" "pools")/"$C/data/pool"
+	done
+
+
+	for C in $(cat "$STORAGE_META_DIR"/parity)
+	do
+	        mkdir -p $(getMountpoint "$STORAGE_META_DIR" "pools")/$C
+			mount $(getTopDevice "$(getDeviceForId "$C")") $(getMountpoint "$STORAGE_META_DIR" "pools")/$C
+	done
+
+	mkdir -p $(getMountpoint "$STORAGE_META_DIR")
+
+	MERGERFS_PARTS=$(echo $MERGERFS_PARTS | sed -e "s|^:||")
+	MERGERFS_OPTS=$(cat "$STORAGE_META_DIR/mergerfs")
+
+	mergerfs $MERGERFS_OPTS $MERGERFS_PARTS $(getMountpoint "$STORAGE_META_DIR") || return 1
+	
+	mountLastSyncedSnapshot "$STORAGE_META_DIR"
+	return 0
+}
+
+function mountLastSyncedSnapshot {
+	STORAGE_META_DIR="$1"
+	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
+
+	umountLastSyncedSnapshot "$@"
+	
+	mkdir -p $(getMountpoint "$STORAGE_META_DIR")_synced
+
+	MERGERFS_PARTS=""
+
+	for C in $(cat "$STORAGE_META_DIR"/data)
+	do
+		SNAPNUMBER=$(snapper -c snapraid_$(getPoolName "$STORAGE_META_DIR")_$(basename "$C") list | grep synced | sort -u | tail -n 1 | cut -d ' ' -f1)
+
+		if [ -z "$SNAPNUMBER" ]
+		then
+			continue
+		fi
+
+		CUR_PATH=$(getMountpoint "$STORAGE_META_DIR" "pools")/"$C"/data/.snapshots/$SNAPNUMBER/snapshot/pool
+		if [ -n "$MERGERFS_PARTS" ]
+		then
+			MERGERFS_PARTS="$MERGERFS_PARTS:"
+			
+		fi
+		MERGERFS_PARTS="${MERGERFS_PARTS}${CUR_PATH}"
+	done
+
+	MERGERFS_PARTS=$(echo $MERGERFS_PARTS | sed -e "s|^:||")
+
+	[ -z "$MERGERFS_PARTS" ] && echo No snapshot to mount && return 1
+
+	mergerfs -o fsname=$(getPoolName "$STORAGE_META_DIR")_synced,ro $MERGERFS_PARTS $(getMountpoint "$STORAGE_META_DIR")_synced || return 1
+}
+
+function umountLastSyncedSnapshot {
+	STORAGE_META_DIR="$1"
+	MOUNTPOINT=$(getMountpoint "$STORAGE_META_DIR")_synced
+	umount "$MOUNTPOINT" 2>&1 > /dev/null
+	return 0
+}
+
+function umountPool {	
+	STORAGE_META_DIR="$1"
+	umount "$(getMountpoint "$STORAGE_META_DIR")" 2>&1 > /dev/null
+	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
+	
+	umountLastSyncedSnapshot "$STORAGE_META_DIR"
+	
+	RESULT=0
+	
+	for C in $(cat "$STORAGE_META_DIR"/devices)
+	do
+		umount "$(getMountpoint "$STORAGE_META_DIR" "pools")/$C" 2>&1 > /dev/null; RESULT=$((RESULT + $?))
+	done
+	
+	storage_pool closeDevices "$STORAGE_META_DIR"; RESULT=$((RESULT + $?))
+	
+	RESULT=$((RESULT + $?))
+	return $RESULT
+}
+
+function sync {	
+	STORAGE_META_DIR="$1"
+	
+	snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" sync && date > "$STORAGE_META_DIR/state_last_sync"
+	umountLastSyncedSnapshot "$STORAGE_META_DIR"
+	mountLastSyncedSnapshot "$STORAGE_META_DIR"
+	return 0
+}
+
+function fix {	
+	STORAGE_META_DIR="$1"
+	
+	snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" fix -e
+}
+
+function scrub {	
+	STORAGE_META_DIR="$1"
+	TYPE="$2"	
+	[ -z "$TYPE" ] && TYPE=mini
+	[ -z "$SCRUB_MINI_PERCENTAGE" ] && SCRUB_MINI_PERCENTAGE=10
+	[ -z "$SCRUB_MINI_AGE_DAYS" ] && SCRUB_MINI_AGE_DAYS=10
+	
+	if [ "$TYPE" == mini ]
+	then
+		snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" scrub -p "$SCRUB_MINI_PERCENTAGE" -o "$SCRUB_MINI_AGE_DAYS"
+	elif [ "$TYPE" == full ]
+	then
+		snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" scrub -p 100 -o 0
+		SNAPRAIDRESULT=$?
+		[ "$SNAPRAIDRESULT" -eq 0 ] && date > "$STORAGE_META_DIR/state_last_full_scrub"
+	fi
+}
+
+function maintenance {	
+	STORAGE_META_DIR="$1"
+	[ -e "$STORAGE_META_DIR/config" ] && . $STORAGE_META_DIR/config
+	TYPE="$2"
+	[ -z "$TYPE" ] && TYPE=mini
+	[ -z "$MAINTENANCE_MINI_SCRUB_PERCENTAGE" ] && MAINTENANCE_MINI_SCRUB_PERCENTAGE=10
+	[ -z "$MAINTENANCE_MINI_SCRUB_AGE_DAYS" ] && MAINTENANCE_MINI_SCRUB_AGE_DAYS=10
+	
+	# finished running aborted
+	snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" sync
+	scrub "$STORAGE_META_DIR" "$TYPE"
+	snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" cleanup
+}
+
+function status {
+	STORAGE_META_DIR="$1"
+	[ -e "$STORAGE_META_DIR/config" ] && . $STORAGE_META_DIR/config
+	TYPE="$2"
+	
+	# finished running aborted
+	
+	OUTPUT="$(snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" status)"
+	RESULT=0
+	ERRORS=0
+	echo "$OUTPUT" | grep -q DANGER && (( RESULT+=1 )) && (( ERRORS = ERRORS + $(echo "$OUTPUT" | grep DANGER | grep -Eo '[0-9]*') ))
+	echo "$OUTPUT" | grep -q "file errors" && (( RESULT+=1 )) && (( ERRORS = ERRORS + $(echo "$OUTPUT" | grep "file errors" | grep -Eo '[0-9]*') ))
+	echo "$OUTPUT" | grep -q "io errors" && (( RESULT+=1 )) && (( ERRORS = ERRORS + $(echo "$OUTPUT" | grep "io errors" | grep -Eo '[0-9]*') ))
+	echo "$OUTPUT" | grep -q "data errors" && (( RESULT+=1 )) && (( ERRORS = ERRORS + $(echo "$OUTPUT" | grep "data errors" | grep -Eo '[0-9]*') ))
+	
+	[ "$ERRORS" -gt 0 ] && echo Errors: "$ERRORS"
+	
+	[ -f "$STORAGE_META_DIR/state_last_full_scrub" ] && echo -n "Scrubbed: " && cat "$STORAGE_META_DIR/state_last_full_scrub"
+	[ -f "$STORAGE_META_DIR/state_last_sync" ] && echo -n "Synced: " && cat "$STORAGE_META_DIR/state_last_sync"
+	
+	[ "$TYPE" == full ] && echo --------- && echo "$OUTPUT"
+	#echo $RESULT
+	exit $RESULT
+}
+
+function backup {
+	echo NOT IMPLEMENTED
+	exit 1
+}
+
+COMMAND=$1
+shift
+
+set +e
+ 
+case $COMMAND in
+	mount) mountPool "$@" ;;
+	umount) umountPool "$@" ;;
+	create) create "$@" ;;
+	add) add "$@" ;;
+	remove) remove "$@" ;;
+	sync) sync "$@" ;;
+	fix) fix "$@" ;;
+	scrub) scrub "$@" ;;
+	maintenance) maintenance "$@" ;;
+	status) status "$@" ;;
+	backup) backup "$@" ;;
+	umountLastSyncedSnapshot) umountLastSyncedSnapshot "$@" ;;
+	mountLastSyncedSnapshot) mountLastSyncedSnapshot "$@" ;;
+	*) echo "Usage:
+storage_pool_snapraid <mount|umount> <metadir>
+storage_pool_snapraid create <metadir> <mergerfsopts>
+storage_pool_snapraid add <type> <metadir> <device>
+  type: data, parity, 2-parity, ... , 6-parity
+storage_pool_snapraid sync <metadir>
+storage_pool_snapraid scrub <metadir> <type>
+storage_pool_snapraid maintenance <metadir> <type>
+storage_pool_snapraid fix <metadir>
+storage_pool_snapraid backup <metadir> <type>
+storage_pool_snapraid status <metadir>" ;;
+esac
+
+

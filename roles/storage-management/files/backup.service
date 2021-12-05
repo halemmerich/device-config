@@ -1,0 +1,7 @@
+[Unit]
+Description=Backup
+ 
+[Service]
+Type=oneshot
+User=root
+ExecStart=bash /usr/local/bin/storage_backup auto

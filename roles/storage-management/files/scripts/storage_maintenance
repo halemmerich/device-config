@@ -1,0 +1,10 @@
+#!/bin/bash
+
+TYPE="$1"
+
+[ ! -f /etc/storage/maintenance/$TYPE ] && { echo Storage maintenance config for type $TYPE not found; exit 1; }
+
+for C in $(cat /etc/storage/maintenance/$TYPE)
+do
+	storage_pool maintenance "$C" $TYPE
+done

@@ -1,0 +1,84 @@
+#!/bin/bash
+
+. /usr/local/bin/storage_helpers 
+
+! command -v vgscan 2>&1 > /dev/null && echo lvm2 missing && exit 1
+
+set -x
+
+function addCache {
+	STORAGE_META_DIR="$1"
+	CACHE="$(getTopDevice "$2")"
+	VGNAME="$(getPoolName "$STORAGE_META_DIR")"
+	
+	storage_pool openDevices "$STORAGE_META_DIR"
+	
+	hdparm -W1 $CACHE
+	addToVg "$STORAGE_META_DIR" "$CACHE"
+	lvcreate -l 100%FREE -n "$(getDeviceId "$CACHE")_cache" $VGNAME $CACHE
+	
+	echo "$(getDeviceId "$CACHE")" > "$STORAGE_META_DIR"/cache
+	
+	updateCachedDrives "$STORAGE_META_DIR"
+	
+	storage_pool closeDevices "$STORAGE_META_DIR"
+}
+
+function updateCachedDrives {
+	STORAGE_META_DIR="$1"
+	CACHE=$(cat "$STORAGE_META_DIR"/cache)
+	for C in $(cat "$STORAGE_META_DIR"/cached)
+	do
+		lvconvert -y --type cache --cachemode writethrough --cachevol "${CACHE}_cache" "$(getPoolName "$STORAGE_META_DIR")"/"${C}_cached" || true
+	done
+}
+
+function addData {
+	STORAGE_META_DIR="$1"
+	CACHED="$(getTopDevice "$2")"
+	VGNAME="$(getPoolName "$STORAGE_META_DIR")"
+	
+	storage_pool openDevices "$STORAGE_META_DIR"
+	
+	hdparm -W0 $CACHED
+	addToVg "$STORAGE_META_DIR" "$CACHED"
+	
+	echo "$(getDeviceId "$CACHED")" > "$STORAGE_META_DIR"/cached
+	
+	updateCachedDrives "$STORAGE_META_DIR"
+	
+	lvcreate -l 100%FREE -n "$(getDeviceId "$CACHED")_cached" $VGNAME $CACHED
+	
+	storage_pool closeDevices "$STORAGE_META_DIR"
+}
+
+function addToVg {
+	STORAGE_META_DIR="$1"
+	DISK="$2"
+	VGNAME="$(getPoolName "$STORAGE_META_DIR")"
+	vgdisplay "$VGNAME" || vgcreate "$VGNAME" "$(getTopDevice "$DISK")"
+	vgextend "$VGNAME" "$(getTopDevice "$DISK")"
+}
+
+function create {
+	STORAGE_META_DIR="$1"
+	
+	[ ! -f "$STORAGE_META_DIR/.created" ] && storage_pool create "$@"
+	
+	touch "$STORAGE_META_DIR/cache"
+	touch "$STORAGE_META_DIR/cached"
+}
+
+COMMAND=$1
+shift
+ 
+case $COMMAND in
+	create) create "$@" ;;
+	addData) addData "$@" ;;
+	addCache) addCache "$@" ;;
+	*) echo "Usage:
+storage_block_cache create <metadir>
+storage_block_cache addCache <metadir> <device>
+storage_block_cache addData <metadir> <device>"
+;;
+esac

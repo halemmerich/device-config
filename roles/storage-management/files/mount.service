@@ -1,0 +1,12 @@
+[Unit]
+Description=Mount               
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/mountscript mount /root/keyfiles /media/storage
+ExecStop=/usr/local/bin/mountscript umount /root/keyfiles /media/storage
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+

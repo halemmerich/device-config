@@ -1,0 +1,297 @@
+#!/bin/bash
+. /usr/local/bin/storage_helpers
+
+! command -v cryptsetup 2>&1 > /dev/null && echo cryptsetup missing && exit 1
+
+function getDevicesFromKeydir {
+	KEYDIR=$1
+	[ -z "$KEYDIR" ] && echo Key directory path missing && exit 1
+	! [ -d "$KEYDIR" ] && echo Key directory missing && exit 1
+	[ $(ls "$KEYDIR/" | wc -l) -eq 0 ] && echo Keydir is empty && exit 1
+	
+	for C in "$KEYDIR/keyfile"*
+	do
+		[ -f "$C" ] && echo $(getDeviceForId $(basename "$C" | sed -e "s|keyfile_||"))
+	done
+}
+
+function mapAll {
+	KEYDIR=$1
+	DEVICE=$2
+ 
+	[ -z "$KEYDIR" ] && echo Key directory path missing && return 1
+	! [ -d "$KEYDIR" ] && echo Key directory missing && return 1
+	[ $(ls "$KEYDIR/" | wc -l) -eq 0 ] && echo Keydir is empty && return 1
+
+	if [ -n "$DEVICE" ]
+	then
+		mapSingle "$KEYDIR" "$DEVICE" || return 1
+	else
+		for C in "$KEYDIR/keyfile"*
+		do
+			[ -f "$C" ] && mapSingle "$KEYDIR" "$(basename "$C" | sed -e "s|keyfile_||")"
+		done
+	fi
+}
+
+function checkDevAvailable {
+	dd if="$DEVICE" of=/dev/null bs=512 count=1 status=none
+	if [ 0 -eq $? ]
+	then
+		#echo $DEVICE Read success on first try
+		return 0
+	fi
+
+	sleep 10s
+
+	dd if="$DEVICE" of=/dev/null bs=512 count=1 status=none
+	if [ 0 -eq $? ]
+	then
+		#echo $DEVICE Read success on second try
+		return 0
+	fi
+
+	echo Read failure on $DEVICE
+	return 1
+}
+
+function mapSingle {
+	KEYDIR="$1"
+	ID="$2"
+	DEVICE=""
+	[ -b "$ID" ] && DEVICE="$ID" && ID="$(getDeviceId "$DEVICE")"
+	[ -z "$DEVICE" ] && DEVICE="$(getDeviceForId "$ID")"
+	HEADER="$KEYDIR/luksHeader_$ID"
+	KEY="$KEYDIR/keyfile_$ID"
+
+	if [ -f $HEADER -a -f $KEY ]
+	then
+		echo Mapping "$DEVICE" to "$ID"
+		checkDevAvailable "$DEVICE" || return 1
+
+		if [ ! -b "/dev/mapper/${ID}_crypted" ]
+		then
+			cryptsetup luksOpen --key-file "$KEY" --header "$HEADER" "$DEVICE" "${ID}"_crypted || return 1
+		fi
+
+		if blkid "/dev/mapper/${ID}_crypted" | grep -q 'TYPE="DM_integrity"'
+		then
+			integritysetup open --integrity crc32 "/dev/mapper/${ID}"_crypted "${ID}"_integrity || return 1
+		fi
+	fi
+}
+ 
+function unmapAll {
+	KEYDIR="$1"
+	DEVICE="$2"
+ 
+	[ -z "$KEYDIR" ] && echo Key directory path missing
+	! [ -d "$KEYDIR" ] && echo Key directory missing
+	[ $(ls "$KEYDIR/" | wc -l) -eq 0 ] && echo Keydir is empty
+	
+	if [ -n "$DEVICE" ]
+	then
+		unmapSingle "$DEVICE"
+	else
+		for C in "$KEYDIR/keyfile"*
+		do
+			[ -f "$C" ] && unmapSingle $(basename "$C" | sed -e "s|keyfile_||")
+		done
+	fi
+}
+
+function unmapSingle {
+	ID="$1"
+	DEVICE=""
+	[ -b "$ID" ] && DEVICE="$ID" && ID="$(getDeviceId "$DEVICE")"
+	[ -z "$DEVICE" ] && DEVICE="$(getDeviceForId "$ID")"
+	HEADER="$KEYDIR/luksHeader_$ID"
+	KEY="$KEYDIR/keyfile_$ID"
+ 
+	if [ -f $HEADER -a -f $KEY ]
+	then
+		[ -b "/dev/mapper/"${ID}"_integrity" ] && integritysetup close "${ID}"_integrity
+		[ -b "/dev/mapper/"${ID}"_crypted" ] && cryptsetup luksClose "${ID}"_crypted
+	fi
+}
+
+function backup {
+	KEYDIR="$1"
+	DESTINATION=`pwd`
+	NAME="_$2"
+
+
+	if [ -z "$KEYDIR" ]
+	then
+		echo Key directory
+		exit 1
+	fi
+	cd "$KEYDIR"
+
+	WORKDIR=`mktemp -d`
+	chmod 700 "$WORKDIR"
+
+	COUNTER=0
+	for CURRENT in $(ls "luksHeader_"*)
+	do
+		COUNTER=$(( ++COUNTER ))
+		ID=`echo "$CURRENT" | cut -d '_' -f 2-`
+		HEADER="luksHeader_$ID"
+		KEY="keyfile_$ID"
+
+		if [ -f $HEADER -a -f $KEY ]
+		then
+			MASTERKEY="$WORKDIR/${COUNTER}_master_$ID"
+			QR="$WORKDIR/${COUNTER}_qr_$ID.png"
+			HEADERINFO="$WORKDIR/${COUNTER}_header_$ID.txt"
+			echo YES | cryptsetup luksDump --dump-master-key --master-key-file "$MASTERKEY" --key-file "$KEY" --header "$HEADER" DUMMYDEVICENOTUSED >> "$HEADERINFO" || exit 1
+			sed -i -e "$ d" "$HEADERINFO"
+			echo -n -e "MK:\n" >> "$HEADERINFO"
+			hexdump "$MASTERKEY" >> "$HEADERINFO"
+			qrencode -8 -l H -r "$MASTERKEY" -o "$QR"
+		fi
+	done
+
+	cd "$WORKDIR"
+
+	shred *master*
+	rm *master*
+
+	if [ `ls | wc -l` -gt 0 ]
+	then
+		COMMAND="( ";
+		COUNTER=0
+		LINE=""
+		PAGE=""
+
+		for C in *
+		do
+
+			case "$C" in
+			*.txt)
+				#COMMAND="$COMMAND ( -font DejaVu-Sans-Mono -pointsize 8 text:$C -gravity center -trim +repage"
+				LINE="$LINE ( -font DejaVu-Sans-Mono -pointsize 8 text:$C -gravity center -trim +repage "
+			;;
+			*.png)
+				#COMMAND="$COMMAND $C -gravity west +repage +append )"
+				LINE="$LINE $C -gravity west +repage +append ) "
+			;;
+			esac
+
+
+			if [ $(( COUNTER % 8 )) -eq 7 ]
+			then
+				COMMAND="$COMMAND ( $LINE -append ) "
+				PAGE=""
+				LINE=""
+			fi
+
+
+			COUNTER=$(( COUNTER + 1 ))
+
+
+		done
+
+		if [ $(( COUNTER % 8)) -ne 7 ]
+		then
+			COMMAND="$COMMAND ( $LINE -append ) "
+		fi
+
+		COMMAND="$COMMAND )"
+		convert $COMMAND -gravity north backup.pdf
+		mv backup.pdf "$DESTINATION/backup$NAME.pdf"
+	fi
+
+	shred "$WORKDIR/"*
+	rm -r "$WORKDIR"
+}
+
+function create {
+	[ -z "$2" ] && echo 'Usage: storage_block_crypto create <keydir> <device> <optional:withintegrity(yes/no)>' && exit 1
+	KEYDIR="$1"
+	DEVICE="$2"
+	
+	WITH_INTEGRITY="$3"
+
+	ADDITIONAL_PARAMS=""
+ 
+	ID="$(getDeviceId "$DEVICE")"
+	ID_CRYPTED="$ID"_crypted
+	ID_INTEGRITY="$ID"_integrity
+	HEADER="$KEYDIR/luksHeader_$ID"
+	KEY="$KEYDIR/keyfile_$ID"
+ 
+	echo -e "This will destroy all data at the following places:
+
+\tDisk device: $DEVICE
+\tHeader file: $HEADER
+\tKey file: $KEY
+ 
+It will not overwrite the complete disk with random data, this should be done before if needed."
+	read -p "Continue (y/n)?" CHOICE
+	case "$CHOICE" in 
+		y|Y ) ;;
+		n|N ) exit 1;;
+		* ) echo "invalid input"; exit 1;;
+	esac
+
+	mkdir -p "$KEYDIR"
+
+	dd if=/dev/random bs=1 count=8192 of="$KEY" status=none
+	dd if=/dev/zero bs=1049600 count=1 of="$HEADER" status=none
+
+	if [ ! -b "$DEVICE" ]
+	then
+		LOOPDEV=`losetup -f --show "$DEVICE"`
+		DEVICE="$LOOPDEV"
+	fi
+
+	lsblk
+
+	cryptsetup luksFormat --sector-size=4096 --header "$HEADER" --key-file "$KEY" --align-payload 0 $ADDITIONAL_PARAMS "$DEVICE"
+
+	chmod 400 "$KEY" "$HEADER"
+	cryptsetup open --key-file "$KEY" --header "$HEADER" "$DEVICE" "$ID_CRYPTED"
+
+	CRYPTED_DEVICE="/dev/mapper/$ID_CRYPTED"
+	INTEGRITY_DEVICE="/dev/mapper/$ID_INTEGRITY"
+
+	if [ "$WITH_INTEGRITY" = "yes" ]
+	then
+		integritysetup format --sector-size=4096 --integrity crc32 --no-wipe "$CRYPTED_DEVICE"
+		integritysetup open --integrity crc32 "$CRYPTED_DEVICE" "$ID_INTEGRITY"
+		integritysetup close "$ID_INTEGRITY"
+	fi
+
+	cryptsetup close "$ID_CRYPTED"
+
+	if [ -n "$LOOPDEV" ]
+	then
+		losetup -d "$LOOPDEV"
+	fi
+}
+ 
+COMMAND=$1
+shift
+
+set +e
+ 
+case $COMMAND in
+	map) mapAll "$@" ;;
+	umap) unmapAll "$@" ;;
+	create) create "$@" ;;
+	backup) backup "$@" ;;
+	devices) getDevicesFromKeydir "$@" ;;
+	id) getDeviceId "$1";;
+	device) getDeviceForId "$1";;
+	*) echo "Usage:
+storage_block_crypto <map|umap> <keydir>
+storage_block_crypto <map|umap> <keydir> <device>
+storage_block_crypto create <keydir> <device> [yes]
+storage_block_crypto backup <keydir>
+storage_block_crypto devices <keydir>
+storage_block_crypto device <id>
+storage_block_crypto id <device>" ;;
+esac
+
+

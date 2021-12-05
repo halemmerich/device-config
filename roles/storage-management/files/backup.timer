@@ -1,0 +1,9 @@
+[Unit]
+Description=Run backup scripts nightly
+ 
+[Timer]
+OnCalendar=*-*-* 1:30:00
+Persistent=true
+ 
+[Install]
+WantedBy=timers.target
