@@ -89,6 +89,7 @@
   roles:
   - testclient-common
   - testclient-jabber
+  - testclient-sogo
 
 - hosts: desktop_arch
   become: yes

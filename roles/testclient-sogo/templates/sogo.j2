@@ -1,0 +1,128 @@
+#!/bin/bash
+. /etc/testclient/sogo
+
+[ -n "$SOGO_PORT" ] && SOGO_PORT=443
+SOGO_PORT=:${SOGO_PORT}
+[ -z "$SOGO_PROTO" ] && SOGO_PROTO=https
+[ -z "$USERNAME" ] && USERNAME="$USER@$DOMAIN"
+
+
+CALDAVURI="${SOGO_PROTO}://sogo.${DOMAIN}${SOGO_PORT}/.well-known/caldav/"
+CARDDAVURI="${SOGO_PROTO}://sogo.${DOMAIN}${SOGO_PORT}/.well-known/carddav/"
+
+echo "CALDAV: $CALDAVURI
+CARDDAV: $CARDDAVURI"
+
+WORKDIR=$(mktemp -d)
+
+cat << EOF > "$WORKDIR/config"
+[general]
+status_path = "$WORKDIR/status/"
+
+[pair tester_contacts]
+a = "tester_contacts_local"
+b = "tester_contacts_remote"
+collections = ["from a", "from b"]
+metadata = ["displayname"]
+
+[storage tester_contacts_local]
+type = "filesystem"
+path = "$WORKDIR/contacts/"
+fileext = ".vcf"
+
+[storage tester_contacts_remote]
+type = "carddav"
+url = "$CARDDAVURI"
+username = "$USERNAME"
+password = "$PASSWORD"
+
+[pair tester_calendar]
+a = "tester_calendar_local"
+b = "tester_calendar_remote"
+collections = ["from a", "from b"]
+metadata = ["displayname", "color"]
+
+[storage tester_calendar_local]
+type = "filesystem"
+path = "$WORKDIR/calendars/"
+fileext = ".ics"
+
+[storage tester_calendar_remote]
+type = "caldav"
+url = "$CALDAVURI"
+username = "$USERNAME"
+password = "$PASSWORD"
+
+EOF
+
+export VDIRSYNCER_CONFIG="$WORKDIR/config"
+
+echo -e "y\n" | vdirsyncer discover tester_contacts
+echo -e "y\n" | vdirsyncer discover tester_calendar
+vdirsyncer sync
+
+RANDOMVALUE="$(uuidgen -r)"
+RANDOMVALUE1="$(uuidgen -r)"
+
+echo Create data
+
+cat /var/lib/testclient/sogo/testdata/SogoApp.ics | sed -e "s|^UID.*|UID:$(uuidgen -r)|" | sed -e "s|^SUMMARY.*|SUMMARY:Appointment_$RANDOMVALUE|" > "$WORKDIR/calendars/personal/SogoApp.ics"
+cat /var/lib/testclient/sogo/testdata/SogoTodo.ics | sed -e "s|^UID.*|UID:$(uuidgen -r)|" | sed -e "s|^SUMMARY.*|SUMMARY:Todo_$RANDOMVALUE|" > "$WORKDIR/calendars/personal/SogoTodo.ics"
+cat /var/lib/testclient/sogo/testdata/SogoCon.vcf | sed -e "s|^UID.*|UID:$(uuidgen -r)|" | sed -e "s|^FN.*|FN:Name_$RANDOMVALUE|" > "$WORKDIR/contacts/personal/SogoCon.vcf"
+
+vdirsyncer sync
+
+
+echo Clean and get file names
+
+rm -r "$WORKDIR"/calendars "$WORKDIR"/contacts "$WORKDIR"/status
+
+echo -e "y\n" | vdirsyncer discover tester_contacts
+echo -e "y\n" | vdirsyncer discover tester_calendar
+vdirsyncer sync
+
+
+FN_APP=$(grep "Appointment_$RANDOMVALUE" -r -l $WORKDIR/calendars)
+FN_TODO=$(grep "Todo_$RANDOMVALUE" -r -l $WORKDIR/calendars)
+FN_CON=$(grep "Name_$RANDOMVALUE" -r -l $WORKDIR/contacts)
+
+echo "Files are: 
+$FN_APP
+$FN_TODO
+$FN_CON"
+
+
+echo Modify data and sync
+
+sed -e "s|^SUMMARY.*|SUMMARY:Appointment_$RANDOMVALUE1|" -i "$FN_APP"
+sed -e "s|^SUMMARY.*|SUMMARY:Todo_$RANDOMVALUE1|" -i "$FN_TODO"
+sed -e "s|^FN.*|FN:Name_$RANDOMVALUE1|" -i "$FN_CON"
+
+vdirsyncer sync
+
+#cd $WORKDIR; bash
+echo Clean data and resync
+
+rm -r "$WORKDIR"/calendars "$WORKDIR"/contacts "$WORKDIR"/status
+
+echo -e "y\n" | vdirsyncer discover tester_contacts
+echo -e "y\n" | vdirsyncer discover tester_calendar
+vdirsyncer sync
+
+echo Check for change
+
+RC=0
+
+[ "SUMMARY:Appointment_$RANDOMVALUE1" != "$(grep SUMMARY "$FN_APP")" ] && echo Appointment update failed && RC=$(( RC + 1 ))
+[ "SUMMARY:Todo_$RANDOMVALUE1" != "$(grep SUMMARY "$FN_TODO")" ] && echo Todo update failed && RC=$(( RC + 1 ))
+[ "FN:Name_$RANDOMVALUE1" != "$(grep FN "$FN_CON")" ] && echo Contact update failed && RC=$(( RC + 1 ))
+
+
+echo Delete test data
+
+rm "$FN_APP" "$FN_TODO" "$FN_CON"
+vdirsyncer sync --force-delete
+
+rm -r "$WORKDIR"
+echo $RC
+exit $RC

@@ -1,0 +1,30 @@
+- name: 'Install dependencies'
+  package:
+    name:
+    - vdirsyncer
+  tags:
+    - install
+
+- name: Configure directories
+  file:
+    path: "{{ item }}"
+    mode: '0777'
+    state: directory
+  loop:
+    - '/var/lib/testclient/sogo'
+    - '/var/lib/testclient/sogo/testdata'
+  tags:
+    - config
+
+- name: 'Create script'
+  template:
+    src: '{{ item.src }}'
+    dest: '{{ item.dst }}'
+    mode: '0755'
+  loop:
+    - { src: "sogo.j2", dst: "/usr/local/lib/testclient/sogo" }
+    - { src: "testdata/SogoApp.ics.j2", dst: "/var/lib/testclient/sogo/testdata/SogoApp.ics" }
+    - { src: "testdata/SogoCon.vcf.j2", dst: "/var/lib/testclient/sogo/testdata/SogoCon.vcf" }
+    - { src: "testdata/SogoTodo.ics.j2", dst: "/var/lib/testclient/sogo/testdata/SogoTodo.ics" }
+  tags:
+    - config
