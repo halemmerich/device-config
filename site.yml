@@ -5,13 +5,11 @@
 
 - hosts: staging_fakeca
   become: yes
-  remote_user: admin
   roles:
     - client-fakeca
 
 - hosts: all
   become: yes
-  remote_user: admin
   roles:
   - hosts
   - ansible-deps
@@ -19,39 +17,33 @@
 
 - hosts: server_pacman_repo
   become: yes
-  remote_user: admin
   roles:
   - server-pacman-repo
 
 - hosts: builder_pacman_repo
   become: yes
-  remote_user: admin
   roles:
   - pacman-repo-builder
 
 - hosts: arch
   become: yes
-  remote_user: admin
   roles:
   - common-arch
 
 - hosts: debian
   become: yes
-  remote_user: admin
   roles:
   - common-debian
 
 
 - hosts: server_teamspeak
   become: yes
-  remote_user: admin
   roles:
   - server-backup
   - server-teamspeak
 
 - hosts: server_syncplay
   become: yes
-  remote_user: admin
   roles:
   - server-backup
   - server-syncplay
@@ -59,19 +51,16 @@
   
 - hosts: server_remotely
   become: yes
-  remote_user: admin
   roles:
   - server-remotely
 
 - hosts: server_arch
   become: yes
-  remote_user: admin
   roles:
   - pacmatic
   
 - hosts: server
   become: yes
-  remote_user: admin
   roles:
   - server-sshtunnel
   - server-backup
