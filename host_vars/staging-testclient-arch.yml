@@ -1,0 +1,12 @@
+domain: "staging.arch"
+hostname: "staging-testclient-arch"
+fqdn: "{{ hostname }}.{{ domain }}"
+
+java_home: "/usr/lib/jvm/default"
+
+locales:
+  - en_US.UTF-8
+keymaps:
+  - en-latin1-nodeadkeys
+
+letsencrypt_fake: true

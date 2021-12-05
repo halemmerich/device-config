@@ -83,7 +83,12 @@
   become: yes
   roles:
   - ufw
-  
+
+- hosts: testclient
+  become: yes
+  roles:
+  - testclient-common
+
 - hosts: desktop_arch
   become: yes
   roles:

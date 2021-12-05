@@ -3,6 +3,8 @@ staging-desktop-arch
 staging-desktop-debian
 staging-server-arch
 staging-server-debian
+staging-testclient-arch
+staging-testclient-debian
 
 [server_dns]
 staging-dns-arch
@@ -22,6 +24,10 @@ staging-dns-arch
 [debian]
 staging-server-debian
 staging-dns-debian
+
+[testclient]
+staging-testclient-arch
+staging-testclient-debian
 
 [desktop]
 staging-desktop-arch

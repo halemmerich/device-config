@@ -1,0 +1,17 @@
+- name: 'Create script'
+  template:
+    src: testclient.j2
+    dest: '/usr/local/bin/testclient'
+    mode: '0750'
+  tags:
+    - config
+
+- name: Configure directories
+  file:
+    path: "{{ item }}"
+    mode: '0755'
+    state: directory
+  loop:
+    - '/usr/local/lib/testclient/'
+  tags:
+    - config

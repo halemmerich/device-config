@@ -98,6 +98,7 @@ services:
       - /run/lock
       - /tmp
     volumes:
+      - testclientdata:/var/lib/testclient
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     
   staging-desktop-debian:
@@ -114,6 +115,41 @@ services:
       - /run/lock
       - /tmp
     volumes:
+      - testclientdata:/var/lib/testclient
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+
+  staging-testclient-arch:
+    build: archvnc/
+    image: archvnc:latest
+    cap_add:
+      - SYS_ADMIN
+    networks:
+      staging_net:
+        ipv4_address: 172.28.0.17
+        ipv6_address: "fe81::172:28:0:17"
+    tmpfs:
+      - /run
+      - /run/lock
+      - /tmp
+    volumes:
+      - testclientdata:/var/lib/testclient
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    
+  staging-testclient-debian:
+    build: debianvnc/
+    image: debianvnc:latest
+    cap_add:
+      - SYS_ADMIN
+    networks:
+      staging_net:
+        ipv4_address: 172.28.0.18
+        ipv6_address: "fe81::172:28:0:18"
+    tmpfs:
+      - /run
+      - /run/lock
+      - /tmp
+    volumes:
+      - testclientdata:/var/lib/testclient
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
 networks:
@@ -129,3 +165,4 @@ volumes:
   archrepodata:
   archbuilddatapkgs:
   archbuilddatarepo:
+  testclientdata:

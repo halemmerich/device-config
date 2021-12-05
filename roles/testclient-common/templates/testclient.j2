@@ -1,0 +1,53 @@
+#!/bin/bash
+
+[ -z "$2" ] && echo "At least command (cleanup, all, <service>) and domain are needed.
+Additional options: user password workdir"
+
+USER="$3"
+PASSWORD="$4"
+TESTCLIENT_WORKDIR="$5"
+
+[ -z "$USER" ] && USER=tester
+[ -z "$PASSWORD" ] && PASSWORD=tester
+[ -z "$TESTCLIENT_WORKDIR" ] && TESTCLIENT_WORKDIR=/var/lib/testclient/
+
+
+export COMMAND=$1
+export DOMAIN=$2
+export USER
+export PASSWORD
+export TESTCLIENT_WORKDIR
+
+if [ "cleanup" == "$COMMAND" ]
+then
+	rm -rf "$TESTCLIENT_WORKDIR"/*
+	exit 0
+fi
+
+TEMPLOG=$(mktemp)
+
+RC=0
+
+for C in /usr/local/lib/testclient/*
+do
+	
+	[ "all" != "$COMMAND" -a $(basename "$C") != "$COMMAND" ] && continue 
+	
+	if [ -z "$DEBUG" ]
+	then
+		bash "$C" > "$TEMPLOG" 2>&1
+	else
+		bash "$C" 2>&1 | tee "$TEMPLOG"
+	fi
+	
+	CRC=$?
+	[ $CRC -ne 0 ] && (( RC++ ))
+	[ 0 -eq "$CRC" ] && echo SUCCESS: $C || echo FAILED: $C
+done
+
+if [ $RC -ne 0 ]
+then
+	cat $TEMPLOG
+
+	echo Failure count is $RC
+fi

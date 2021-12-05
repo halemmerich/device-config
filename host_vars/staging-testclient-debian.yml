@@ -1,0 +1,12 @@
+domain: "staging.debian"
+hostname: "staging-testclient-debian"
+fqdn: "{{ hostname }}.{{ domain }}"
+
+java_home: "/usr/lib/jvm/default-java"
+
+locales:
+  - en_US.UTF-8
+keymaps:
+  - en-latin1-nodeadkeys
+
+letsencrypt_fake: true
