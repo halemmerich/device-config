@@ -1,0 +1,3 @@
+server_dns_config_path: "/etc/bind/named.conf"
+server_dns_zone_path: "/var/lib/bind/"
+server_dns_group: "bind"

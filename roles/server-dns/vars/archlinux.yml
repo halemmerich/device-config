@@ -1,0 +1,3 @@
+server_dns_config_path: "/etc/named.conf"
+server_dns_zone_path: "/var/named/"
+server_dns_group: "named"

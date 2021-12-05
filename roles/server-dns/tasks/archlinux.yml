@@ -1,0 +1,6 @@
+- name: 'Install'
+  package:
+    name:
+    - bind
+  tags:
+    - install

@@ -8,3 +8,9 @@ netconf:
   staging-server-debian:
     ip_v4: "172.28.0.12"
     ip_v6: "fe81::172:28:0:12"
+  staging-dns-arch:
+    ip_v4: "172.28.0.15"
+    ip_v6: "fe81::172:28:0:15"
+  staging-dns-debian:
+    ip_v4: "172.28.0.16"
+    ip_v6: "fe81::172:28:0:16"

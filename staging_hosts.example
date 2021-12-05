@@ -3,3 +3,5 @@ staging-server-debian ansible_host=172.28.0.12 ansible_port=22 ansible_user=ansi
 staging-desktop-arch ansible_host=172.28.0.13 ansible_port=22 ansible_user=ansible ansible_become_pass=ansible ansible_python_interpreter=/usr/bin/python3
 staging-desktop-debian ansible_host=172.28.0.14 ansible_port=22 ansible_user=ansible ansible_become_pass=ansible ansible_python_interpreter=/usr/bin/python3
 staging-repo-arch ansible_host=172.28.0.10 ansible_port=22 ansible_user=ansible ansible_become_pass=ansible ansible_python_interpreter=/usr/bin/python3
+staging-dns-arch ansible_host=172.28.0.15 ansible_port=22 ansible_user=ansible ansible_become_pass=ansible ansible_python_interpreter=/usr/bin/python3
+staging-dns-debian ansible_host=172.28.0.16 ansible_port=22 ansible_user=ansible ansible_become_pass=ansible ansible_python_interpreter=/usr/bin/python3

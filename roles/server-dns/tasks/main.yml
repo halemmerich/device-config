@@ -1,0 +1,30 @@
+- include_vars: "vars/{{ ansible_os_family | lower }}.yml"
+    
+- include_tasks: "{{ ansible_os_family | lower }}.yml"
+
+- name: Create config
+  template:
+    src: "named.conf.j2"
+    dest: "{{ server_dns_config_path }}"
+    mode: '0750'
+  tags:
+    - config
+
+- name: Create zone files
+  template:
+    src: "zone.j2"
+    dest: "{{ server_dns_zone_path }}/{{ item.filename }}"
+    mode: '0750'
+    group: "{{ server_dns_group }}"
+  loop: "{{ server_dns_zones }}"
+  when: item.master is not defined
+  tags:
+    - config
+
+- name: 'Enable services'
+  systemd:
+    name: named
+    state: restarted
+    enabled: yes
+  tags:
+    - config

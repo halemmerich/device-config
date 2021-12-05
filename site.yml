@@ -1,3 +1,8 @@
+- hosts: server_dns
+  become: yes
+  roles:
+  - server-dns
+
 - hosts: staging_fakeca
   become: yes
   remote_user: admin

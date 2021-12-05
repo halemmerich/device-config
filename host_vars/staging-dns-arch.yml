@@ -1,0 +1,59 @@
+domain: "staging.arch"
+hostname: "staging-dns-arch"
+fqdn: "{{ hostname }}.{{ domain }}"
+public_ip_v4: "{{ netconf[hostname].ip_v4 }}"
+public_ip_v6: "{{ netconf[hostname].ip_v6 }}"
+
+locales:
+  - en_US.UTF-8
+keymaps:
+  - en-latin1-nodeadkeys
+
+server_dns_allowrecursion:
+  - any
+server_dns_forwarders:
+  - 127.0.0.11
+server_dns_master: "{{ netconf['staging-dns-debian'].ip_v4 }}"
+server_dns_default_ttl: 600
+server_dns_zones:
+  - filename: "staging.arch.zone"
+    nameserver: "ns01.{{ domain }}."
+    mail: "root.{{ domain }}."
+    name: "{{ domain }}"
+    domain: "{{ domain }}"
+    records:
+      - {                             type: NS,    data: 'ns01.{{ domain }}.'                                                   }
+      - {                             type: NS,    data: 'ns02.{{ domain }}.'                                                   }
+      - { name: "ns01",               type: A,     data: '{{ netconf[hostname].ip_v4 }}'                                        }
+      - { name: "ns01",               type: AAAA,  data: '{{ netconf[hostname].ip_v6 }}'                                        }
+      - { name: "ns02",               type: A,     data: '{{ netconf["staging-dns-debian"].ip_v4 }}'                            }
+      - { name: "ns02",               type: AAAA,  data: '{{ netconf["staging-dns-debian"].ip_v6 }}'                            }
+      - { name: mail,                 type: A,     data: '{{ netconf[hostname].ip_v4 }}'                                        }
+      - { name: mail,                 type: AAAA,  data: '{{ netconf[hostname].ip_v6 }}'                                        }
+      - { name: "@",                  type: MX 10, data: 'mail'                                                                 }
+      - { name: "@",                  type: TXT,   data: '"v=spf1 +mx +a  -all"'                                                }
+      - { name: "@",                  type: A,     data: '{{ netconf["staging-server-arch"].ip_v4 }}'                           }
+      - { name: "@",                  type: AAAA,  data: '{{ netconf["staging-server-arch"].ip_v6 }}'                           }
+      - { name: "*",                  type: A,     data: '{{ netconf["staging-server-arch"].ip_v4 }}'                           }
+      - { name: "*",                  type: AAAA,  data: '{{ netconf["staging-server-arch"].ip_v6 }}'                           }
+      - { name: "conference",         type: CNAME, data: 'xmpp.{{ domain }}.'                                                   }
+      - { name: "_xmpp-client._tcp",  type: SRV,   data: '0 5 5222 xmpp.{{ domain }}.'                                          }
+      - { name: "_xmpp-server._tcp",  type: SRV,   data: '0 5 5269 xmpp.{{ domain }}.'                                          }
+      - { name: "_xmppconnect",       type: TXT,   data: '_xmpp-client-xbosh=https://xmpp.{{ domain }}:443/http-bind'           }
+      - { name: "_xmppconnect",       type: TXT,   data: '_xmpp-client-websocket=wss://xmpp.{{ domain }}:443/xmpp-websocket'    }
+      - { name: "_xmpps-client._tcp", type: SRV,   data: '0 5 443 xmpp.{{ domain }}'                                            }
+      - { name: "_xmpps-client._tcp", type: SRV,   data: '0 5 5223 xmpp.{{ domain }}'                                           }
+  - name: "staging.debian"
+    master: "{{ server_dns_master }}"
+  - name: "{{ netconf['staging-server-arch'].ip_v6 | ansible.netcommon.ipaddr('revdns') | regex_search('[0-9]+\\.(.*)\\.$','\\1') | first}}"
+    master: "{{ server_dns_master }}"
+  - filename: "{{ netconf['staging-server-arch'].ip_v4 | ansible.netcommon.ipaddr('revdns') | regex_search('[0-9]+\\.(.*)\\.$','\\1') | first}}"
+    nameserver: "ns01.{{ domain }}."
+    mail: "root.{{ domain }}."
+    domain: "staging.arch"
+    records:
+      - { name: "{{ netconf['staging-server-arch'].ip_v4 | ansible.netcommon.ipaddr('revdns') | regex_search('[0-9]+\\.(.*)$','\\1') | first }}",    type: NS,    data: 'ns01.{{ domain }}.'           }
+      - { name: "{{ netconf['staging-server-arch'].ip_v4 | ansible.netcommon.ipaddr('revdns') | regex_search('[0-9]+\\.(.*)$','\\1') | first }}",    type: NS,    data: 'ns02.{{ domain }}.'           }
+      - { name: "{{ netconf['staging-server-arch'].ip_v4 | ansible.netcommon.ipaddr('revdns') | regex_search('([0-9]+)\\..*$','\\1') | first }}",    type: PTR,   data: '{{ domain }}.'                }
+      - { name: "{{ netconf['staging-server-debian'].ip_v4 | ansible.netcommon.ipaddr('revdns') | regex_search('([0-9]+)\\..*$','\\1') | first }}",  type: PTR,   data: 'staging.debian.'              }
+

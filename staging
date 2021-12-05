@@ -4,13 +4,19 @@ staging-desktop-debian
 staging-server-arch
 staging-server-debian
 
+[server_dns]
+staging-dns-arch
+staging-dns-debian
+
 [arch]
 staging-server-arch
 staging-desktop-arch
 staging-repo-arch
+staging-dns-arch
 
 [debian]
 staging-server-debian
+staging-dns-debian
 
 [desktop]
 staging-desktop-arch

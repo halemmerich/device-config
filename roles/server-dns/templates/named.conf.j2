@@ -1,0 +1,62 @@
+options {
+    directory "{{ server_dns_zone_path }}";
+    pid-file "/run/named/named.pid";
+
+    listen-on-v6 { any; };
+    
+    allow-update { none; };
+
+	{% if server_dns_forwarders is defined %}
+	forwarders {
+		{% for forwarder in server_dns_forwarders %}
+		{{ forwarder }};
+		{% endfor %}
+	};
+	{% endif %}
+
+	{% if server_dns_allowrecursion is defined %}
+	allow-recursion {
+		{% for rule in server_dns_allowrecursion %}
+		{{ rule }};
+		{% endfor %}
+	};
+	{% endif %}
+
+    version none;
+    hostname "{{ hostname }}";
+    server-id none;
+};
+
+zone "localhost" IN {
+    type master;
+    file "localhost.zone";
+};
+
+zone "0.0.127.in-addr.arpa" IN {
+    type master;
+    file "127.0.0.zone";
+};
+
+zone "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa" {
+    type master;
+    file "localhost.ip6.zone";
+};
+
+{% for zone in server_dns_zones %}
+zone "{{ zone.name | default(zone.filename) }}" IN {
+	type {% if zone.master is defined %}slave{% else %}master{% endif %};
+	{% if zone.master is defined %}masters {
+		{{ zone.master}};
+	};
+	allow-transfer {
+		none;
+	};
+	{% else %}
+	file "{{ zone.filename }}";
+	allow-update {
+		none;
+	};
+	{% endif %}
+};
+
+{% endfor %}

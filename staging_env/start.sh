@@ -19,6 +19,9 @@ echo
 
 RC=0;
 
+
+NAMESERVERS=$(yq -r '.services | to_entries[] | select(.key | contains("dns")) | [ .value.networks.staging_net.ipv4_address ] | join(" ")' docker-compose.yml | sed 's/^/nameserver /')
+
 TEMPLOG=$(mktemp)
 
 mkdir -p keys
@@ -61,6 +64,15 @@ do
 	CRC=$?; [ $CRC -ne 0 ] && (( RC++ ))
 	echo - Set authorized keys with RC $CRC | tee -a $TEMPLOG
 	echo > $TEMPLOG
+	
+	if echo "$NAME" | grep -q -v dns
+	then
+		
+		docker exec -ti $C bash -c "echo -e \"$NAMESERVERS\" > /etc/resolv.conf" >> $TEMPLOG
+		CRC=$?; [ $CRC -ne 0 ] && (( RC++ ))
+		echo - Set /etc/resolv.conf with RC $CRC | tee -a $TEMPLOG
+		echo > $TEMPLOG
+	fi
 done
 
 echo
