@@ -10,18 +10,18 @@
 
 ## Tags:
 
-- config:
+- `config`
   Only configuration of already installed software. This explicitly means, that all config-tagged tasks can be run offline against the staging environment
-- install:
+- `install`
   Install software from repositories or other sources. Either via package management or manually.
-- upgrade:
+- `upgrade`
   Upgrade installed software, but do not change any configuration. Restoration of config is allowed, if the software rewrites its config on install.
 
 ## External ansible roles/collections
 
 Install with ansible-galaxy collection install
 
-    kewlfft.aur
+- `kewlfft.aur`
 
 ## Staging environment:
 

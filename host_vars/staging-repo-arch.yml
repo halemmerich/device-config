@@ -49,6 +49,8 @@ server_pacmanrepo_packages:
   - jitsi-meet-turnserver-bin
   - jicofo-bin
   - prosody-modules-hg
+  - nginx-mainline-mod-dav-ext
+  - nginx-mainline-mod-njs
   - lua-event
   - wlr-randr
   - xboxdrv

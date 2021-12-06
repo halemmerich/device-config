@@ -1,14 +1,15 @@
 - name: 'Install packages'
   package:
     name:
-    - nginx
+    - nginx-mainline
+  when: ansible_os_family == "Archlinux"
   tags:
     - install
 
-- name: 'Install'
+- name: 'Install packages'
   package:
     name:
-    - apache-tools
+    - nginx
   when: ansible_os_family == "Debian"
   tags:
     - install

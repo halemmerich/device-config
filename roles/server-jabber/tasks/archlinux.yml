@@ -1,8 +1,6 @@
 - name: 'Install'
-  kewlfft.aur.aur:
+  package:
     name:
      - prosody-modules-hg
-  become: yes
-  become_user: aur_builder
   tags:
     - install

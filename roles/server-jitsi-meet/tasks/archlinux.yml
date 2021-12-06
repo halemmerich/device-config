@@ -1,5 +1,5 @@
 - name: 'Install packages'
-  kewlfft.aur.aur:
+  package:
     name:
     - jre11-openjdk
     - jitsi-meet-bin
@@ -7,7 +7,5 @@
     - jitsi-meet-prosody-bin
     - jitsi-meet-turnserver-bin
     - jicofo-bin
-  become: yes
-  become_user: aur_builder
   tags:
     - install

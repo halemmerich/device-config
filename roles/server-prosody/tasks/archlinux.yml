@@ -4,14 +4,6 @@
     - prosody
     - lua52-sec
     - lua52-zlib
-  tags:
-    - install
-
-- name: 'Install'
-  kewlfft.aur.aur:
-    name:
     - lua52-event
-  become: yes
-  become_user: aur_builder
   tags:
     - install

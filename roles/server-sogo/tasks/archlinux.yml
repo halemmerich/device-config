@@ -1,17 +1,7 @@
 - name: 'Install'
-  kewlfft.aur.aur:
+  package:
     name:
     - sogo
-  become: yes
-  become_user: aur_builder
-  tags:
-    - install
-    
-- name: 'Install nginx - WORKAROUND'
-  kewlfft.aur.aur:
-    name:
-    - nginx-mod-njs
-  become: yes
-  become_user: aur_builder
+    - nginx-mainline-mod-njs
   tags:
     - install
