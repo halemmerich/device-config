@@ -1,5 +1,5 @@
 - name: 'Install'
-  aur:
+  kewlfft.aur.aur:
     name:
      - prosody-modules-hg
   become: yes

@@ -1,5 +1,5 @@
 - name: 'Install packages'
-  aur:
+  kewlfft.aur.aur:
     name:
     - jre11-openjdk
     - jitsi-meet-bin

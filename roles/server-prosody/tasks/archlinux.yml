@@ -8,7 +8,7 @@
     - install
 
 - name: 'Install'
-  aur:
+  kewlfft.aur.aur:
     name:
     - lua52-event
   become: yes

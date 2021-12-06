@@ -6,7 +6,7 @@
     - install
 
 - name: 'Install'
-  aur:
+  kewlfft.aur.aur:
     name:
     - apache-tools
   become: yes

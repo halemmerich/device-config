@@ -1,5 +1,5 @@
 - name: 'Install'
-  aur:
+  kewlfft.aur.aur:
     name:
     - nginx-mod-dav-ext
   become: yes

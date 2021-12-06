@@ -1,5 +1,5 @@
 - name: 'Install'
-  aur:
+  kewlfft.aur.aur:
     name:
     - sogo
   become: yes

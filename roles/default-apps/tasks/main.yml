@@ -22,7 +22,7 @@
     - install
 
 - name: Install
-  aur:
+  kewlfft.aur.aur:
     name:
     - chromium-widevine
   become_user: aur_builder

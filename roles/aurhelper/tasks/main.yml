@@ -24,7 +24,7 @@
     - install
 
 - name: Install yay
-  aur:
+  kewlfft.aur.aur:
     name: yay
   become: yes
   become_user: aur_builder

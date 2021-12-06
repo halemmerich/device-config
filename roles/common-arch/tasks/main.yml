@@ -44,7 +44,7 @@
     - upgrade
     
 - name: Upgrade aur packages
-  aur:
+  kewlfft.aur.aur:
     upgrade: yes
   become: yes
   become_user: aur_builder
