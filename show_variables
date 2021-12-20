@@ -1,0 +1,4 @@
+#!/bin/bash
+[ -z "$1" ] && echo Needs the inventory as first parameter && exit 1
+
+ansible-inventory --graph --vars -i "$@"
