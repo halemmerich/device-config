@@ -90,6 +90,7 @@
     name: nginx
     state: started
     enabled: yes
+  register: nginx_enabled
   notify: restart_nginx
   tags:
     - config
