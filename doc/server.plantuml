@@ -1,0 +1,92 @@
+@startuml
+
+node "server" {
+
+	folder "Externally reachable ports" {
+		interface "TCP Stream :{{ server_nginx_port_tls }}" as TCP_SSL
+		interface "HTTP :{{ server_nginx_port_http }}" as HTTP
+		interface "XMPPS Client:5223" as XMPPS
+		interface "HTTPS :5281" as HTTPS_PROSODY
+		interface "XMPP Client:5222" as XMPP_CLIENT
+		interface "XMPP Server:5269" as XMPP_SERVER
+		interface "STUN/TURN :3478/UDP" as STUNTURNUDP
+		interface "TURNS :5349" as TURNS
+		interface "JVB :10000/UDP" as JVB
+	}
+
+	interface "HTTP :20000" as HTTP_SOGO
+	interface "Unix MariaDB socket" as SOCKDB
+	interface "HTTPS :{{ server_nginx_port_https_backend }}" as HTTPS_BACKEND
+	interface "HTTP :5280" as HTTP_PROSODY
+	interface "XMPP Component:5347" as XMPP_COMPONENT
+
+	SOCKDB --> [MariaDB]
+	
+	HTTP ---> [NGINX Http]
+	HTTPS_BACKEND -> [NGINX Http]
+	TCP_SSL ---> [NGINX Stream]
+	
+	[NGINX Stream] ---[hidden] [NGINX Http]
+	
+	[NGINX Stream] ---> XMPPS : "ALPN xmpp-client\nALPN xmpp-server"	
+	[NGINX Stream] ---> TURNS : "SNI turn.server.tld"	
+	[NGINX Stream] -> HTTPS_BACKEND : "SNI nextcloud.server.tld\nSNI xmpp.server.tld\nSNI sogo.server.tld\ndefault"
+	
+	
+	together {
+		[Videobridge]
+		[Jicofo]
+		[Prosody]
+	}
+	
+	TURNS ----> [coturn]
+	STUNTURNUDP ----> [coturn]
+	[coturn] <--> JVB
+	
+	JVB ---> [Videobridge]
+	[Jicofo] ----> XMPP_COMPONENT
+	[Jicofo] ---> XMPP_CLIENT
+	[Videobridge] ---> XMPP_CLIENT
+	
+	together {
+		[Nextcloud]
+		[Jitsi Meet]
+		[SOGo]
+		[default]
+	}
+	
+	[NGINX Http] --> HTTP_SOGO
+	[NGINX Http] --> HTTP_PROSODY : "Bosh\nWebsocket"
+	[NGINX Http] .. [Nextcloud]
+	[NGINX Http] .. [Jitsi Meet]
+	[NGINX Http] .. [default]
+
+	HTTP_SOGO --> [SOGo]
+
+	[SOGo] --> SOCKDB
+	[Nextcloud] --> SOCKDB
+	
+	
+	XMPP_COMPONENT --> [Prosody]
+	XMPPS --> [Prosody]
+	XMPP_SERVER --> [Prosody]
+	XMPP_CLIENT --> [Prosody]
+	HTTP_PROSODY --> [Prosody]
+	HTTPS_PROSODY --> [Prosody]
+}
+
+cloud Internet {
+	[Conversations] ----> TCP_SSL
+	[Conversations] ----> XMPP_CLIENT
+	[Conversations] ----> STUNTURNUDP
+	[Conversations] ----> XMPPS
+	[XmppServer] -----> XMPP_SERVER
+	[Browser] ----> HTTP
+	[Browser] ----> TCP_SSL
+	[WebRTC] ----> STUNTURNUDP
+	[WebRTC] ----> TURNS
+	[WebRTC] ----> JVB
+	[WebRTC] ----> TCP_SSL
+}
+
+@enduml
