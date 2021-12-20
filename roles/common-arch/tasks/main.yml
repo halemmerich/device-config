@@ -41,6 +41,15 @@
   tags:
     - config
 
+- name: 'Create mirrorlist'
+  template:
+    src: "mirrorlist.j2"
+    dest: "/etc/pacman.d/mirrorlist"
+    mode: '0644'
+  when: pacman_mirrorlist is defined
+  tags:
+    - config
+
 - name: 'Install'
   template:
     src: checkupdatesafety.j2
