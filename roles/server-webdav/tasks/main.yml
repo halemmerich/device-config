@@ -82,20 +82,20 @@
     
 - name: Adds users to shares
   vars:
-    password: "{{ item.passwort | default(lookup('password', '/dev/null')) }}"
+    password: "{{ item.1.password | default(lookup('password', '/dev/null')) }}"
   shell:
     cmd: 'server_webdav_adduser "{{ item.0.name }}" "{{ item.1.name}}"'
-    stdin: "{{ item.1.password }}\n"
+    stdin: "{{ password }}\n"
   loop: "{{ webdav_server_shares | subelements('users', 'skip_missing=true') }}"
   tags:
     - config
     
 - name: Resets passwords
   vars:
-    password: "{{ item.passwort }}"
+    password: "{{ item.1.password }}"
   shell:
     cmd: 'server_webdav_resetpwd "{{ item.0.name }}" "{{ item.1.name }}"'
-    stdin: "{{ item.1.password }}\n"
+    stdin: "{{ password }}\n"
   when: item.1.password is defined
   loop: "{{ webdav_server_shares | subelements('users', 'skip_missing=true') }}"
   tags:
