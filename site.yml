@@ -90,6 +90,7 @@
   - testclient-common
   - testclient-jabber
   - testclient-sogo
+  - testclient-jitsi
 
 - hosts: desktop_arch
   become: yes

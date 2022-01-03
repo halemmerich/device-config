@@ -1,0 +1,22 @@
+#!/bin/bash
+. /etc/testclient/jitsi
+mkdir -p "$TESTCLIENT_WORKDIR"/jitsi/
+cd "$TESTCLIENT_WORKDIR"/jitsi/
+
+if [ ! -d jitsi-meet-torture ]
+then
+	git clone https://github.com/jitsi/jitsi-meet-torture.git
+	cd jitsi-meet-torture
+	JAVA_HOME={{ java_home }} mvn package
+	cd ..
+fi
+
+cd jitsi-meet-torture
+
+Xnest :20 &
+PID_XNEST=$!
+DISPLAY=:20 mvn test -Djitsi-meet.instance.url="https://meet.$DOMAIN" -Djitsi-meet.tests.toRun=UDPTest
+RC=$?
+kill $PID_XNEST
+
+exit $RC
