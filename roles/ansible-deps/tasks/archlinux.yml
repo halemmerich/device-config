@@ -1,5 +1,7 @@
 - pacman:
    update_cache: yes
+  tags:
+    - upgrade
 
 - package:
     name:
