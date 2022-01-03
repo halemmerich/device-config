@@ -5,18 +5,7 @@ CheckSpace
 ParallelDownloads = 5
 SigLevel = Required DatabaseOptional
 LocalFileSigLevel = Optional
-
-[core]
-Include = /etc/pacman.d/mirrorlist
-
-[extra]
-Include = /etc/pacman.d/mirrorlist
-
-[community]
-Include = /etc/pacman.d/mirrorlist
-
-[multilib]
-Include = /etc/pacman.d/mirrorlist
+HookDir = /etc/pacman.d/hooks
 
 {% if pacman_repos is defined%}
 {% for current in pacman_repos %}
@@ -31,8 +20,23 @@ Server = {{ server }}
 Include = {{ include }}
 {% endfor %}
 {% endif %}
-{% if current.server is defined %}Server = {{ current.server }}{% endif %}
-{% if current.include is defined %}Include = {{ current.include }}{% endif %}
-SigLevel = {{ current.siglevel }}
+{% if current.server is defined %}Server = {{ current.server }}
+{% endif %}
+{% if current.include is defined %}Include = {{ current.include }}
+{% endif %}
+{% if current.siglevel is defined %}SigLevel = {{ current.siglevel }}
+{% endif %}
+
 {% endfor %}
+{% else %}
+
+[core]
+Include = /etc/pacman.d/mirrorlist
+
+[extra]
+Include = /etc/pacman.d/mirrorlist
+
+[community]
+Include = /etc/pacman.d/mirrorlist
+
 {% endif %}
