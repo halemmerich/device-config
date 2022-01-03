@@ -11,6 +11,10 @@ server {
     ssl_prefer_server_ciphers on;
     
     location / {
+        {% if server_pacmanrepo_users is defined %}
+        auth_basic  "Authenticate";
+        auth_basic_user_file /var/lib/pacman-repo/.htpasswd;
+        {% endif %}
         autoindex on;
     }
 }

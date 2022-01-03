@@ -4,6 +4,17 @@
     home: /var/lib/pacman-repo
   tags:
     - config
+
+- name: 'Create scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  loop:
+    - { src: "server_pacmanrepo_resetpwd.j2", dest: "/usr/local/bin/server_pacmanrepo_resetpwd" }
+    - { src: "server_pacmanrepo_adduser.j2", dest: "/usr/local/bin/server_pacmanrepo_adduser" }
+  tags:
+    - config
     
 - name: Configure pacmanrepo dir
   file:
@@ -42,3 +53,25 @@
   args:
     creates: /var/lib/pacman-repo/packages/{{ server_pacmanrepo_name }}.db.tar.zst
   when: server_pacmanrepo_name is defined
+  
+- name: Adds users
+  vars:
+    password: "{{ item.passwort | default(lookup('password', '/dev/null')) }}"
+  shell:
+    cmd: 'server_pacmanrepo_adduser "{{ item.name }}"'
+    stdin: "{{ password }}\n"
+  loop: "{{ server_pacmanrepo_users }}"
+  when: server_pacmanrepo_users is defined
+  tags:
+    - config
+    
+- name: Resets passwords
+  vars:
+    password: "{{ item.password }}"
+  shell:
+    cmd: 'server_pacmanrepo_resetpwd "{{ item.name }}"'
+    stdin: "{{ password }}\n"
+  when:  server_pacmanrepo_users is defined and item.password is defined
+  loop: "{{ server_pacmanrepo_users }}"
+  tags:
+    - config

@@ -1,0 +1,24 @@
+#!/bin/bash
+[ -z "$1" ] && echo data needed: USERNAME, PASSWORD from - && exit 1
+
+IFS= read PW
+
+if [ -z "$PW" ]
+then
+	PW=$(pwgen -n 10 | cat)
+fi
+
+USERNAME="$1"
+
+if [ ! -e "/var/lib/pacman-repo/.htpasswd" ]
+then
+	PARAMS="-c"
+fi
+
+echo "$PW" | htpasswd -i $PARAMS "/var/lib/pacman-repo/.htpasswd" $USERNAME
+
+chown pacmanrepo:{{ server_nginx_group }} "/var/lib/pacman-repo/.htpasswd"
+
+[ "$?" = 0 ] && echo New PWD is "$PW" || echo Done
+
+systemctl reload nginx
