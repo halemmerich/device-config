@@ -1,43 +1,8 @@
-- name: Repos by Include
-  ini_file:
-    path: /etc/pacman.conf
-    section: "{{ item.name }}"
-    option: Include
-    value: "{{ item.include }}"
-  when: item.include is defined
-  loop: "{{ pacman_repos }}"
-  tags:
-    - config
-
-- name: Repos by server
-  ini_file:
-    path: /etc/pacman.conf
-    section: "{{ item.name }}"
-    option: Server
-    value: "{{ item.server }}"
-  when: item.server is defined
-  loop: "{{ pacman_repos }}"
-  tags:
-    - config
-
-- name: Repos by Siglevel
-  ini_file:
-    path: /etc/pacman.conf
-    section: "{{ item.name }}"
-    option: SigLevel
-    value: "{{ item.siglevel }}"
-  when: item.siglevel is defined
-  loop: "{{ pacman_repos }}"
-  tags:
-    - config
-
-- name: Parallel downloads for pacman
-  ini_file:
-    path: /etc/pacman.conf
-    section: "options"
-    option: ParallelDownloads
-    value: 5
-  when: item.siglevel is defined
+- name: 'Create pacman config'
+  template:
+    src: "pacman.conf.j2"
+    dest: "/etc/pacman.conf"
+    mode: '0644'
   tags:
     - config
 
@@ -65,7 +30,6 @@
     update_cache: yes
   tags:
     - upgrade
-    - install
 
 - name: Update keyring first
   shell: pacman -S --noconfirm archlinux-keyring

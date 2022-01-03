@@ -1,0 +1,38 @@
+[options]
+HoldPkg = pacman glibc
+Architecture = auto
+CheckSpace
+ParallelDownloads = 5
+SigLevel = Required DatabaseOptional
+LocalFileSigLevel = Optional
+
+[core]
+Include = /etc/pacman.d/mirrorlist
+
+[extra]
+Include = /etc/pacman.d/mirrorlist
+
+[community]
+Include = /etc/pacman.d/mirrorlist
+
+[multilib]
+Include = /etc/pacman.d/mirrorlist
+
+{% if pacman_repos is defined%}
+{% for current in pacman_repos %}
+[{{ current.name }}]
+{% if current.servers is defined %}
+{% for server in current.servers %}
+Server = {{ server }}
+{% endfor %}
+{% endif %}
+{% if current.includes is defined %}
+{% for include in current.includes %}
+Include = {{ include }}
+{% endfor %}
+{% endif %}
+{% if current.server is defined %}Server = {{ current.server }}{% endif %}
+{% if current.include is defined %}Include = {{ current.include }}{% endif %}
+SigLevel = {{ current.siglevel }}
+{% endfor %}
+{% endif %}
