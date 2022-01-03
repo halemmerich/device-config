@@ -1,0 +1,9 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = *
+[Action]
+Depends = coreutils
+When = PostTransaction
+Exec = /usr/bin/bash -c "rm -r /var/lib/pacman-repo/packages/cache; mkdir -p /var/lib/pacman-repo/packages/cache; cp -r /var/cache/pacman/pkg/* /var/lib/pacman-repo/packages/cache/; cp /var/lib/pacman/sync/*.db* /var/lib/pacman-repo/packages/cache/"

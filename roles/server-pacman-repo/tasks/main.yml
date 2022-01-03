@@ -31,6 +31,22 @@
   tags:
     - config
 
+- name: Configure pacman hook dir
+  file:
+    path: "/etc/pacman.d/hooks"
+    mode: '0755'
+    state: directory
+  tags:
+    - config
+
+- name: Install pacman hook to keep cached files updated
+  template:
+    src: "pacman-repo-cache-update.hook.j2"
+    dest: "/etc/pacman.d/hooks/pacman-repo-cache-update.hook"
+    mode: '0700'
+  tags:
+    - config
+
 - name: 'Create certificates'
   command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
   args:
