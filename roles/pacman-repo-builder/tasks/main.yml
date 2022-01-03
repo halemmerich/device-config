@@ -36,6 +36,20 @@
   tags:
     - config
 
+- name: Configure dir
+  file:
+    path: "{{ item }}"
+    owner: pacmanrepobuilder
+    group: pacmanrepobuilder
+    mode: "u=rwX,g=,o="
+    recurse: yes
+    state: directory
+  loop:
+    - '/var/lib/pacman-repo-builder/.ssh'
+    - '/var/lib/pacman-repo-builder/.gnupg'
+  tags:
+    - config
+
 - name: 'Create scripts'
   template:
     src: "{{ item.src }}"
