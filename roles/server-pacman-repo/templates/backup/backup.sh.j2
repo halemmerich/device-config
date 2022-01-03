@@ -1,0 +1,8 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+mkdir -p $MOUNTDIR/pacmanrepo; (( RC |= $? ))
+
+rsync_backup /var/lib/pacman-repo/.htpasswd pacmanrepo/.htpasswd; (( RC |= $? ))
+
+exit $RC
