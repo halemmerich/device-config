@@ -1,15 +1,5 @@
-- name: Update cache
-  apt:
-    update_cache: yes
-  tags:
-    - upgrade
-    - install
-    
-- name: Upgrade packages
-  apt:
-    upgrade: yes
-  tags:
-    - upgrade
+- include_role:
+    name: util-package-upgrade
 
 - name: Utilites
   package:

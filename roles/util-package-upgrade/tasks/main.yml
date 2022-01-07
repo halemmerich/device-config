@@ -1,0 +1,33 @@
+- name: Update cache
+  pacman:
+    update_cache: yes
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: Update keyring first
+  shell: pacman -S --noconfirm archlinux-keyring
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: Upgrade packages
+  pacman:
+    upgrade: yes
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - upgrade
+
+- name: Update cache
+  apt:
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+    
+- name: Upgrade packages
+  apt:
+    upgrade: yes
+  when: ansible_os_family == "Debian"
+  tags:
+    - upgrade

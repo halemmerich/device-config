@@ -24,7 +24,7 @@
     group: root
   tags:
     - config
-    
+
 - name: Configure pacman hook dir
   file:
     path: "/etc/pacman.d/hooks"
@@ -33,22 +33,8 @@
   tags:
     - config
 
-- name: Update cache
-  pacman:
-    update_cache: yes
-  tags:
-    - upgrade
-
-- name: Update keyring first
-  shell: pacman -S --noconfirm archlinux-keyring
-  tags:
-    - upgrade
-
-- name: Upgrade packages
-  pacman:
-    upgrade: yes
-  tags:
-    - upgrade
+- include_role:
+    name: util-package-upgrade
 
 - name: Utilites
   package:
