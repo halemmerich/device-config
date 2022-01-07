@@ -31,7 +31,26 @@ server_nginx_port_tls: "443"
 server_nginx_port_tls_no_pp: "4440"
 server_nginx_default_domains:
   - "{{ domain }}"
-  
+
+pacman_repos:
+  - name: "core"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "extra"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "community"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "multilib"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "testrepo"
+    servers:
+     -  file:///var/lib/pacman-repo/packages
+    siglevel: Optional
+    
+pacman_mirrorlist:
+  - "http://repo.{{ domain }}:7878/$repo/os/$arch"
+  - "http://ftp.halifax.rwth-aachen.de/archlinux/$repo/os/$arch"
+  - "http://linux.rz.rub.de/archlinux/$repo/os/$arch"
+
 server_pacmanrepo_name: "testrepo"
 server_pacmanrepo_target: "/var/lib/pacman-repo/packages"
 server_pacmanrepo_keys:

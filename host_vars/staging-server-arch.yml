@@ -13,11 +13,23 @@ keymaps:
 hosts_additional_aliases:
   - "auth.meet.{{ domain }}"
   - "focus.meet.{{ domain }}"
-  
+
 pacman_repos:
+  - name: "core"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "extra"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "community"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "multilib"
+    include: "/etc/pacman.d/mirrorlist"
   - name: "testrepo"
     server: "https://repo.staging.arch"
     siglevel: Optional
+    
+pacman_mirrorlist:
+  - "http://repo.staging.arch:7878/$repo/os/$arch"
+
 
 hosts_entries:
   - name: staging-repo-arch
