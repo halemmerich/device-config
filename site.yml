@@ -1,29 +1,43 @@
 - hosts: server_dns
   become: yes
   roles:
+  - util-package-upgrade
   - server-dns
 
 - hosts: staging_fakeca
   become: yes
   roles:
-    - client-fakeca
+  - util-package-upgrade
+  - client-fakeca
+
+- hosts: server_pacman_repo
+  become: yes
+  roles:
+  - util-package-upgrade
+  - server-pacman-repo
+
+- hosts: builder_pacman_repo
+  become: yes
+  roles:
+  - util-package-upgrade
+  - pacman-repo-builder
+
+- hosts: all
+  become: yes
+  roles:
+  - custom-repos
+
+- hosts: server_pacman_cache
+  become: yes
+  roles:
+  - util-package-upgrade
+  - server-pacman-cache
 
 - hosts: all
   become: yes
   roles:
   - hosts
   - ansible-deps
-  - common
-
-- hosts: server_pacman_repo
-  become: yes
-  roles:
-  - server-pacman-repo
-
-- hosts: builder_pacman_repo
-  become: yes
-  roles:
-  - pacman-repo-builder
 
 - hosts: staging_local
   become: yes
@@ -46,6 +60,11 @@
   become: yes
   roles:
   - common-debian
+
+- hosts: all
+  become: yes
+  roles:
+  - common
 
 - hosts: local
   become: yes
