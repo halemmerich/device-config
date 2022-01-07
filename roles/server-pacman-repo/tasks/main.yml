@@ -12,6 +12,7 @@
     mode: '0700'
   loop:
     - { src: "server_pacmanrepo_resetpwd.j2", dest: "/usr/local/bin/server_pacmanrepo_resetpwd" }
+    - { src: "server_pacmanrepo_update_cache.j2", dest: "/usr/local/bin/server_pacmanrepo_update_cache" }
     - { src: "server_pacmanrepo_adduser.j2", dest: "/usr/local/bin/server_pacmanrepo_adduser" }
     - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/webdav.sh" }
     - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/webdav.sh" }
@@ -44,6 +45,11 @@
     src: "pacman-repo-cache-update.hook.j2"
     dest: "/etc/pacman.d/hooks/pacman-repo-cache-update.hook"
     mode: '0700'
+  tags:
+    - config
+    
+- name: 'Create initial cache'
+  command: '/usr/local/bin/server_pacmanrepo_update_cache'
   tags:
     - config
 

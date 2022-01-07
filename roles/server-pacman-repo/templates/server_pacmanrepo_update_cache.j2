@@ -1,0 +1,4 @@
+#!/bin/sh
+mkdir -p /var/lib/pacman-repo/packages/cache
+rsync --delete /var/cache/pacman/pkg/ /var/lib/pacman-repo/packages/cache/
+cp /var/lib/pacman/sync/*.db* /var/lib/pacman-repo/packages/cache/
