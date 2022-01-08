@@ -62,7 +62,6 @@ staging-server-arch
 
 [server_syncplay]
 staging-server-arch
-
 [server_games]
 staging-gameserver-arch
 staging-gameserver-debian
