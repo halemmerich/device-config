@@ -162,3 +162,19 @@ webdav_server_shares:
     users:
       - name: tester
         password: "{{ testuser_pwd }}"
+
+linuxgsm_servers:
+  - name: valheim_test
+    type: vhserver
+    config: |
+        servername="{{ domain }} Valheim server"
+        serverpassword="{{testuser_pwd }}"
+        gameworld="vhserver"
+        port="2456"
+    dependencies:
+      - lib32-sdl2
+      - bc
+      - jq
+    ports:
+      - {port: "2456", proto: "udp"}
+      - {port: "2457", proto: "udp"}

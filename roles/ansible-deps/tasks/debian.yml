@@ -6,5 +6,6 @@
       - python3-lxml
       - python3-pymysql
       - apt-transport-https
+      - acl
   tags:
     - install

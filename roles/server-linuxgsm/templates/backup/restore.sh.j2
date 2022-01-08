@@ -1,0 +1,16 @@
+#!/bin/bash
+
+MOUNTDIR="$1"
+
+systemctl stop linuxgsm_{{ item.id }}
+
+{% for current in item.backup %}
+
+DATA_PATH="{{ current }}"
+rsync_restore "linuxgsm/{{ item.id }}/{{ current }}" ${DATA_PATH}
+
+chown {{ item.id }}:{{ item.id }} -R ${DATA_PATH}
+
+{% endfor %}
+
+systemctl start linuxgsm_{{ item.id }}

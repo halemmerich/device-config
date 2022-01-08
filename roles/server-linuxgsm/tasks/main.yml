@@ -1,0 +1,130 @@
+- name: 'Install dependencies'
+  package:
+    name:
+    - lib32-gcc-libs
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: 'Install dependencies'
+  package:
+    name:
+    - lib32gcc-s1
+    - lib32stdc++6
+    - curl
+    - iproute2
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+
+- name: 'Install per game server dependencies'
+  package:
+    name: "{{ item.dependencies }}"
+  loop: "{{ linuxgsm_servers }}"
+  tags:
+    - install
+
+- name: 'Create user'
+  user:
+    name: '{{ item.id }}'
+    state: present
+    shell: /bin/bash
+    create_home: yes
+    home: '/opt/linuxgsm/{{ item.id }}'
+  loop: "{{ linuxgsm_servers }}"
+  tags:
+    - config
+
+- name: 'Create service'
+  template:
+    src: 'linuxgsm.service.j2'
+    dest: '/etc/systemd/system/{{ item.id }}.service'
+    mode: '0644'
+  register: systemd
+  loop: "{{ linuxgsm_servers }}"
+  tags:
+    - config
+
+- name: 'Create backup script'
+  template:
+    src: "backup/backup.sh.j2"
+    dest: "/usr/local/lib/backupscripts/backup/{{ item.id }}.sh"
+    mode: '0700'
+  loop: "{{ linuxgsm_servers }}"
+  tags:
+    - config
+
+- name: 'Create restore script'
+  template:
+    src: "backup/restore.sh.j2"
+    dest: "/usr/local/lib/backupscripts/restore/{{ item.id }}.sh"
+    mode: '0700'
+  loop: "{{ linuxgsm_servers }}"
+  tags:
+    - config
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  when: systemd.changed
+  tags:
+    - config
+
+- name: Download LGSM
+  get_url:
+    url: https://linuxgsm.sh
+    dest: "/opt/linuxgsm/{{ item.id }}/linuxgsm.sh"
+    owner: '{{ item.id }}'
+    mode: '0700'
+  loop: "{{ linuxgsm_servers }}"
+  tags:
+    - install
+
+- name: Install manager
+  become: yes
+  become_user: "{{ item.id }}"
+  shell: "./linuxgsm.sh {{ item.type }}"
+  args:
+    creates: "/opt/linuxgsm/{{ item.id }}/{{ item.type }}"
+    chdir: "/opt/linuxgsm/{{ item.id }}"
+  loop: "{{ linuxgsm_servers }}"
+  tags:
+    - install
+
+- name: Install server
+  become: yes
+  become_user: "{{ item.id }}"
+  shell: "./{{ item.type }} auto-install"
+  args:
+    chdir: "/opt/linuxgsm/{{ item.id }}/"
+    creates: "/opt/linuxgsm/{{ item.id }}/serverfiles"
+  loop: "{{ linuxgsm_servers }}"
+  tags:
+    - install
+    
+- community.general.ufw:
+    rule: allow
+    port: "{{ item.1.port }}"
+    proto: "{{ item.1.proto }}"
+  loop: "{{ linuxgsm_servers | subelements('ports', skip_missing=True) }}"
+  when: ufw_enabled is defined
+  tags:
+    - config
+
+- name: 'Create config'
+  copy:
+    dest: "/opt/linuxgsm/{{ item.id }}/lgsm/config-lgsm/{{ item.type }}/{{ item.type }}.cfg"
+    content: "{{ item.config }}"
+    mode: '0640'
+  loop: "{{ linuxgsm_servers }}"
+  tags:
+    - config
+
+- name: 'Start service'
+  systemd:
+    name: '{{ item.id }}'
+    enabled: true
+    state: started
+  loop: "{{ linuxgsm_servers }}"
+  tags:
+    - config

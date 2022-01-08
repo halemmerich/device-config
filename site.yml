@@ -89,6 +89,12 @@
   - server-sogo
   - server-fail2ban
   - util-run-letsencrypt-hooks
+  
+- hosts: server_games
+  become: yes
+  roles:
+  - server-backup
+  - server-linuxgsm
 
 - hosts: ufw
   become: yes

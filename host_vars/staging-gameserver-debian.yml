@@ -1,0 +1,42 @@
+domain: "staging.debian"
+hostname: "staging-gameserver-debian"
+fqdn: "{{ hostname }}.{{ domain }}"
+
+public_ip_v4: "{{ netconf[hostname].ip_v4 }}"
+public_ip_v6: "{{ netconf[hostname].ip_v6 }}"
+
+locales:
+  - en_US.UTF-8
+keymaps:
+  - en-latin1-nodeadkeys
+  
+letsencrypt_fake: true
+debian_multiarch: true
+
+testadmin_pwd: "admin"
+testuser_pwd: "tester"
+
+backup_server_path: "/tmp"
+restore_server_path: "{{ backup_server_path}}"
+
+linuxgsm_servers:
+  - id: valheim_test
+    type: vhserver
+    config: |
+        servername="{{ domain }} Valheim server"
+        serverpassword="{{testuser_pwd }}"
+        gameworld="vhserver"
+        port="2456"
+    dependencies:
+      - netcat
+      - cpio
+      - bsdmainutils
+      - libsdl2-2.0-0:i386
+      - bc
+      - jq
+    backup:
+      - /opt/linuxgsm/valheim_test/.config/unity3d/IronGate/Valheim/worlds
+    ports:
+      - {port: "2456", proto: "udp"}
+      - {port: "2457", proto: "udp"}
+

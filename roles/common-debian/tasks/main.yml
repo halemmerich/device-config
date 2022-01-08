@@ -1,3 +1,7 @@
+- name: Add 32 bit architecture
+  command: dpkg --add-architecture i386
+  when: debian_multiarch is true
+  
 - include_role:
     name: util-package-upgrade
 

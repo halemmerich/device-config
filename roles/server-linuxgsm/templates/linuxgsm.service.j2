@@ -1,0 +1,15 @@
+[Unit]
+Description=LinuxGSM {{ item.type }} game server
+Wants=network.target
+
+[Service]
+WorkingDirectory=/opt/linuxgsm/{{ item.id }}/
+User={{ item.id }}
+Type=forking
+ExecStart=/opt/linuxgsm/{{ item.id }}/{{ item.type }} start
+ExecStop=/opt/linuxgsm/{{ item.id }}/{{ item.type }} stop
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
