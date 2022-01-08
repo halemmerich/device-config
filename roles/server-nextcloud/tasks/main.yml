@@ -2,6 +2,13 @@
     
 - include_tasks: "{{ ansible_os_family | lower }}.yml"
 
+- name: 'Install packages'
+  package:
+    name:
+    - inotify-tools
+  tags:
+    - install
+
 - name: Check config file
   stat:
     path: '{{ nextcloud_config_path }}'
