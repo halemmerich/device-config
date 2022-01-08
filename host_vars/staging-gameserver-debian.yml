@@ -13,59 +13,30 @@ keymaps:
 letsencrypt_fake: true
 debian_multiarch: true
 
-hosts_additional_aliases:
-  - "auth.meet.{{ domain }}"
-  - "focus.meet.{{ domain }}"
-
 testadmin_pwd: "admin"
 testuser_pwd: "tester"
 
-backup_server_port: "22"
-backup_server_user: "admin"
-backup_server_host: "localhost"
-backup_server_path: "/backup"
-restore_server_port: "{{ backup_server_port }}"
-restore_server_user: "{{ backup_server_user }}"
-restore_server_host: "{{ backup_server_host}}"
+backup_server_path: "/tmp"
 restore_server_path: "{{ backup_server_path}}"
-
-server_valheim_name: "{{ domain }} Valheim server"
-server_valheim_password: "{{testuser_pwd }}"
-server_valheim_world: "vhserver"
-server_valheim_port: 2456
 
 linuxgsm_servers:
   - id: valheim_test
     type: vhserver
     config: |
-        servername="{{ server_valheim_name }}"
-        serverpassword="{{server_valheim_password}}"
-        gameworld="{{server_valheim_world}}"
-        port="{{ server_valheim_port }}"
+        servername="{{ domain }} Valheim server"
+        serverpassword="{{testuser_pwd }}"
+        gameworld="vhserver"
+        port="2456"
     dependencies:
-      - curl
-      - wget
-      - file
-      - tar
-      - bzip2
-      - gzip
-      - unzip
+      - netcat
+      - cpio
       - bsdmainutils
-      - python3
-      - util-linux
-      - ca-certificates
-      - binutils
+      - libsdl2-2.0-0:i386
       - bc
       - jq
-      - tmux
-      - netcat-openbsd
-      - lib32gcc-s1
-      - lib32stdc++6
-      - cpio
-      - distro-info
-      - libsdl2-2.0-0:i386
     backup:
       - /opt/linuxgsm/valheim_test/.config/unity3d/IronGate/Valheim/worlds
     ports:
-      - {port: "{{ server_valheim_port }}", proto: "udp"}
-      - {port: "{{ server_valheim_port + 1 }}", proto: "udp"}
+      - {port: "2456", proto: "udp"}
+      - {port: "2457", proto: "udp"}
+
