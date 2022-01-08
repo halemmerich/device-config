@@ -13,13 +13,7 @@ letsencrypt_mail: "hostmaster@{{ domain }}"
 letsencrypt_port: "8000"
 letsencrypt_fake: true
 
-backup_server_port: "22"
-backup_server_user: "admin"
-backup_server_host: "localhost"
-backup_server_path: "/backup"
-restore_server_port: "{{ backup_server_port }}"
-restore_server_user: "{{ backup_server_user }}"
-restore_server_host: "{{ backup_server_host}}"
+backup_server_path: "/tmp"
 restore_server_path: "{{ backup_server_path}}"
 
 server_nginx_user: "http"

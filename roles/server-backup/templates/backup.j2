@@ -4,12 +4,20 @@ MOUNTDIR=$(mktemp -d)
 
 COMMAND=$1
 
+{% if backup_server_host is defined %}
 sshfs -p {{ backup_server_port }} {{ backup_server_user }}@{{ backup_server_host }}:{{ backup_server_path }} "$MOUNTDIR"
 
 SSHFS_RC=$?
+{% else %}
+MOUNTDIR={{ backup_server_path }}
+{% endif %}
 
 function rsync_backup {
-        rsync --info=progress2 -t -r -l --delete -e "ssh -p {{ backup_server_port }}" "$1" {{ backup_server_user }}@{{ backup_server_host }}:{{ backup_server_path }}/"$2"
+{% if backup_server_host is defined %}
+	rsync --info=progress2 -t -r -l --delete -e "ssh -p {{ backup_server_port }}" "$1" {{ backup_server_user }}@{{ backup_server_host }}:{{ backup_server_path }}/"$2"
+{% else %}
+	rsync --info=progress2 -t -r -l --delete "$1" {{ backup_server_path }}/"$2"
+{% endif %}
 }
 
 export -f rsync_backup
@@ -27,9 +35,14 @@ echo "To: admin@{{ domain }}" > $REPORT_MAIL_FILE
 echo "From: backup@{{ domain }}" >> $REPORT_MAIL_FILE
 echo "Subject: Backup report {{ fqdn }} - $(date)" >> $REPORT_MAIL_FILE
 
-OVERALL_RC=$SSHFS_RC
 
-if [ 0 -eq "$SSHFS_RC" ]
+{% if backup_server_host is defined %}
+OVERALL_RC=$SSHFS_RC
+{% else %}
+OVERALL_RC=0
+{% endif %}
+
+if [ 0 -eq "$OVERALL_RC" ]
 then
 	for C in /usr/local/lib/backupscripts/backup/*
 	do

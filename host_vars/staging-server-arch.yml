@@ -95,13 +95,7 @@ nextcloud_enabled_apps:
   - files_external
   - files_sharing
 
-backup_server_port: "22"
-backup_server_user: "admin"
-backup_server_host: "localhost"
-backup_server_path: "/backup"
-restore_server_port: "{{ backup_server_port }}"
-restore_server_user: "{{ backup_server_user }}"
-restore_server_host: "{{ backup_server_host}}"
+backup_server_path: "/tmp"
 restore_server_path: "{{ backup_server_path}}"
 
 sogo_server_users:

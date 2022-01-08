@@ -2,12 +2,20 @@
 
 MOUNTDIR=$(mktemp -d)
 
+{% if restore_server_host is defined %}
 sshfs -o ro -p {{ restore_server_port }} {{ restore_server_user }}@{{ restore_server_host }}:{{ restore_server_path }} "$MOUNTDIR"
 
 SSHFS_RC=$?
+{% else %}
+MOUNTDIR={{ restore_server_path }}
+{% endif %}
 
 function rsync_restore {
-        rsync --info=progress2 -t -r -l --delete -e "ssh -p {{ restore_server_port }}" {{ restore_server_user }}@{{ restore_server_host }}:{{ restore_server_path }}/"$1"  "$2"
+{% if restore_server_host is defined %}
+	rsync --info=progress2 -t -r -l --delete -e "ssh -p {{ restore_server_port }}" {{ restore_server_user }}@{{ restore_server_host }}:{{ restore_server_path }}/"$1"  "$2"
+{% else %}
+	rsync --info=progress2 -t -r -l --delete {{ restore_server_path }}/"$1"  "$2"
+{% endif %}
 }
 
 export -f rsync_restore
@@ -25,7 +33,11 @@ echo "To: admin@{{ domain }}" > $REPORT_MAIL_FILE
 echo "From: backup@{{ domain }}" >> $REPORT_MAIL_FILE
 echo "Subject: Backup report {{ fqdn }} - $(date)" >> $REPORT_MAIL_FILE
 
+{% if restore_server_host is defined %}
 OVERALL_RC=$SSHFS_RC
+{% else %}
+OVERALL_RC=0
+{% endif %}
 
 COMMAND=/usr/local/lib/backupscripts/restore/$1.sh
 	
@@ -36,7 +48,7 @@ then
 	exit 1
 fi
 
-if [ 0 -eq "$SSHFS_RC" ]
+if [ 0 -eq "$OVERALL_RC" ]
 then
 		echo Running $COMMAND
 		
@@ -68,5 +80,8 @@ SENDMAIL_COMMAND="sendmail admin@{{ domain }}"
 
 [ 0 -ne "$OVERALL_RC" ] && $SENDMAIL_COMMAND < $REPORT_MAIL_FILE
 
+{% if restore_server_host is defined %}
 umount "$MOUNTDIR" && rm -r "$MOUNTDIR"
+{% endif %}
+
 rm -r $REPORT_MAIL_DIR
