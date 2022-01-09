@@ -51,7 +51,7 @@ then
 		
 		su pacmanrepobuilder -c "find . -type f -not -path '*/\.git/*' -exec md5sum {} + | LC_ALL=C sort | md5sum > ../$C.md5"
 		
-		if [ "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 ] || [ $CRC -eq 0 ]
+		if [ ! \( "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
 		then
 			(( RC++ ))
 		fi
@@ -81,7 +81,7 @@ then
 		su pacmanrepobuilder -c "find . -type f -not -path '*/\.git/*' -exec md5sum {} + | LC_ALL=C sort | md5sum > ../$C.md5"
 		
 		CRC=$?
-		if [ "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 ] || [ $CRC -eq 0 ]
+		if [ ! \( "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
 		then
 			(( RC++ ))
 		fi
