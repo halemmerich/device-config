@@ -317,7 +317,14 @@
   loop: "{{ nextcloud_server_users }}"
   tags:
     - config
-    
+
+- name: Adds nextcloud user to webshare group
+  user:
+    name: "{{ nextcloud_user }}"
+    groups: webshare
+    append: yes
+  when: webshare_path.stat.exists
+  
 - name: Adds local storage
   shell:
     cmd: 'server_nextcloud_addstorage "{{ item.name }}" "{{ item.bigfileshare }}"'
