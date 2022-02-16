@@ -35,6 +35,8 @@
 
 - include_role:
     name: util-package-upgrade
+  tags:
+    - upgrade
 
 - name: Utilites
   package:
