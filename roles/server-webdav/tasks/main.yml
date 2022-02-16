@@ -4,18 +4,22 @@
     name: webshare
     state: present
 
+- user:
+    name: webshare
+    group: webshare
+
 - name: Configure directories
   file:
-    path: "{{ item }}"
-    owner: '{{ server_nginx_user }}'
-    group: 'webshare'
-    mode: '0700'
+    path: "{{ item.path }}"
+    owner: webshare
+    group: webshare
+    mode: "{{ item.ar }}"
     state: directory
   loop:
-    - '/var/lib/webdav'
-    - '/var/lib/webdav/cfg'
-    - '/var/lib/webdav/cfg/cleanup.d'
-    - '/var/lib/webdav/temp'
+    - { ar: '0750', path: '/var/lib/webdav' }
+    - { ar: '0770', path: '/var/lib/webdav/temp' }
+    - { ar: '0700', path: '/var/lib/webdav/cfg' }
+    - { ar: '0700', path: '/var/lib/webdav/cfg/cleanup.d' }
   tags:
     - config
 
@@ -23,7 +27,7 @@
   file:
     path: "{{ item }}"
     owner: '{{ server_nginx_user }}'
-    group: 'webshare'
+    group: webshare
     mode: '0770'
     state: directory
   loop:
