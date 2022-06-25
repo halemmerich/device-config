@@ -214,15 +214,22 @@
   tags:
     - config
 
-- name: Set config writable
+- name: Set config writable (writable)
+  lineinfile: 
+    dest: "{{ nextcloud_config_path }}"
+    state: absent 
+    regexp: ".*config_is_read_only.*"
+
+- name: Set config writable (installed)
   command:
-    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set config_is_read_only --value false"'
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set installed --value true"'
   tags:
     - config
 
-- name: Set config writable
-  command:
-    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set installed --value true"'
+- name: Set config writable (remove install file)
+  file:
+    path: '{{ nextcloud_config_path }}/CAN_INSTALL'
+    state: absent
   tags:
     - config
 
