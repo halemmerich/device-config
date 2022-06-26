@@ -55,7 +55,8 @@ then
 		then
 			(( RC++ ))
 		fi
-		pacman -U --asdeps --noconfirm *.pkg.tar.zst
+		
+		pacman -U --asdeps --noconfirm $(ls *.pkg.tar.zst | sort | tail -n 1)
 		cd ../..
 	done
 fi
