@@ -1,0 +1,7 @@
+#!/bin/bash
+
+su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set config_is_read_only --value true"
+chmod 440 {{ nextcloud_config_path }}
+
+echo Done
+

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-chmod 640 {{ nextcloud_config_path }}
+server_nextcloud_config_writable
 su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ maintenance:mode --off"
-chmod 440 {{ nextcloud_config_path }}
+server_nextcloud_config_readonly
 
 echo Done
 

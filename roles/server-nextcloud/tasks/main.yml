@@ -33,6 +33,9 @@
     - { src: "server_nextcloud_scanfiles.j2", dest: "/usr/local/bin/server_nextcloud_scanfiles" }
     - { src: "server_nextcloud_watchstorage.j2", dest: "/usr/local/bin/server_nextcloud_watchstorage" }
     - { src: "server_nextcloud_upgrade.j2", dest: "/usr/local/bin/server_nextcloud_upgrade" }
+    - { src: "server_nextcloud_repair.j2", dest: "/usr/local/bin/server_nextcloud_repair" }
+    - { src: "server_nextcloud_config_writable.j2", dest: "/usr/local/bin/server_nextcloud_config_writable" }
+    - { src: "server_nextcloud_config_readonly.j2", dest: "/usr/local/bin/server_nextcloud_config_readonly" }
     - { src: "server_nextcloud_maintenance_on.j2", dest: "/usr/local/bin/server_nextcloud_maintenance_on" }
     - { src: "server_nextcloud_maintenance_off.j2", dest: "/usr/local/bin/server_nextcloud_maintenance_off" }
     - { src: "server_nextcloud_app_disable.j2", dest: "/usr/local/bin/server_nextcloud_app_disable" }
