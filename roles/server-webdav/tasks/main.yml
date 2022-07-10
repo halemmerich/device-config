@@ -11,7 +11,7 @@
 - name: Configure directories
   file:
     path: "{{ item.path }}"
-    owner: webshare
+    owner: '{{ server_nginx_user }}'
     group: webshare
     mode: "{{ item.ar }}"
     state: directory
