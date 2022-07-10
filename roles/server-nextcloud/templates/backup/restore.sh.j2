@@ -10,6 +10,9 @@ password={{ nextcloud_db_user_password }}"
 
 mysql --defaults-file=<(echo "$DEFAULTS_FILE") -u nextcloud -D nextcloud < "$MOUNTDIR/nextcloud/dbdump.sql"
 
+mkdir -p $(dirname "{{ nextcloud_config_path }}")
+rsync_restore nextcloud/config/config.php "{{ nextcloud_config_path }}"
+
 mkdir -p {{ nextcloud_data_path }}
 rsync_restore nextcloud/data/ {{ nextcloud_data_path }}
 

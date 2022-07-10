@@ -17,6 +17,7 @@ user=nextcloud
 password={{ nextcloud_db_user_password }}") --lock-tables -h localhost -u nextcloud nextcloud > "$MOUNTDIR/nextcloud/dbdump.sql"; (( RC |= $? ))
 
 rsync_backup "$NEXTCLOUD_DATA" "$NEXTCLOUD_DATA_TARGET"; (( RC |= $? ))
+rsync_backup "{{ nextcloud_config_path }}" "nextcloud/config/"; (( RC |= $? ))
 
 server_nextcloud_maintenance_off; (( RC |= $? ))
 
