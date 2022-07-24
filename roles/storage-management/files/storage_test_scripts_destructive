@@ -648,6 +648,7 @@ function backupRunRsync {
 	
 	storage_pool mount teststorage; (( RC |= $? ))
 	logResult $([ -f /mnt/teststorage/backup/backupsource/testfile00 ] && echo OK || echo FAIL) Backup contains testfile
+	logResult $([ -f teststorage/backup_last_success -a "$(cat teststorage/backup_last_success)" -gt 0 ] && echo OK || echo FAIL) Backup timestamp bigger than 0
 	storage_pool umount teststorage; (( RC |= $? ))
 	
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
@@ -659,7 +660,32 @@ function backupRunRsnapshot {
 	
 	storage_pool mount teststorage; (( RC |= $? ))
 	logResult $([ -f /mnt/teststorage/backup/hourly.0/mnt/backupsource/testfile00 ] && echo OK || echo FAIL) Backup contains testfile
+	logResult $([ -f teststorage/backup_last_success -a "$(cat teststorage/backup_last_success)" -gt 0 ] && echo OK || echo FAIL) Backup timestamp bigger than 0
 	storage_pool umount teststorage; (( RC |= $? ))
+	
+	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+}
+
+function backupCheck {
+	mkdir -p teststorage
+	echo /root/teststorage > /etc/storage/autobackup
+	
+	CURRENT="$(getTimestamp)"
+	PASSED_30M=$(( CURRENT - 1800 ))
+	PASSED_1H=$(( CURRENT - 3600 ))
+	PASSED_24H=$(( CURRENT - 24 * 3600 - 1 ))
+	PASSED_23H=$(( CURRENT - 23 * 3600 ))
+	
+	logResult $(storage_backup check teststorage && echo FAIL || echo OK) Check fails if no files at all are available
+	echo "$PASSED_24H" > teststorage/backup_last_success
+	logResult $(storage_backup check teststorage && echo FAIL || echo OK) Check fails if last backup is over 24h old
+	echo "$PASSED_23H" > teststorage/backup_last_success
+	logResult $(storage_backup check teststorage && echo OK || echo FAIL) Check is ok if last backup is over 23h old
+	echo 1 > teststorage/backup_period
+	logResult $(storage_backup check teststorage && echo FAIL || echo OK) Check fails if last backup 23h old with 1h period
+	echo "$PASSED_1H" > teststorage/backup_last_success
+	logResult $(storage_backup check teststorage && echo OK || echo FAIL) Check is ok if last backup 30m old with 1h period
+	
 	
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }

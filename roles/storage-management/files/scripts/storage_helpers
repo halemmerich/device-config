@@ -81,3 +81,11 @@ function checkDevicesAvailable {
 	return 0;
 }
 
+function parseTimestamp {
+	TIMESTAMP="$1"
+	date -d @"$TIMESTAMP"
+}
+
+function getTimestamp {
+	date +"%s"
+}

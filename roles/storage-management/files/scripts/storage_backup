@@ -1,6 +1,33 @@
 #!/bin/bash
 . /usr/local/bin/storage_helpers
 
+
+
+XMPP_DESTINATION=( )
+SEND_XMPP_EXECUTABLE="sendxmpp"
+IDENTIFIER=$HOSTNAME_`echo $MOUNTPOINT | tr / _`
+LOG_FILE="/var/log/backup_$IDENTIFIER"
+
+[ -f /etc/backupcfg ] && . /etc/backupcfg
+
+function xmpp {
+	if [ -f "$1" ]
+	then
+		for current in "${XMPP_DESTINATION[@]}"
+		do
+			echo "$IDENTIFIER Sending file: $1" | "$SEND_XMPP_EXECUTABLE" -f /root/.sendxmpprc -t -n "$current" 2>> "$LOG_FILE"
+			"$SEND_XMPP_EXECUTABLE" -m "$1" -f /root/.sendxmpprc -t -n "$current" 2 >> "$LOG_FILE"
+		done
+		echo "$1" >> "$LOG_FILE"
+	else
+		for current in "${XMPP_DESTINATION[@]}"
+		do
+			echo "$IDENTIFIER $@" | "$SEND_XMPP_EXECUTABLE" -f /root/.sendxmpprc -t -n "$current" 2>> "$LOG_FILE"
+		done
+		echo "$@" >> "$LOG_FILE"
+	fi
+}
+
 function backup {
 	INTERVAL="$2"
 
@@ -19,21 +46,13 @@ function backup {
 	
 	
 	MOUNTPOINT="$(getMountpoint "$STORAGE_META_DIR")"
-
-	XMPP_DESTINATION=( )
-	SEND_XMPP_EXECUTABLE="sendxmpp"
-	IDENTIFIER=$HOSTNAME_`echo $MOUNTPOINT | tr / _`
 	RSYNC_PARAMS="-a --delete --ignore-errors"
 	RSYNC_PARAMS="-a"
 	BACKUP_FOLDER="$MOUNTPOINT"/backup
 	MARKER_FILE="$BACKUP_FOLDER"/.backup
 
-	[ -f /etc/backupcfg ] && . /etc/backupcfg
-
 	FAILED=0
-
-
-	LOG_FILE="/var/log/backup_$IDENTIFIER"
+	
 	LOCKFILE="/var/lock/backup_$IDENTIFIER"
 
 	if [ -e "$LOCKFILE" ]
@@ -44,24 +63,6 @@ function backup {
 	touch "$LOCKFILE"
 
 	echo Start `date` > "$LOG_FILE"
-
-	function xmpp {
-		if [ -f "$1" ]
-		then
-			for current in "${XMPP_DESTINATION[@]}"
-			do
-				echo "$IDENTIFIER Sending file: $1" | "$SEND_XMPP_EXECUTABLE" -f /root/.sendxmpprc -t -n "$current" 2>> "$LOG_FILE"
-				"$SEND_XMPP_EXECUTABLE" -m "$1" -f /root/.sendxmpprc -t -n "$current" 2 >> "$LOG_FILE"
-			done
-			echo "$1" >> "$LOG_FILE"
-		else
-			for current in "${XMPP_DESTINATION[@]}"
-			do
-				echo "$IDENTIFIER $@" | "$SEND_XMPP_EXECUTABLE" -f /root/.sendxmpprc -t -n "$current" 2>> "$LOG_FILE"
-			done
-			echo "$@" >> "$LOG_FILE"
-		fi
-	}
 
 
 	function cleanup {
@@ -116,8 +117,10 @@ function backup {
 		if [ "$RESULT_RSNAPSHOT" -eq 0  ]
 		then
 			RESULT_MESSAGE="$RESULT_MESSAGE successful"
+			echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_success
 		else
 			RESULT_MESSAGE="$RESULT_MESSAGE failed with status code $RESULT_RSYNC"
+			echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
 			FAILED=1
 		fi
 
@@ -218,8 +221,10 @@ function backup {
 			if [ "$RESULT_RSYNC" -eq 0  ]
 			then
 				RESULT_MESSAGE="$RESULT_MESSAGE successful"
+				echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_success
 			else
 				RESULT_MESSAGE="$RESULT_MESSAGE failed with status code $RESULT_RSYNC"
+				echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
 				FAILED=1
 			fi
 
@@ -241,6 +246,7 @@ then
 	echo "Usage:
 storage_backup auto
 storage_backup backup <metadir>
+storage_backup check <metadir>
 storage_backup create <metadir> rsync
 storage_backup create <metadir> rsnapshot
 storage_backup add <metadir> <sourcedir>"
@@ -316,10 +322,24 @@ function add {
 	esac
 }
 
+function check {
+	STORAGE_META_DIR="$1"
+	LAST_SUCCESS=
+	LAST_FAIL=
+	[ -f "$STORAGE_META_DIR"/backup_period ] && PERIOD=$(cat "$STORAGE_META_DIR"/backup_period)
+	[ -z "$PERIOD" ] && PERIOD=24
+	[ -f "$STORAGE_META_DIR"/backup_last_success ] && LAST_SUCCESS=$(cat "$STORAGE_META_DIR"/backup_last_success)
+	[ -f "$STORAGE_META_DIR"/backup_last_fail ] && LAST_FAIL=$(cat "$STORAGE_META_DIR"/backup_last_fail)
+	[ -n "$LAST_FAIL" ] && LAST_FAIL_MESSAGE=", last fail on $(parseTimestamp $LAST_FAIL)"
+	[ -z "$LAST_SUCCESS" ] && { echo "Backup of $(getPoolName "$STORAGE_META_DIR") never succeeded" ; return 1; }
+	[ $(( $(getTimestamp) - ( PERIOD*60*60 ) )) -gt "$LAST_SUCCESS" ] && { echo "Last success for backup of $(getPoolName "$STORAGE_META_DIR") older than ${PERIOD}h ($(parseTimestamp "$LAST_SUCCESS")) ${LAST_FAIL_MESSAGE}" ; return 1; }
+	return 0;
+}
 
 
 if [ "$MODE" = auto ]
 then
+	[ -f /etc/storage/autobackup ] || { echo No autobackup configured; exit 1; }
 	for C in $(cat /etc/storage/autobackup)
 	do
 		storage_pool mount "$C" || { echo Mounting failed for $STORAGE_META_DIR; exit 1; }
@@ -333,6 +353,16 @@ then
 			backup "$C" daily
 		fi
 		storage_pool umount "$C" || { echo Mounting failed for $STORAGE_META_DIR; exit 1; }
+	done
+elif [ "$MODE" = check ]
+then
+	[ -f /etc/storage/autobackup ] || { echo No autobackup configured; exit 1; }
+	for C in $(cat /etc/storage/autobackup)
+	do
+		MSG=$(check "$C")
+		RC=$?
+		[ "$RC" -ne 0 ] && xmpp "$MSG"
+		exit $RC
 	done
 else
 	if checkDevicesAvailable "$STORAGE_META_DIR"
