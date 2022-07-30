@@ -654,6 +654,20 @@ function backupRunRsync {
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }
 
+function backupRunRsyncEmptySource {
+	backupRunRsync
+	rm -rf /mnt/backupsource/*
+	storage_backup backup teststorage;
+	logResult $([ "$?" -ne 0 ] && echo OK || echo FAIL) exit code backup
+	
+	storage_pool mount teststorage; (( RC |= $? ))
+	logResult $([ -f /mnt/teststorage/backup/backupsource/testfile00 ] && echo OK || echo FAIL) Backup contains testfile
+	logResult $([ -f teststorage/backup_last_fail ] && [ -n teststorage/backup_last_fail ] && [ "$(cat teststorage/backup_last_fail)" -gt 0 ] && echo OK || echo FAIL) Backup fail timestamp bigger than 0
+	storage_pool umount teststorage; (( RC |= $? ))
+	
+	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+}
+
 function backupRunRsnapshot {
 	backupAddRsnapshot
 	storage_backup backup teststorage; (( RC |= $? ))
@@ -661,6 +675,20 @@ function backupRunRsnapshot {
 	storage_pool mount teststorage; (( RC |= $? ))
 	logResult $([ -f /mnt/teststorage/backup/hourly.0/mnt/backupsource/testfile00 ] && echo OK || echo FAIL) Backup contains testfile
 	logResult $([ -f teststorage/backup_last_success -a "$(cat teststorage/backup_last_success)" -gt 0 ] && echo OK || echo FAIL) Backup timestamp bigger than 0
+	storage_pool umount teststorage; (( RC |= $? ))
+	
+	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+}
+
+function backupRunRsnapshotEmptySource {
+	backupRunRsnapshot
+	rm -rf /mnt/backupsource/*
+	storage_backup backup teststorage;
+	logResult $([ "$?" -ne 0 ] && echo OK || echo FAIL) exit code backup
+	
+	storage_pool mount teststorage; (( RC |= $? ))
+	logResult $([ -f /mnt/teststorage/backup/hourly.0/mnt/backupsource/testfile00 ] && echo OK || echo FAIL) Backup contains testfile
+	logResult $([ -f teststorage/backup_last_fail ] && [ -n teststorage/backup_last_fail ] && [ "$(cat teststorage/backup_last_fail)" -gt 0 ] && echo OK || echo FAIL) Backup fail timestamp bigger than 0
 	storage_pool umount teststorage; (( RC |= $? ))
 	
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
