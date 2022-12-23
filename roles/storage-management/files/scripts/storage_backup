@@ -112,14 +112,36 @@ function backup {
 		xmpp "Perform backup with rsnapshot"
 		
 		CONTINUE=0
+		NEEDED_SPACE=0
 		for C in $(cat "$BACKUP_FOLDER/.rsnapshot.conf" | grep -i ^backup | tr -s '[:space:]' | cut -f 2)
 		do
-			[ "$( ls -A "$C" | wc -l )" -eq 0 ] && xmpp "No content in $C" && CONTINUE=1
+			[ "$( ls -A "$C" | wc -l )" -eq 0 ] && xmpp "No content in $C" && CONTINUE=1 && break;
+			CURRENT_SOURCE=`getLatestSnapshot "$C"`
+			if [ -z "$CURRENT_SOURCE" ]
+			then
+				xmpp "Snapshot for $CURRENT does not exist, using live data for size estimation"
+				CURRENT_SOURCE="$C"
+			fi
+			NEEDED_SPACE=$(($NEEDED_SPACE + `du -m -d 0 "$CURRENT_SOURCE" | cut -f 1`))
 		done
+		
+		FREE_SPACE=`df --output=avail -m "$BACKUP_FOLDER" | tail -n 1`
+
+		FREE_SPACE=$(($FREE_SPACE + `du -d 0 -m "$BACKUP_FOLDER" | cut -f 1`))
+		
+		if [ "$NEEDED_SPACE" -gt "$FREE_SPACE" ]
+		then
+			xmpp Not enough space for backup
+			CONTINUE=1
+		fi
+		
 		
 		if [ "$CONTINUE" -eq 0 ]
 		then
-			ionice -c 2 -n 7 rsnapshot -v -c "$BACKUP_FOLDER/.rsnapshot.conf" "$INTERVAL" >> "$LOG_FILE" 2>&1
+			echo ---------------
+			rsnapshot -t -c "$BACKUP_FOLDER/.rsnapshot.conf" "$INTERVAL" | sed -e "N;s|\\\\\n| |p;d;" | grep rsync
+			echo ---------------
+			ionice -c 2 -n 7 rsnapshot -v -c "$BACKUP_FOLDER/.rsnapshot.conf" "$INTERVAL" 2>&1 | tee -a "$LOG_FILE" 
 
 			RESULT_RSNAPSHOT="$?"
 			RESULT_MESSAGE="Backup of $BACKUP_FOLDER"

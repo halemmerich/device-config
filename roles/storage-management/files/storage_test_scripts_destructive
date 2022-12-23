@@ -248,13 +248,20 @@ function btrfsCreatePlain {
 	[ -n "$1" ] && DISKS="$1"
 	log Create initial pool
 	storage_pool_btrfs create teststorage; (( RC |= $? ))
+	ADDED=0
 	for C in $DISKS
 	do
 		storage_pool addPlain teststorage "$C"; (( RC |= $? ))
 		storage_pool_btrfs add teststorage "$C"; (( RC |= $? ))
+		(( ADDED += 1 ))
 	done
 	
-	storage_pool_btrfs changeProfile teststorage raid1 raid1; (( RC |= $? ))
+	if [ "$ADDED" -gt 1 ]
+	then
+		storage_pool_btrfs changeProfile teststorage raid1 raid1; (( RC |= $? ))
+	else
+		storage_pool umount teststorage
+	fi
 	
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }
@@ -617,7 +624,8 @@ function backupAddRsync {
 }
 
 function backupCreateRsnapshot {
-	snapraidCreatePlain
+	btrfsCreatePlain "$(getTestDevice 1)"
+	storage_pool umount teststorage
 	mkdir -p /mnt/backupsource
 	createTestFiles /mnt/backupsource/
 	storage_backup create teststorage rsnapshot; (( RC |= $? ))
@@ -674,6 +682,23 @@ function backupRunRsnapshot {
 	
 	storage_pool mount teststorage; (( RC |= $? ))
 	logResult $([ -f /mnt/teststorage/backup/hourly.0/mnt/backupsource/testfile00 ] && echo OK || echo FAIL) Backup contains testfile
+	logResult $([ -f teststorage/backup_last_success -a "$(cat teststorage/backup_last_success)" -gt 0 ] && echo OK || echo FAIL) Backup timestamp bigger than 0
+	storage_pool umount teststorage; (( RC |= $? ))
+	
+	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+}
+
+function backupTargetFullRsnapshot {
+	backupAddRsnapshot
+	dd if=/dev/zero of=/mnt/backupsource/big1.img bs=1M count=700
+	storage_backup backup teststorage; (( RC |= $? ))
+	rm /mnt/backupsource/big1.img
+	dd if=/dev/zero of=/mnt/backupsource/big2.img bs=1M count=700
+	storage_backup backup teststorage; (( RC |= $? ))
+	
+	storage_pool mount teststorage; (( RC |= $? ))
+	logResult $([ -f /mnt/teststorage/backup/hourly.1/mnt/backupsource/big1.img ] && echo FAIL || echo OK) Backup does not contain big1
+	logResult $([ -f /mnt/teststorage/backup/hourly.0/mnt/backupsource/big2.img ] && echo OK || echo FAIL) Backup contains big2
 	logResult $([ -f teststorage/backup_last_success -a "$(cat teststorage/backup_last_success)" -gt 0 ] && echo OK || echo FAIL) Backup timestamp bigger than 0
 	storage_pool umount teststorage; (( RC |= $? ))
 	
