@@ -179,6 +179,7 @@ DISABLE_APT_SNAPSHOT="yes"' > /etc/default/snapper
 	#echo Delete mountpoints and metadata
 	rm -rf teststorage
 	rm -rf /mnt/teststorage
+	rm -rf /mnt/backupsource
 	rm -rf /mnt/teststorage_synced
 	rm -rf /mnt/pools
 	
@@ -206,7 +207,6 @@ function poolAddPlain {
 }
 
 function btrfsAddPlain {
-	
 	storage_pool_btrfs create teststorage; (( RC |= $? ))
 	for C in {0..1}
 	do
@@ -217,6 +217,55 @@ function btrfsAddPlain {
 	logResult $([ "$(cat teststorage/devices | wc -l)" -eq 2 ] && echo OK || echo FAIL) Devices list complete
 	
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+}
+
+function singleAddPlainExisting {
+	storage_pool_single create teststorage; (( RC |= $? ))
+	
+	storage_pool add teststorage "$(getTestDevice 0)"; (( RC |= $? ))
+	
+	logResult $([ "$(cat teststorage/devices | wc -l)" -eq 1 ] && echo OK || echo FAIL) Devices list has one entry
+	
+	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+}
+
+function singleCreatePlain {
+	storage_pool_single create teststorage; (( RC |= $? ))
+	
+	storage_pool add teststorage "$(getTestDevice 0)" ext2; (( RC |= $? ))
+	
+	logResult $([ "$(cat teststorage/devices | wc -l)" -eq 1 ] && echo OK || echo FAIL) Devices list has one entry
+	
+	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+}
+
+function singleMount {
+	singleCreatePlain
+	
+	log Mount pool
+	storage_pool mount teststorage; (( RC |= $? ))
+	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+}
+
+function singleUmount {
+	singleMount
+	
+	log Unmount pool
+	storage_pool umount teststorage; (( RC |= $? ))
+	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+}
+
+function singleAddPlainTwoDevices {
+	
+	storage_pool_single create teststorage; (( RC |= $? ))
+	for C in {0..1}
+	do
+		storage_pool_single add teststorage "$(getTestDevice $C)"; (( RC |= $? ))
+	done
+	
+	logResult $([ "$(cat teststorage/devices | wc -l)" -eq 1 ] && echo OK || echo FAIL) Devices list has still only one entry
+	
+	logResult $([ $RC -ne 0 ] && echo OK || echo FAIL) exit code
 }
 
 function btrfsGetMountableDevice {
@@ -599,21 +648,38 @@ function snapraidStatus {
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }
 
-function backupCreateRsync {
-	snapraidCreatePlain
+function _backupCreate {
+	TYPE="$1"
+	singleCreatePlain
 	mkdir -p /mnt/backupsource
 	createTestFiles /mnt/backupsource/
-	storage_backup create teststorage rsync; (( RC |= $? ))
+	storage_backup create teststorage "$TYPE"; (( RC |= $? ))
+	return $RC
+}
+
+function backupCreateRsync {
+	_backupCreate rsync; (( RC |= $? ))
 	
 	storage_pool mount teststorage
 	logResult $([ -f /mnt/teststorage/backup/.backup ] && echo OK || echo FAIL) Backup marker file exists
 	storage_pool umount teststorage
-	
+
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }
 
+function backupCreateRsnapshot {
+	_backupCreate rsnapshot; (( RC |= $? ))
+
+	storage_pool mount teststorage; (( RC |= $? ))
+	logResult $([ -f /mnt/teststorage/backup/.rsnapshot.conf ] && echo OK || echo FAIL) Rsnapshot config file exists
+	EXPECTED="ERROR: At least one backup point must be set"
+	logResult $(rsnapshot -c /mnt/teststorage/backup/.rsnapshot.conf configtest 2>&1 | grep -q "$EXPECTED" && echo OK || echo FAIL) Rsnapshot config file is missing backup source
+	storage_pool umount teststorage; (( RC |= $? ))
+}
+
 function backupAddRsync {
-	backupCreateRsync
+	_backupCreate rsync; (( RC |= $? ))
+
 	storage_backup add teststorage /mnt/backupsource; (( RC |= $? ))
 	
 	storage_pool mount teststorage; (( RC |= $? ))
@@ -623,24 +689,9 @@ function backupAddRsync {
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }
 
-function backupCreateRsnapshot {
-	btrfsCreatePlain "$(getTestDevice 1)"
-	storage_pool umount teststorage
-	mkdir -p /mnt/backupsource
-	createTestFiles /mnt/backupsource/
-	storage_backup create teststorage rsnapshot; (( RC |= $? ))
-	
-	storage_pool mount teststorage
-	logResult $([ -f /mnt/teststorage/backup/.rsnapshot.conf ] && echo OK || echo FAIL) Rsnapshot config file exists
-	EXPECTED="ERROR: At least one backup point must be set"
-	logResult $(rsnapshot -c /mnt/teststorage/backup/.rsnapshot.conf configtest 2>&1 | grep -q "$EXPECTED" && echo OK || echo FAIL) Rsnapshot config file is missing backup source
-	storage_pool umount teststorage; (( RC |= $? ))
-	
-	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
-}
-
 function backupAddRsnapshot {
-	backupCreateRsnapshot
+	_backupCreate rsnapshot; (( RC |= $? ))
+
 	storage_backup add teststorage /mnt/backupsource; (( RC |= $? ))
 	
 	storage_pool mount teststorage; (( RC |= $? ))
@@ -690,16 +741,20 @@ function backupRunRsnapshot {
 
 function backupTargetFullRsnapshot {
 	backupAddRsnapshot
-	dd if=/dev/zero of=/mnt/backupsource/big1.img bs=1M count=700
+	truncate -s 700M /mnt/backupsource/big1.img
 	storage_backup backup teststorage; (( RC |= $? ))
 	rm /mnt/backupsource/big1.img
-	dd if=/dev/zero of=/mnt/backupsource/big2.img bs=1M count=700
-	storage_backup backup teststorage; (( RC |= $? ))
+	truncate -s 700M /mnt/backupsource/big2.img
+	storage_backup backup teststorage
+	logResult $( [ "$?" -ne 0 ] && echo OK || echo FAIL) Second big file backup fails
 	
 	storage_pool mount teststorage; (( RC |= $? ))
-	logResult $([ -f /mnt/teststorage/backup/hourly.1/mnt/backupsource/big1.img ] && echo FAIL || echo OK) Backup does not contain big1
-	logResult $([ -f /mnt/teststorage/backup/hourly.0/mnt/backupsource/big2.img ] && echo OK || echo FAIL) Backup contains big2
-	logResult $([ -f teststorage/backup_last_success -a "$(cat teststorage/backup_last_success)" -gt 0 ] && echo OK || echo FAIL) Backup timestamp bigger than 0
+	logResult $([ -f /mnt/teststorage/backup/hourly.1/mnt/backupsource/big1.img ] && echo OK || echo FAIL) Older backup contains big1
+	logResult $([ -f /mnt/teststorage/backup/hourly.1/mnt/backupsource/big2.img ] && echo FAIL || echo OK) Older backup does not contain big2
+	logResult $([ -f /mnt/teststorage/backup/hourly.0/mnt/backupsource/big1.img ] && echo FAIL || echo OK) Current backup does not contain big1, not in source anymore
+	logResult $([ -f /mnt/teststorage/backup/hourly.0/mnt/backupsource/big2.img ] && echo FAIL || echo OK) Current backup does not contain big2, to big to be copied
+	logResult $([ -f teststorage/backup_last_success ] && [ "$(cat teststorage/backup_last_success)" -gt 0 ] && echo OK || echo FAIL) Successful backup timestamp bigger than 0
+	logResult $([ -f teststorage/backup_last_fail ] && [ "$(cat teststorage/backup_last_fail)" -gt 0 ] && echo OK || echo FAIL) Failed backup timestamp bigger than 0
 	storage_pool umount teststorage; (( RC |= $? ))
 	
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
@@ -827,7 +882,7 @@ function backupAutoNotAvailable {
 function poolAutomount {
 	snapraidCreatePlain
 	echo /root/teststorage > /etc/storage/automount
-	
+	echo 88888888888888888888888888
 	storage_pool automount; (( RC |= $? ))
 	
 	logResult $(mount | grep -q /mnt/teststorage && echo OK || echo FAIL) teststorage mounted
@@ -836,8 +891,6 @@ function poolAutomount {
 }
 
 function poolOpenDevices {
-	
-	
 	storage_pool create teststorage; (( RC |= $? ))
 	echo -e "y\nYES\n" | storage_block_crypto create teststorage/keyfiles "$(getTestDevice 1)"; (( RC |= $? ))
 	echo -e "y\nYES\n" | storage_block_crypto create teststorage/keyfiles "$(getTestDevice 2)" yes; (( RC |= $? ))
@@ -927,6 +980,7 @@ if [ -z "$1" ]
 then
 	echo "Commands:"
 	echo "all"
+	echo "regex"
 	echo "cleanup";
 	set | grep '()' | grep pool | sed -e "s| ()||"
 	set | grep '()' | grep btrfs | sed -e "s| ()||"
@@ -942,6 +996,7 @@ fi
 if [ "$1" == all ]
 then
 	COMMANDS=$(set | grep '()' | grep ^pool | sed -e "s| ()||")
+	COMMANDS="$COMMANDS $(set | grep '()' | grep ^single | sed -e "s| ()||")"
 	COMMANDS="$COMMANDS $(set | grep '()' | grep ^btrfs | sed -e "s| ()||")"
 	COMMANDS="$COMMANDS $(set | grep '()' | grep ^snapraid | sed -e "s| ()||")"
 	COMMANDS="$COMMANDS $(set | grep '()' | grep ^backup | sed -e "s| ()||")"
@@ -949,6 +1004,13 @@ then
 	COMMANDS="$COMMANDS $(set | grep '()' | grep ^maintenance | sed -e "s| ()||")"
 	COMMANDS="$COMMANDS $(set | grep '()' | grep ^cache | sed -e "s| ()||")"
 	COMMANDS="$COMMANDS $(set | grep '()' | grep ^crypto | sed -e "s| ()||")"
+	for C in $COMMANDS
+	do
+		wrapTest $C
+	done
+elif [ "$1" == regex ]
+then
+	COMMANDS=$(set | grep '()' | grep -e "$2" | sed -e "s| ()||")
 	for C in $COMMANDS
 	do
 		wrapTest $C

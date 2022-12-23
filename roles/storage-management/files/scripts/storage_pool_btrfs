@@ -73,7 +73,6 @@ function mountPool {
 
 	MOUNT_DIR="$(getMountpoint "$STORAGE_META_DIR")"
 	mkdir -p $MOUNT_DIR || return 1
-	set -x
 	cat teststorage/devices
 	mount "$(getMountableDevice "$STORAGE_META_DIR")" $MOUNT_DIR || return 1
 }

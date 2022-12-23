@@ -37,8 +37,7 @@ function closeDevices {
 
 function defer {
 	STORAGE_META_DIR="$1"
-	[ "$(cat $STORAGE_META_DIR/.created)" == "btrfs" ] && storage_pool_btrfs $COMMAND "$@"
-	[ "$(cat $STORAGE_META_DIR/.created)" == "snapraid" ] && storage_pool_snapraid $COMMAND "$@"
+	storage_pool_$(cat $STORAGE_META_DIR/.created) $COMMAND "$@"
 }
 
 function create {

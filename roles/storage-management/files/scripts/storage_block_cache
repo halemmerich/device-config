@@ -4,8 +4,6 @@
 
 ! command -v vgscan 2>&1 > /dev/null && echo lvm2 missing && exit 1
 
-set -x
-
 function addCache {
 	STORAGE_META_DIR="$1"
 	CACHE="$(getTopDevice "$2")"

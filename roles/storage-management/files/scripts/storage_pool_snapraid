@@ -23,7 +23,7 @@ function snapraid_wrap {
 	return $?
 }
 
-function create {	
+function create {
 	STORAGE_META_DIR="$1"
 	MERGERFS_OPTS="$2"
 	

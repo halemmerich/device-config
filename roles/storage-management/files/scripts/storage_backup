@@ -1,8 +1,6 @@
 #!/bin/bash
 . /usr/local/bin/storage_helpers
 
-
-
 XMPP_DESTINATION=( )
 SEND_XMPP_EXECUTABLE="sendxmpp"
 OVERALL_RC=0
@@ -143,7 +141,7 @@ function backup {
 			echo ---------------
 			ionice -c 2 -n 7 rsnapshot -v -c "$BACKUP_FOLDER/.rsnapshot.conf" "$INTERVAL" 2>&1 | tee -a "$LOG_FILE" 
 
-			RESULT_RSNAPSHOT="$?"
+			RESULT_RSNAPSHOT="${PIPESTATUS[0]}"
 			RESULT_MESSAGE="Backup of $BACKUP_FOLDER"
 
 			if [ "$RESULT_RSNAPSHOT" -eq 0  ]
@@ -415,7 +413,7 @@ then
 	for C in $(cat /etc/storage/autobackup)
 	do
 		MSG=$(check "$C")
-		$(( OVERALL_RC |= $? ))
+		(( OVERALL_RC |= $? ))
 		[ "$OVERALL_RC" -ne 0 ] && xmpp "$MSG"
 	done
 	exit $OVERALL_RC
