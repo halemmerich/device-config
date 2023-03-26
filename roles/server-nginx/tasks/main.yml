@@ -83,7 +83,7 @@
   copy:
     dest: "/etc/letsencrypt/renewal-hooks/post/nginx.sh"
     mode: "0700"
-    content: "systemctl nginx reload"
+    content: "systemctl reload nginx"
 
 - name: 'Enable services'
   systemd:
