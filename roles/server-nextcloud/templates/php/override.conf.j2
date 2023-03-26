@@ -1,6 +1,10 @@
 [Service]
-ReadWritePaths=/var/lib/nextcloud/data
+ReadWritePaths=/var/lib/nextcloud
 ReadWritePaths={{ nextcloud_path }}
 {% if webshare_path.stat.exists %}
 ReadWritePaths=/var/lib/webdav/shares
+{% endif %}
+{% if ansible_os_family == "Archlinux" %}
+ExecStart=
+ExecStart=/usr/bin/php-fpm-legacy --nodaemonize --fpm-config /etc/php-legacy/php-fpm.conf --php-ini /etc/php-legacy/php-fpm.ini
 {% endif %}

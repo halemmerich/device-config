@@ -56,10 +56,11 @@
 
 - name: Configure memory limit
   lineinfile:
-    dest: "{{ php_path }}/php.ini"
+    dest: "{{ php_ini_path }}"
     regexp: "memory_limit ="
     line: "memory_limit = 1024M"
   notify: restart_nginx
+  when: ansible_os_family == "Debian"
   tags:
     - config
 
@@ -194,7 +195,7 @@
       line: "'installed' => false,"
   - name: Install
     command:
-      cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ maintenance:install --database mysql --database-name nextcloud --database-host localhost --database-user nextcloud --database-pass={{ nextcloud_db_user_password }} --admin-pass={{ nextcloud_admin_user_password }} --data-dir /var/lib/nextcloud/data/ --no-interaction"'
+      cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "{{ php_command }} {{ nextcloud_path }}/occ maintenance:install --database mysql --database-name nextcloud --database-host localhost --database-user nextcloud --database-pass={{ nextcloud_db_user_password }} --admin-pass={{ nextcloud_admin_user_password }} --data-dir /var/lib/nextcloud/data/ --no-interaction"'
   when: not ocdata_path.stat.exists
   notify: restart_nginx
   tags:
@@ -208,7 +209,7 @@
 
 - name: Set config writable (installed)
   command:
-    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set installed --value true"'
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "{{ php_command }} {{ nextcloud_path }}/occ config:system:set installed --value true"'
   tags:
     - config
 
@@ -221,20 +222,20 @@
 
 - name: Run upgrade to update database
   shell:
-    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ upgrade"'
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "{{ php_command }} {{ nextcloud_path }}/occ upgrade"'
   tags:
     - config
 
 - name: Get enabled Apps
   shell:
-    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ app:list | grep - | sed \"s/  - \(.*\):.*/\1/\" | grep -v -"'
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "{{ php_command }} {{ nextcloud_path }}/occ app:list | grep - | sed \"s/  - \(.*\):.*/\1/\" | grep -v -"'
   register: app_list_output
   tags:
     - config
   
 - name: Disable most Apps
   shell:
-    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ app:disable {{ item }}"'
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "{{ php_command }} {{ nextcloud_path }}/occ app:disable {{ item }}"'
   register: app_disable_output
   failed_when: app_disable_output.rc != 0 and app_disable_output.rc != 2
   changed_when: app_disable_output.rc == 0
@@ -244,14 +245,14 @@
 
 - name: Enable some apps
   shell:
-    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ app:enable {{ item }}"'
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "{{ php_command }} {{ nextcloud_path }}/occ app:enable {{ item }}"'
   loop: "{{ nextcloud_enabled_apps }}"
   tags:
     - config
   
 - name: Set config readonly
   command:
-    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ config:system:set config_is_read_only --value true"'
+    cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "{{ php_command }} {{ nextcloud_path }}/occ config:system:set config_is_read_only --value true"'
   tags:
     - config
 

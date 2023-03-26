@@ -11,7 +11,7 @@ fi
 ID="$1"
 
 export OC_PASS="$PW"
-su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ user:resetpassword --password-from-env \"$ID\""
+su -s /bin/bash {{ nextcloud_user }} -c "{{php_command}} {{ nextcloud_path }}/occ user:resetpassword --password-from-env \"$ID\""
 
 [ "$?" = 0 ] && echo New PWD is "$PW" || echo Done
 

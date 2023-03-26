@@ -54,5 +54,11 @@ $CONFIG = array (
   'mail_domain' => '{{ domain }}',
   'mail_smtpmode' => 'smtp',
   'mail_smtphost' => '127.0.0.1',
-  'mail_smtpport' => 25
+  'mail_smtpport' => 25,
+  'memcache.distributed' => '\OC\Memcache\Redis',
+  'memcache.locking' => '\OC\Memcache\Redis',
+  'redis' => [
+     'host' => 'localhost',
+     'port' => 6379,
+  ],
 );

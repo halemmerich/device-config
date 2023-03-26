@@ -11,7 +11,9 @@
     - php-mysql
     - php-curl
     - php-json
+    - php-redis
     - pwgen
+    - redis-server
   tags:
     - install
 
@@ -98,3 +100,12 @@
   when: config_path.stat.exists
   tags:
     - upgrade
+
+- name: 'Enable services'
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+  loop:
+    - redis-server
+  tags:
+    - config

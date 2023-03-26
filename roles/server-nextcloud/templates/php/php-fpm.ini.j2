@@ -1,0 +1,74 @@
+[PHP]
+engine = On
+short_open_tag = Off
+precision = 14
+output_buffering = 4096
+zlib.output_compression = Off
+implicit_flush = Off
+unserialize_callback_func =
+serialize_precision = -1
+open_basedir = /var/lib/nextcloud/data:/var/lib/nextcloud/sessions:/run/redis:/var/lib/nextcloud/apps:/tmp:/usr/share/webapps/nextcloud:/etc/webapps/nextcloud:/dev/urandom:/usr/lib/php-legacy/modules:/var/log/nextcloud:/proc/meminfo
+disable_functions =
+disable_classes =
+zend.enable_gc = On
+zend.exception_ignore_args = On
+zend.exception_string_param_max_len = 0
+zend_extension=opcache
+expose_php = On
+max_execution_time = 30
+max_input_time = 60
+memory_limit = 1024M
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
+display_errors = Off
+display_startup_errors = Off
+log_errors = On
+log_errors_max_len = 1024
+ignore_repeated_errors = Off
+ignore_repeated_source = Off
+report_memleaks = On
+variables_order = "GPCS"
+request_order = "GP"
+register_argc_argv = Off
+auto_globals_jit = On
+post_max_size = 8M
+auto_prepend_file =
+auto_append_file =
+extension_dir = "/usr/lib/php-legacy/modules/"
+enable_dl = Off
+file_uploads = On
+upload_max_filesize = 2M
+max_file_uploads = 20
+allow_url_fopen = On
+allow_url_include = Off
+default_socket_timeout = 60
+extension=bcmath
+extension=bz2
+extension=curl
+extension=exif
+extension=gd
+extension=iconv
+extension=intl
+extension=mysqli
+extension=pdo_mysql
+extension=zip
+extension=igbinary
+extension=redis
+cli_server.color = On
+date.timezone = Europe/Berlin
+smtp_port = 25
+
+redis.session.locking_enabled=1
+redis.session.lock_retries=-1
+redis.session.lock_wait_time=10000
+
+[opcache]
+opcache.enable = 1
+opcache.interned_strings_buffer = 8
+opcache.max_accelerated_files = 10000
+opcache.memory_consumption = 128
+opcache.save_comments = 1
+opcache.revalidate_freq = 1
+
+[Session]
+session.save_handler = redis
+session.save_path = tcp://localhost:6379

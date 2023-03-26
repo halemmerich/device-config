@@ -3,7 +3,7 @@
 
 ID="$1"
 
-su -s /bin/bash {{ nextcloud_user }} -c "php {{ nextcloud_path }}/occ group:adduser admin \"$ID\""
+su -s /bin/bash {{ nextcloud_user }} -c "{{php_command}} {{ nextcloud_path }}/occ group:adduser admin \"$ID\""
 
 
 [ "$?" -eq 0 ] && echo New PWD is "$PW" || echo Done

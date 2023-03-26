@@ -1,11 +1,13 @@
 nextcloud_path: /usr/share/webapps/nextcloud
 nextcloud_data_path: /var/lib/nextcloud/data
 nextcloud_config_path: /etc/webapps/nextcloud/config/config.php
+nextcloud_php_config_path: /etc/webapps/nextcloud/config/php.ini
 nextcloud_config_path_ro: /usr/share/webapps/nextcloud/config/config.php
 nextcloud_user: nextcloud
 nextcloud_group: nextcloud
-php_path: /etc/php
-php_fpm_path: /etc/php/php-fpm.d
-php_ini_path: "/etc/php/php.ini"
-php_fpm_service: "php-fpm"
+php_command: php-legacy
+php_path: /etc/php-legacy
+php_fpm_path: /etc/php-legacy/php-fpm.d
+php_ini_path: "/etc/php-legacy/php-fpm.ini"
+php_fpm_service: "php-legacy-fpm"
 nextcloud_fastcgi: "unix://run/nextcloud/nextcloud.sock"

@@ -2,27 +2,26 @@
   package:
     name:
     - nextcloud
-    - php-fpm
-    - php-intl
+    - php-legacy-fpm
+    - php-legacy-redis
+    - php-legacy-igbinary
     - pwgen
+    - redis
   tags:
     - install
 
-- name: Ensure extensions are enabled
-  lineinfile:
-    dest: "{{ php_ini_path }}"
-    regexp: ";extension={{ item }}"
-    insertafter: ";extension"
-    line: "extension={{ item }}"
+- name: 'Create php config'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.user }}"
+    group: "{{ item.group }}"
+    mode: '0660'
   loop:
-    - iconv
-    - mysqli
-    - pdo_mysql
-    - curl
-    - zip
-    - gd
-    - bz2
-    - intl
+    - { src: "php/php-fpm.ini.j2", dest: "/etc/php-legacy/php-fpm.ini", user: "root", group: "root" }
+    - { src: "php/php-fpm.ini.j2", dest: "/etc/webapps/nextcloud/php.ini", user: "{{ nextcloud_user }}", group: "{{ nextcloud_group}}" }
+  tags:
+    - config
 
 - name: Configure directories
   file:
@@ -34,8 +33,18 @@
    - '/var/lib/nextcloud'
    - '/var/lib/nextcloud/apps'
    - '/var/lib/nextcloud/data'
+   - '/var/lib/nextcloud/sessions'
 
 - user:
     name: nextcloud
     groups: webshare
     append: yes
+
+- name: 'Enable services'
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+  loop:
+    - redis
+  tags:
+    - config
