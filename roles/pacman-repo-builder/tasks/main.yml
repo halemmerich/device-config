@@ -97,6 +97,12 @@
     line: 'REPO_NAME={{ server_pacmanrepo_name | default("") }}'
     create: yes
 
+- name: Set git config name
+  command: "git config --global user.name 'fake'"
+
+- name: Set git config mail
+  command: "git config --global user.email 'fake@fake.com'"
+
 - name: Build
   command: "server_pacmanrepo_build {{ server_pacmanrepo_name }}"
   when: server_pacmanrepo_build | default(false)
