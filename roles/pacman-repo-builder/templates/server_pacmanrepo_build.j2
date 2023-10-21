@@ -49,11 +49,11 @@ then
 		su pacmanrepobuilder -c 'makepkg -sf --sign --noconfirm'
 		CRC=$?
 		
-		su pacmanrepobuilder -c "find . -type f -not -path '*/\.git/*' -exec md5sum {} + | LC_ALL=C sort | md5sum > ../$C.md5"
-		
 		if [ ! \( "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
 		then
 			(( RC++ ))
+		else
+			su pacmanrepobuilder -c "find . -type f -not -path '*/\.git/*' -exec md5sum {} + | LC_ALL=C sort | md5sum > ../$C.md5"
 		fi
 		
 		pacman -U --asdeps --noconfirm $(ls *.pkg.tar.zst | sort | tail -n 1)
@@ -79,12 +79,12 @@ then
 		
 		su pacmanrepobuilder -c 'makepkg -sf --sign --noconfirm'
 		
-		su pacmanrepobuilder -c "find . -type f -not -path '*/\.git/*' -exec md5sum {} + | LC_ALL=C sort | md5sum > ../$C.md5"
-		
 		CRC=$?
 		if [ ! \( "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
 		then
 			(( RC++ ))
+		else
+			su pacmanrepobuilder -c "find . -type f -not -path '*/\.git/*' -exec md5sum {} + | LC_ALL=C sort | md5sum > ../$C.md5"
 		fi
 		cd ../..
 	done
