@@ -145,7 +145,6 @@
   - kernel
   - automount
   - desktop
-  - desktop-cinnamon
   - desktop-sway
   - desktop-gnome
   - default-apps
