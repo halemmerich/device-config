@@ -80,8 +80,6 @@
 
 - hosts: server_arch
   become: yes
-  roles:
-  - pacmatic
   
 - hosts: server
   become: yes
