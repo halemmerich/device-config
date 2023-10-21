@@ -1,0 +1,9 @@
+[Unit]
+  Description=Mount script {{ item.src }}
+
+[Automount]
+  Where={{ item.path }}
+  TimeoutIdleSec={{ item.idle | default("60") }}
+
+[Install]
+  WantedBy=multi-user.target

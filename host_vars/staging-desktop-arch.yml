@@ -64,8 +64,8 @@ hosts_entries:
     - server-debian
 
 automount_credentials:
-  - username: user
-    password: "{{ lookup('password', 'credentials/staging-nas-arch.staging.arch/samba/tester length=12') }}"
+  - username: tester
+    password: "{{ lookup('password', 'credentials/{{ fqdn }}/samba/tester length=12') }}"
 
 automount_onlinechecks:
   - "staging-nas-arch"

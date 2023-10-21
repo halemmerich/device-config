@@ -144,6 +144,7 @@
   - X11
   - kernel-zen
   - kernel
+  - automount
   - desktop
   - desktop-cinnamon
   - desktop-sway

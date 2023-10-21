@@ -1,0 +1,68 @@
+- name: 'Create mount units'
+  template:
+    src: "mount.j2"
+    dest: "/etc/systemd/system/{{ item.escapedname }}.mount"
+    mode: '0644'
+  loop: "{{ automount_mounts }}"
+  when: automount_mounts is defined
+  tags:
+    - config
+
+- name: 'Create automount units'
+  template:
+    src: "automount.j2"
+    dest: "/etc/systemd/system/{{ item.escapedname }}.automount"
+    mode: '0644'
+  loop: "{{ automount_mounts }}"
+  when: automount_mounts is defined
+  tags:
+    - config
+
+- name: 'Create online check units'
+  template:
+    src: "onlinecheck.j2"
+    dest: "/etc/systemd/system/{{ item }}-online.service"
+    mode: '0644'
+  loop: "{{ automount_onlinechecks }}"
+  when: automount_onlinechecks is defined
+  tags:
+    - config
+
+- name: 'Create credential files'
+  template:
+    src: "credentials.j2"
+    dest: "/root/.smbcredentials_{{ item.username }}"
+    mode: '0600'
+  loop: "{{ automount_credentials }}"
+  when: automount_credentials is defined
+  tags:
+    - config
+
+- name: Configure mount directories
+  file:
+    path: "{{ item.path }}"
+    state: directory
+  loop: "{{ automount_mounts }}"
+  when: automount_mounts is defined
+  tags:
+    - config  
+
+- name: 'Enable automount units'
+  systemd:
+    name: "{{ item.escapedname }}.automount"
+    daemon-reload: yes
+    enabled: yes
+  loop: "{{ automount_mounts }}"
+  when: automount_mounts is defined
+  tags:
+    - config
+
+- name: 'Start automount units, ignore errors'
+  systemd:
+    name: "{{ item.escapedname }}.automount"
+    state: started
+  loop: "{{ automount_mounts }}"
+  when: automount_mounts is defined
+  ignore_errors: true
+  tags:
+    - config

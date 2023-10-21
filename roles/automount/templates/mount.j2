@@ -1,0 +1,14 @@
+[Unit]
+  Description=cifs mount script {{ item.src }}
+  {% if item.waitfor is defined %}Requires={{ item.waitfor }}-online.service
+  After={{ item.waitfor }}-online.service{% endif %}
+
+[Mount]
+  What={{ item.src }}
+  Where={{ item.path }}
+  {% if item.options is defined %}Options={{ item.options }}
+{% endif %}
+  Type={{ item.type }}
+
+[Install]
+  WantedBy=multi-user.target
