@@ -1,0 +1,32 @@
+- name: Install GNOME
+  package:
+    name:
+    - gnome-session
+    - gnome-shell
+    - gnome-settings-daemon
+    - gnome-keyring
+    - gnome-control-center
+    - xdg-desktop-portal-gnome
+    - xdg-user-dirs-gtk
+    - foot
+  tags:
+    - install
+    
+- name: Install GNOME
+  package:
+    name:
+    - gvfs-backends
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+    
+- name: Install GNOME
+  package:
+    name:
+    - gvfs-smb
+    - gvfs-mtp
+    - gvfs-gphoto2
+    - gvfs-afc
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
