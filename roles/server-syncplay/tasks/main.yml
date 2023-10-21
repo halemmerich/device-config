@@ -42,7 +42,7 @@
 
 - name: 'Get index.html'
   get_url:
-    url: 'https://syncplay.pl/download/'
+    url: 'https://github.com/Syncplay/syncplay/releases?q=stable&expanded=true'
     dest: '{{ download_repo.path }}'
     force: yes
   when: download_repo.path is defined
