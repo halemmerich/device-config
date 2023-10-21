@@ -1,8 +1,0 @@
-- name: Install generic UI components
-  package:
-    name:
-    - xorg-server
-    - xorg-xrandr
-    - xorg-xkill
-  tags:
-    - install

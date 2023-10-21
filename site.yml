@@ -141,7 +141,6 @@
 - hosts: desktop
   become: yes
   roles:
-  - X11
   - kernel-zen
   - kernel
   - automount
