@@ -17,7 +17,7 @@
     - config
 
 - name: Update Databases
-  shell: pacman -Sy
+  shell: pacman -Syy
   when: ansible_os_family == "Archlinux"
   tags:
     - install
