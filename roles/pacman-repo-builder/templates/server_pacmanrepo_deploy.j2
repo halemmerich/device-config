@@ -16,6 +16,5 @@ then
 	exit 1
 fi
 
-cd ~
-
-rsync -rl /var/lib/pacman-repo-builder/repo/ "$TARGET"
+cd /var/lib/pacman-repo-builder
+rsync --delete -rl /var/lib/pacman-repo-builder/repo/ "$TARGET"
