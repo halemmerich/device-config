@@ -1,0 +1,2 @@
+samba_smb_service: smb
+samba_nmb_service: nmb

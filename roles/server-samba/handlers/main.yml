@@ -3,8 +3,8 @@
     name: '{{ item }}'
     state: restarted
   loop:
-    - smb
-    - nmb
+    - "{{ samba_smb_service | default('smb') }}"
+    - "{{ samba_nmb_service | default('nmb') }}"
   when: samba_install.changed
 
 - name: reload_samba
@@ -12,6 +12,7 @@
     name: '{{ item }}'
     state: reloaded
   loop:
-    - smb
-    - nmb
+    - "{{ samba_smb_service | default('smb') }}"
+    - "{{ samba_nmb_service | default('nmb') }}"
   when: samba_config.changed
+
