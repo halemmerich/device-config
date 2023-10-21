@@ -1,10 +1,12 @@
 - name: 'Install'
   package:
     name:
-    - nextcloud
+    - php-legacy
     - php-legacy-fpm
     - php-legacy-redis
     - php-legacy-igbinary
+    - php-legacy-gd
+    - nextcloud
     - pwgen
     - redis
   tags:
@@ -25,15 +27,15 @@
 
 - name: Configure directories
   file:
-    path: '{{ item }}'
+    path: '{{ item.path }}'
     owner: '{{ nextcloud_user }}'
-    mode: '0700'
+    mode: '{{ item.mode }}'
     state: directory
   loop:
-   - '/var/lib/nextcloud'
-   - '/var/lib/nextcloud/apps'
-   - '/var/lib/nextcloud/data'
-   - '/var/lib/nextcloud/sessions'
+   - { path: '/var/lib/nextcloud', mode: '0755' }
+   - { path: '/var/lib/nextcloud/apps', mode: '0755' }
+   - { path: '/var/lib/nextcloud/data', mode: '0770' }
+   - { path: '/var/lib/nextcloud/sessions', mode: '0700' }
 
 - user:
     name: nextcloud

@@ -2,6 +2,43 @@
     
 - include_tasks: "{{ ansible_os_family | lower }}.yml"
 
+- name: Configure memory limit
+  lineinfile:
+    dest: "{{ php_ini_path }}"
+    regexp: "memory_limit ="
+    line: "memory_limit = 1024M"
+  notify: restart_nginx
+  when: ansible_os_family == "Debian"
+  tags:
+    - config
+
+- name: 'Create configs'
+  template:
+    src: php/nextcloud.conf.j2
+    dest: '{{ php_fpm_path }}/nextcloud.conf'
+    mode: '0600'
+  notify: restart_nginx
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - config
+    
+- name: 'Create configs'
+  template:
+    src: php/override.conf.j2
+    dest: '/etc/systemd/system/{{ php_fpm_service }}.service.d/override.conf'
+    mode: '0600'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Start services'
+  systemd:
+    name: "{{ php_fpm_service }}"
+    state: restarted
+    daemon_reload: yes
+  tags:
+    - config
+
 - name: 'Install packages'
   package:
     name:
@@ -54,16 +91,6 @@
   tags:
     - config
 
-- name: Configure memory limit
-  lineinfile:
-    dest: "{{ php_ini_path }}"
-    regexp: "memory_limit ="
-    line: "memory_limit = 1024M"
-  notify: restart_nginx
-  when: ansible_os_family == "Debian"
-  tags:
-    - config
-
 - name: 'Create config nginx server'
   template:
     src: nginx/nextcloud-server.conf.j2
@@ -100,24 +127,6 @@
   tags:
     - config
 
-- name: 'Create configs'
-  template:
-    src: php/nextcloud.conf.j2
-    dest: '{{ php_fpm_path }}/nextcloud.conf'
-    mode: '0600'
-  notify: restart_nginx
-  when: ansible_os_family == "Archlinux"
-  tags:
-    - config
-
-- name: 'Start services'
-  systemd:
-    name: "{{ php_fpm_service }}"
-    state: restarted
-    daemon_reload: yes
-  tags:
-    - config
-
 - name: 'Detect webshares'
   stat:
     path: /var/lib/webdav/shares
@@ -130,15 +139,6 @@
     path: "/etc/systemd/system/{{ php_fpm_service }}.service.d/"
     mode: '0700'
     state: directory
-  tags:
-    - config
-
-- name: 'Create configs'
-  template:
-    src: php/override.conf.j2
-    dest: '/etc/systemd/system/{{ php_fpm_service }}.service.d/override.conf'
-    mode: '0600'
-  notify: restart_nginx
   tags:
     - config
 
@@ -162,6 +162,17 @@
     login_user: root
     priv:
       'nextcloud.*': 'ALL'
+  tags:
+    - config
+  
+- name: Configure directories
+  file:
+    path: "{{ nextcloud_config_dir }}"
+    mode: '0640'
+    owner: "{{ nextcloud_user }}"
+    group: "{{ nextcloud_group }}"
+    state: directory
+  when: nextcloud_config_dir is defined
   tags:
     - config
 

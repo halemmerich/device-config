@@ -1,7 +1,8 @@
 nextcloud_path: /var/www/nextcloud
 nextcloud_data_path: /var/lib/nextcloud/data
-nextcloud_config_path: /var/www/nextcloud/config/config.php
-nextcloud_config_path_ro: /var/www/nextcloud/config/config.php
+nextcloud_config_dir: /var/www/nextcloud/config
+nextcloud_config_path: "{{ nextcloud_config_dir }}/config.php"
+nextcloud_config_path_ro: "{{ nextcloud_config_dir }}/onfig.php"
 nextcloud_user: www-data
 nextcloud_group: www-data
 php_command: php

@@ -37,7 +37,8 @@
 
   - name: Determine latest available version
     shell: 'grep -Eo "[0-9]{1,2}\.[0-9]{1,3}\.[0-9]{1,3}" {{ download_repo.path }} | sort -uV | tail -n1'
-    register: latest_determined
+    register: nextcloud_version
+    when: nextcloud_version is undefined
 
   - name: Remove temporary file
     file:
@@ -47,26 +48,25 @@
     block:
       - name: Configure directories
         file:
-          path: '{{ item }}'
+          path: '{{ item.path }}'
           owner: '{{ server_nginx_user }}'
-          mode: '0700'
+          mode: '{{ item.mode }}'
           state: directory
         loop:
-          - '{{ nextcloud_path }}'
-          - '/var/lib/nextcloud'
-          - '/var/lib/nextcloud/apps'
-          - '/var/lib/nextcloud/data'
-          - '/var/log/nextcloud/'
+        - { path: '/var/lib/nextcloud', mode: '0755' }
+        - { path: '/var/lib/nextcloud/apps', mode: '0755' }
+        - { path: '/var/lib/nextcloud/data', mode: '0770' }
+        - { path: '/var/lib/nextcloud/sessions', mode: '0700' }
 
-      - name: 'Deploy version {{ latest_determined.stdout }}'
+      - name: 'Deploy version {{ nextcloud_version.stdout }}'
         unarchive:
-          src: "https://download.nextcloud.com/server/releases/nextcloud-{{ latest_determined.stdout }}.tar.bz2"
+          src: "https://download.nextcloud.com/server/releases/nextcloud-{{ nextcloud_version.stdout }}.tar.bz2"
           dest: '{{ nextcloud_path }}'
           remote_src: yes
           owner: '{{ server_nginx_user }}'
           group: '{{ server_nginx_user }}'
           extra_opts: [--strip-components=1]
-        when: latest_determined.stdout is defined
+        when: nextcloud_version.stdout is defined
         
   when: not install_path.stat.exists
   tags:
