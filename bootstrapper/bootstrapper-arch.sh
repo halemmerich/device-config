@@ -1,11 +1,5 @@
 #!/bin/sh
 
-# Example commands to run on installer environments for remote install
-# loadkeys de			# change to whatever keyboard layout you like
-# passwd				# set a root password 
-# systemctl start sshd	# start ssh to copy over the bootstrapper script
-# ip addr				# get the ip for that
-
 set -e
 #Bootstrap config:
 
@@ -20,29 +14,37 @@ then
 fi
 
 function printhelp {
-	echo "Usage: $(basename $0) <bootstraptype> <blockdevice> [NEW_HOSTNAME]
+	echo \
+"Usage: $(basename $0) <bootstraptype> <blockdevice> [NEW_HOSTNAME]
 
 Types:
 
-partition	create partition scheme while DELETING ALL CONTENTS of given device
-bare		complete installation from bare metal while DELETING ALL CONTENTS of given device, expects NEW_HOSTNAME
-install		expects the structure partition creates and does a complete install, expects NEW_HOSTNAME
-mount		mounts working structure in /mnt, does nothing else
-umount		umounts working structure in /mnt, does nothing else
-loader		only (re)installs the bootloader, expects system as created by bare or install
-config		only (re)configure the system as created by bare or install
+partition   create partition scheme while DELETING ALL CONTENTS of given device
+bare        complete installation from bare metal while DELETING ALL CONTENTS of given device, expects NEW_HOSTNAME
+install	    expects the structure partition creates and does a complete install, expects NEW_HOSTNAME
+mount       mounts working structure in /mnt, does nothing else
+umount      umounts working structure in /mnt, does nothing else
+loader      only (re)installs the bootloader, expects system as created by bare or install
+config      only (re)configure the system as created by bare or install
 
 Directories for keyfiles:
-<workingdir>/*.pub				used for admin auth and remote initrd unlock keys
-<workingdir>/authkeys/*.pub		additional keys for admin auth
-<workingdir>/remotekeys/*.pub	additional keys for remote initrd unlock
+  <workingdir>/*.pub              used for admin auth and remote initrd unlock keys
+  <workingdir>/authkeys/*.pub     additional keys for admin auth
+  <workingdir>/remotekeys/*.pub   additional keys for remote initrd unlock
 
 Environment variables:
-ADMIN_PASSWORD_HASH		sets a single password hash for the admin user, prevents interactively asking for that password
-LUKS_PASSWORD			sets LUKS password, prevents interactively asking for that password
-BOOT_TYPE				sets boot type, bios or efi, prevents autodetection of current boot mode
-ADMIN_AUTHORIZED_KEYS	sets a list of newline separated ssh public keys for admin user, prevents reading of keyfiles
-REMOTE_UNLOCK_KEYS		sets a list of newline separated ssh public keys for root user, for unlocking in initrd, prevents reading of keyfiles
+  ADMIN_PASSWORD_HASH     sets a single password hash for the admin user, prevents interactively asking for that password
+  LUKS_PASSWORD           sets LUKS password, prevents interactively asking for that password
+  BOOT_TYPE               sets boot type, bios or efi, prevents autodetection of current boot mode
+  ADMIN_AUTHORIZED_KEYS   sets a list of newline separated ssh public keys for admin user, prevents reading of keyfiles
+  REMOTE_UNLOCK_KEYS      sets a list of newline separated ssh public keys for root user, for unlocking in initrd, prevents reading of keyfiles
+  SWAP_SIZE               set a size for the swap partition in GB
+
+Example commands to run on installer environments for remote install
+  loadkeys de             # change to whatever keyboard layout you like
+  passwd                  # set a root password 
+  systemctl start sshd    # start ssh to copy over the bootstrapper script
+  ip addr                 # get the ip for that
 "
 }
 
@@ -196,9 +198,11 @@ fi
 
 if [ -n "$STEP_BARE" ]
 then
-
-	MEMTOTAL=$(cat /proc/meminfo | grep MemTotal | sed -e "s|[^0-9]||g")
-	MEMORY_SIZE=$(( ( $MEMTOTAL / ( 1024 * 1024 ) ) + 1 ))
+	if [ -z "$SWAP_SIZE" ]
+	then
+		MEMTOTAL=$(cat /proc/meminfo | grep MemTotal | sed -e "s|[^0-9]||g")
+		SWAP_SIZE=$(( ( $MEMTOTAL / ( 1024 * 1024 ) ) + 1 ))
+	fi
 
 	wipefs -a -f "$DEVICE"
 
@@ -214,7 +218,7 @@ then
 	then
 	sgdisk \
 	  --new 1::+1G --typecode 1:ef00 --change-name 1:'ESP' \
-	  --new 2::+${MEMORY_SIZE}G --typecode 2:8200 --change-name 2:'SWAP' \
+	  --new 2::+${SWAP_SIZE}G --typecode 2:8200 --change-name 2:'SWAP' \
 	  --new 3::-0 --typecode 3:8300 --change-name 3:'ROOT' \
 	  "$DEVICE"
 		
@@ -222,7 +226,7 @@ then
 	sgdisk \
 	  --new 1::+1M --typecode 1:ef02 --change-name 1:'BIOSBOOT' \
 	  --new 2::+1G --typecode 2:8300 --change-name 2:'BOOT' \
-	  --new 3::+${MEMORY_SIZE}G --typecode 3:8200 --change-name 3:'SWAP' \
+	  --new 3::+${SWAP_SIZE}G --typecode 3:8200 --change-name 3:'SWAP' \
 	  --new 4::-0 --typecode 4:8300 --change-name 4:'ROOT' \
 	  "$DEVICE"
 		
