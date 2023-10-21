@@ -17,10 +17,6 @@ pacman_repos:
   - name: "community"
     include: "/etc/pacman.d/mirrorlist"
 
-pacman_siglevel: Never
-pacman_mirrorlist:
-  - "https://archive.archlinux.org/repos/2022/01/10/$repo/os/$arch"
-
 server_dns_allowrecursion:
   - any
 server_dns_forwarders:

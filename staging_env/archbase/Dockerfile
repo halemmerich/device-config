@@ -1,12 +1,17 @@
-FROM archlinux:base-20220109.0.43549
+#FROM archlinux:base-20220109.0.43549
+FROM archlinux
 ARG PASSWORD="ansible"
 ARG SSH_PUBKEY=""
 ARG TIMEZONE=Europe/Berlin
 
-RUN sed -i -e "s|^SigLevel.*|SigLevel=Never|" /etc/pacman.conf
-RUN echo 'Server=https://archive.archlinux.org/repos/2022/01/10/$repo/os/$arch' > /etc/pacman.d/mirrorlist
+#RUN sed -i -e "s|^SigLevel.*|SigLevel=Never|" /etc/pacman.conf
+#RUN echo 'Server=https://archive.archlinux.org/repos/2022/01/10/$repo/os/$arch' > /etc/pacman.d/mirrorlist
 
-RUN pacman -Syu --noconfirm openssh python sudo
+RUN pacman -Syy --noconfirm 
+RUN pacman -S --noconfirm archlinux-keyring
+RUN pacman-key --init
+RUN pacman-key --populate
+RUN pacman -Su --noconfirm openssh python sudo
 RUN mkdir /etc/systemd/system/multi-user.target.wants
 RUN ln -s /usr/lib/systemd/system/sshd.service /etc/systemd/system/multi-user.target.wants/sshd.service
 RUN ln -s /usr/share/zoneinfo/$TIMEZONE /etc/localtime
