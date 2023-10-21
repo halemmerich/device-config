@@ -25,8 +25,7 @@
     - libgnome-keyring
     - ttf-dejavu
     - swaylock
-    - pipewire-media-session
-    - libpipewire02
+    - wireplumber
     - otf-font-awesome
     - xorg-xwayland
   tags:
@@ -97,13 +96,10 @@
 - name: Configure desktop capturing
   become_user: "{{ item }}"
   systemd:
-    name: pipewire-media-session
+    name: wireplumber
     scope: user
     enabled: yes
   loop: "{{ sway_users }}"
-  environment:
-    XDG_RUNTIME_DIR: "/run/user/{{ users[item].uid }}"
-    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ users[item].uid }}/bus"
   tags:
     - config
   when: ansible_os_family == "Archlinux"
