@@ -15,15 +15,15 @@ mkdir -p /var/vmail
 rsync_restore mail/vmail/ /var/vmail/
 
 chown vmail:vmail -R /var/vmail
-find /var/lib/nextcloud/data -type f -print0 | xargs -0 chmod 640
-find /var/lib/nextcloud/data -type d -print0 | xargs -0 chmod 750
+find /var/vmail -type f -print0 | xargs -0 chmod 640
+find /var/vmail -type d -print0 | xargs -0 chmod 750
 
 mkdir -p /var/spool/postfix
 rsync_restore mail/spool/ /var/spool/postfix/
 
 chown postfix:postfix -R /var/spool/postfix
-find /var/lib/nextcloud/data -type f -print0 | xargs -0 chmod 640
-find /var/lib/nextcloud/data -type d -print0 | xargs -0 chmod 750
+find /var/spool/postfix -type f -print0 | xargs -0 chmod 640
+find /var/spool/postfix -type d -print0 | xargs -0 chmod 750
 
 systemctl restart postfix
 systemctl restart dovecot
