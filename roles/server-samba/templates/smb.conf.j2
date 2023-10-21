@@ -17,6 +17,7 @@
 	create mask = {{ share.createmask | default('755') }}
 	guest ok = {{ share.guestok | default('no') }}
 	follow symlinks = {{ share.followsymlinks | default('no') }}
+	case sensitive = {{ share.casesensitive | default('auto') }}
 	wide links = {{ share.widelinks | default('no') }}
 	{% if share.validusers is defined %}valid users ={% for item in share.validusers %} {{item}}{% endfor %}{% endif %}
 	
