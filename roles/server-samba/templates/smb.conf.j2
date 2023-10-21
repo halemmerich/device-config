@@ -8,6 +8,13 @@
 	allow insecure wide links = yes
 	unix extensions  = yes
 
+{% if server_samba_options is defined %}
+{% for option in server_samba_options %}
+	{{ option }}
+{% endfor %}
+{% endif %}
+
+
 {% if server_samba_shares is defined %}
 {% for share in server_samba_shares %}
 [{{ share.name }}]
