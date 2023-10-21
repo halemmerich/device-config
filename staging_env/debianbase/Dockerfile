@@ -1,9 +1,10 @@
-FROM debian:bullseye-slim
+FROM debian:bullseye
 ARG PASSWORD="ansible"
 ARG SSH_PUBKEY=""
 ARG TIMEZONE=Europe/Berlin
 
 RUN apt-get update
+RUN apt-get upgrade -y
 RUN apt-get install -y ssh python sudo ca-certificates nano python3-apt locales
 RUN ln -s /usr/lib/systemd/system/sshd.service /etc/systemd/system/multi-user.target.wants/sshd.service
 
