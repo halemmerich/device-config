@@ -23,10 +23,9 @@
     dest: "{{ item.dest }}"
     owner: "{{ item.user }}"
     group: "{{ item.group }}"
-    mode: '0660'
+    mode: '0644'
   loop:
-    - { src: "php/php-fpm.ini.j2", dest: "/etc/php-legacy/php-fpm.ini", user: "root", group: "root" }
-    - { src: "php/php-fpm.ini.j2", dest: "/etc/webapps/nextcloud/php.ini", user: "{{ nextcloud_user }}", group: "{{ nextcloud_group}}" }
+    - { src: "php/php-fpm.ini.j2", dest: "{{ php_ini_path }}", user: "root", group: "root" }
   tags:
     - config
 
