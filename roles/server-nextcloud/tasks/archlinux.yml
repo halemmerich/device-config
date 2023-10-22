@@ -12,6 +12,11 @@
   tags:
     - install
 
+- name: Allow install in config
+  lineinfile:
+    path: "/etc/redis/redis.conf"
+    line: "supervised auto"
+
 - name: 'Create php config'
   template:
     src: "{{ item.src }}"
