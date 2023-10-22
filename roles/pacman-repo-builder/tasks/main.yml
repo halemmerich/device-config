@@ -112,6 +112,8 @@
 - name: Build
   command: "server_pacmanrepo_build {{ server_pacmanrepo_name }}"
   when: server_pacmanrepo_build | default(false)
+  tags:
+    - upgrade
   
 - name: Deploy
   command: server_pacmanrepo_deploy
