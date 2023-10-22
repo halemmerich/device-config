@@ -49,6 +49,7 @@ server_pacmanrepo_allow_sign_fail: "true"
 server_pacmanrepo_build: true
 server_pacmanrepo_deploy: true
 server_pacmanrepo_target: "/var/lib/pacman-repo/packages"
+server_pacmanrepo_keyserver: pgp.mit.edu
 server_pacmanrepo_keys:
   - 0FDE7BE0E88F5E48
 server_pacmanrepo_deps:

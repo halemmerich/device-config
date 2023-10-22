@@ -26,7 +26,7 @@ if [ -f keys.list ]
 then
 	for C in $(cat keys.list)
 	do
-		su pacmanrepobuilder -c "gpg --recv-keys $C"
+		su pacmanrepobuilder -c "gpg --keyserver {{ server_pacmanrepo_keyserver }}  --recv-keys $C"
 	done
 fi
 
