@@ -2,6 +2,13 @@
     
 - include_tasks: "{{ ansible_os_family | lower }}.yml"
 
+- name: 'Detect webshares'
+  stat:
+    path: /var/lib/webdav/shares
+  register: webshare_path
+  tags:
+    - config
+
 - name: Configure memory limit
   lineinfile:
     dest: "{{ php_ini_path }}"
@@ -21,7 +28,14 @@
   when: ansible_os_family == "Archlinux"
   tags:
     - config
-    
+
+- name: Configure directories
+  file:
+    path: "/etc/systemd/system/{{ php_fpm_service }}.service.d/"
+    mode: '0700'
+    state: directory
+  tags:
+    - config
 - name: 'Create configs'
   template:
     src: php/override.conf.j2
@@ -124,21 +138,6 @@
     dest: '/etc/nginx/proxy_protocol_mappings.d/nextcloud.conf'
     mode: '0700'
   notify: restart_nginx
-  tags:
-    - config
-
-- name: 'Detect webshares'
-  stat:
-    path: /var/lib/webdav/shares
-  register: webshare_path
-  tags:
-    - config
-
-- name: Configure directories
-  file:
-    path: "/etc/systemd/system/{{ php_fpm_service }}.service.d/"
-    mode: '0700'
-    state: directory
   tags:
     - config
 
