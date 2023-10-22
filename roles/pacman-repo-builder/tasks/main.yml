@@ -88,6 +88,12 @@
 - name: Ensure config is set
   ansible.builtin.lineinfile:
     path: /etc/pacmanrepo.conf
+    line: 'ALLOW_SIGN_FAIL={{ server_pacmanrepo_allow_sign_fail | default("") }}'
+    create: yes
+
+- name: Ensure config is set
+  ansible.builtin.lineinfile:
+    path: /etc/pacmanrepo.conf
     line: 'TARGET={{ server_pacmanrepo_target | default("") }}'
     create: yes
 
