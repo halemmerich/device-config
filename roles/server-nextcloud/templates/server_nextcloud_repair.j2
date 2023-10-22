@@ -3,7 +3,7 @@
 systemctl stop nextcloud-cron.timer
 server_nextcloud_config_writable
 
-su -s /bin/bash {{ nextcloud_user }} -c "{{php_command}} {{ nextcloud_path }}/occ maintenance:repair --include-expensive"
+su -s /bin/bash {{ nextcloud_user }} -c "{{php_command}} -c {{ php_ini_path }} {{ nextcloud_path }}/occ maintenance:repair --include-expensive"
 
 server_nextcloud_config_readonly
 systemctl start nextcloud-cron.timer

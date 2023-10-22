@@ -1,7 +1,7 @@
 #!/bin/bash
 
 server_nextcloud_config_writable
-su -s /bin/bash {{ nextcloud_user }} -c "{{php_command}} {{ nextcloud_path }}/occ app:disable $1"
+su -s /bin/bash {{ nextcloud_user }} -c "{{php_command}} -c {{ php_ini_path }} {{ nextcloud_path }}/occ app:disable $1"
 server_nextcloud_config_readonly
 
 echo Done
