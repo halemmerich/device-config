@@ -88,18 +88,21 @@
 - name: Ensure config is set
   ansible.builtin.lineinfile:
     path: /etc/pacmanrepo.conf
+    regex: '^ALLOW_SIGN_FAIL'
     line: 'ALLOW_SIGN_FAIL={{ server_pacmanrepo_allow_sign_fail | default("") }}'
     create: yes
 
 - name: Ensure config is set
   ansible.builtin.lineinfile:
     path: /etc/pacmanrepo.conf
+    regex: '^TARGET'
     line: 'TARGET={{ server_pacmanrepo_target | default("") }}'
     create: yes
 
 - name: Ensure config is set
   ansible.builtin.lineinfile:
     path: /etc/pacmanrepo.conf
+    regex: '^REPO_NAME'
     line: 'REPO_NAME={{ server_pacmanrepo_name | default("") }}'
     create: yes
 
@@ -113,7 +116,7 @@
   command: "server_pacmanrepo_build {{ server_pacmanrepo_name }}"
   when: server_pacmanrepo_build | default(false)
   tags:
-    - upgrade
+  - upgrade
   
 - name: Deploy
   command: server_pacmanrepo_deploy
