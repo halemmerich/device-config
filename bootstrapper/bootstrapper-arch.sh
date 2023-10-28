@@ -246,7 +246,7 @@ then
 	set -e
 
 
-	if [ "BOOT_TYPE" = "efi" ]
+	if [ "$BOOT_TYPE" = "efi" ]
 	then
 	sgdisk \
 	  --new 1::+${BOOT_SIZE}G --typecode 1:ef00 --change-name 1:'ESP' \
@@ -314,7 +314,7 @@ then
 		mount /dev/mapper/luks-$UUID_ROOT /mnt
 	fi
 	
-	if [ "BOOT_TYPE" = "efi" ]
+	if [ "$BOOT_TYPE" = "efi" ]
 	then
 		if mount | grep "/mnt/boot " | grep $(realpath $EFI) > /dev/null
 		then
@@ -408,7 +408,7 @@ EOF
 
 	if [ -z "$REMOTE_UNLOCK_KEYS" ]
 	then
-		if [ $( ls *.pub | wc -l ) -ge 1 ]
+		if [ -n $( find . -maxdepth 1 -name "*.pub" -print -quit ) ]
 		then
 			cat *.pub >> /mnt/root/.ssh/authorized_keys
 		fi
@@ -465,7 +465,7 @@ EOF
 	
 	if [ -z "$ADMIN_AUTHORIZED_KEYS" ]
 	then
-		if [ $( ls *.pub | wc -l ) -ge 1 ]
+		if [ -n $( find . -maxdepth 1 -name "*.pub" -print -quit ) ]
 		then
 			cat *.pub >> /mnt/home/admin/.ssh/authorized_keys
 		fi
