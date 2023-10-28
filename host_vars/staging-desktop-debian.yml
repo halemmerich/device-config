@@ -19,7 +19,11 @@ server_subdomains:
   - xmpp
   - remotely
   - mail
-  
+
+#hosts_entries:
+#  - ip: "123.123.123.1"
+#    hostnames: "canonical alias1 alias2"
+
 hosts_entries:
   - name: staging-server-arch
     ip: "{{ hostvars['staging-server-arch'].public_ip_v4 }}"
@@ -34,6 +38,26 @@ hosts_entries:
     aliases:
     - server-debian
 
-#hosts_entries:
-#  - ip: "123.123.123.1"
-#    hostnames: "canonical alias1 alias2"
+automount_credentials:
+  - username: tester
+    password: "{{ lookup('password', 'credentials/staging-nas-debian.staging.debian/samba/tester length=12') }}"
+
+automount_onlinechecks:
+  - "staging-nas-debian"
+
+automount_mounts:
+  - escapedname: "media-testshare"
+    src: "//staging-nas-debian/testshare"
+    path: "/media/testshare"
+    type: "cifs"
+    waitfor: "staging-nas-debian"
+  - escapedname: "media-testshare_guest"
+    src: "//staging-nas-debian/testshare-guest"
+    path: "/media/testshare_guest"
+    type: "cifs"
+    waitfor: "staging-nas-debian"
+  - escapedname: "media-testshare_guest_ro"
+    src: "//staging-nas-debian/testshare-guest-ro"
+    path: "/media/testshare_guest_ro"
+    type: "cifs"
+    waitfor: "staging-nas-debian"

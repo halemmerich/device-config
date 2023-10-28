@@ -30,7 +30,11 @@ users:
     uid: 2000
     fullname: Test User
     mail: testuser@{{ domain }}
-    
+
+server_samba_users:
+  - username: user
+    password: "{{ lookup('password', 'credentials/{{ fqdn }}/samba/martin length=12') }}"
+
 server_samba_shares:
   - name: testshare
     path: /tmp
