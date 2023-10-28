@@ -1,7 +1,7 @@
 - name: Install java
   package:
     name:
-    - jdk11-openjdk
+    - jdk17-openjdk
   when: ansible_os_family == "Archlinux"
   tags:
     - install
@@ -9,7 +9,7 @@
 - name: Install java
   package:
     name:
-    - openjdk-11-jdk
+    - openjdk-17-jdk
     - uuid-runtime
   when: ansible_os_family == "Debian"
   tags:
