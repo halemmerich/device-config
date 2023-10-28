@@ -1,7 +1,7 @@
 - name: 'Install packages'
   package:
     name:
-    - jre11-openjdk
+    - jre17-openjdk
     - jitsi-meet-bin
     - jitsi-videobridge-bin
     - jitsi-meet-prosody-bin

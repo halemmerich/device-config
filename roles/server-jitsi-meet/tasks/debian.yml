@@ -17,7 +17,7 @@
 - name: 'Install packages'
   apt:
     name:
-    - openjdk-11-jre
+    - openjdk-17-jre
     - jitsi-meet-web
     - jitsi-videobridge2
     - jitsi-meet-prosody
