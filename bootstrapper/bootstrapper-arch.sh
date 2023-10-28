@@ -48,7 +48,7 @@ Directories for keyfiles:
   <workingdir>/remotekeys/*.pub   additional keys for remote initrd unlock
 
 Environment variables:
-  ADMIN_PASSWORD_HASH     sets a single password hash for the admin user, prevents interactively asking for that password
+  ADMIN_PASSWORD          sets a single password hash for the admin user, prevents interactively asking for that password
   LUKS_PASSWORD           sets LUKS password, prevents interactively asking for that password
   BOOT_TYPE               sets boot type, bios or efi, prevents autodetection of current boot mode
   ADMIN_AUTHORIZED_KEYS   sets a list of newline separated ssh public keys for admin user, prevents reading of keyfiles
@@ -113,6 +113,34 @@ c*)
 	exit 1
 	;;
 esac
+
+while [ -z "$LUKS_PASSWORD" -a \( -n "$STEP_BARE" -o -n "$STEP_MOUNT" \) ]
+do
+	echo Enter LUKS password: 
+	read -s LUKS_PASSWORD1
+	echo again: 
+	read -s LUKS_PASSWORD2
+	if [ "$LUKS_PASSWORD1" = "$LUKS_PASSWORD2" ]
+	then	
+		LUKS_PASSWORD="$LUKS_PASSWORD1"
+	else
+		echo Passwords did not match
+	fi
+done
+
+while [ -z "$ADMIN_PASSWORD" -a -n "$STEP_CONFIG" ]
+do
+	echo Enter admin password: 
+	read -s ADMIN_PASSWORD1
+	echo again: 
+	read -s ADMIN_PASSWORD2
+	if [ "$ADMIN_PASSWORD1" = "$ADMIN_PASSWORD2" ]
+	then	
+		ADMIN_PASSWORD="$ADMIN_PASSWORD1"
+	else
+		echo Passwords did not match
+	fi
+done
 
 loadkeys $KEYMAP
 
@@ -184,20 +212,6 @@ function closeLuks {
 }
 
 timedatectl set-ntp true
-
-while [ -z "$LUKS_PASSWORD" -a \( -n "$STEP_BARE" -o -n "$STEP_MOUNT" \) ]
-do
-	echo Enter LUKS password: 
-	read -s LUKS_PASSWORD1
-	echo again: 
-	read -s LUKS_PASSWORD2
-	if [ "$LUKS_PASSWORD1" = "$LUKS_PASSWORD2" ]
-	then	
-		LUKS_PASSWORD="$LUKS_PASSWORD1"
-	else
-		echo Passwords did not match
-	fi
-done
 
 curl -o /etc/pacman.d/mirrorlist "https://archlinux.org/mirrorlist/?country=${MIRRORLIST_COUNTRY}&protocol=http&protocol=https&ip_version=4&use_mirror_status=on"
 sed -i 's/^#Server/Server/' /etc/pacman.d/mirrorlist
@@ -445,13 +459,7 @@ EOF
 	#reinstall sudo
 	arch-chroot /mnt pacman --noconfirm -S sudo
 
-	if [ -z "$ADMIN_PASSWORD_HASH" ]
-	then
-		echo Enter password for user admin
-		arch-chroot /mnt passwd admin
-	else
-		arch-chroot /mnt sh -c "echo admin:$ADMIN_PASSWORD_HASH | chpasswd --encrypted"
-	fi
+	arch-chroot /mnt sh -c "echo admin:$ADMIN_PASSWORD | chpasswd"
 
 	arch-chroot /mnt su -c "mkdir -p .ssh; ssh-keygen -f .ssh/id_rsa -N \"\" -C \"admin@$NEW_HOSTNAME\"" --login admin 
 	
