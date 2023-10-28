@@ -50,6 +50,7 @@
   systemd:
     name: "{{ item }}"
     enabled: yes
+    state: "started"
   loop:
     - redis
   tags:
