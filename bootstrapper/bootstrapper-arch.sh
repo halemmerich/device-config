@@ -18,6 +18,16 @@ then
 	BOOT_SIZE=2
 fi
 
+if [ -z "$KEYMAP" ]
+then
+	KEYMAP=de
+fi
+
+if [ -z "$MIRRORLIST_COUNTRY" ]
+then
+	MIRRORLIST_COUNTRY=DE
+fi
+
 function printhelp {
 	echo \
 "Usage: $(basename $0) <bootstraptype> <blockdevice> [NEW_HOSTNAME]
@@ -45,6 +55,8 @@ Environment variables:
   REMOTE_UNLOCK_KEYS      sets a list of newline separated ssh public keys for root user, for unlocking in initrd, prevents reading of keyfiles
   SWAP_SIZE               set a size for the swap partition in GB
   BOOT_SIZE               set a size for the boot/efi partition in GB
+  KEYMAP                  set a keymap for the console
+  MIRRORLIST_COUNTRY      set a country for the mirrorlist download
 
 Example commands to run on installer environments for remote install
   loadkeys de             # change to whatever keyboard layout you like
@@ -102,6 +114,7 @@ c*)
 	;;
 esac
 
+loadkeys $KEYMAP
 
 if [ -z "$2" -a \( -n "$STEP_MOUNT" -o -n "$STEP_UMOUNT"  -o -n "$STEP_INSTALL" \) ]
 then
@@ -170,7 +183,6 @@ function closeLuks {
 	set -e
 }
 
-loadkeys de-latin1
 timedatectl set-ntp true
 
 while [ -z "$LUKS_PASSWORD" -a \( -n "$STEP_BARE" -o -n "$STEP_MOUNT" \) ]
@@ -187,7 +199,7 @@ do
 	fi
 done
 
-curl -o /etc/pacman.d/mirrorlist "https://archlinux.org/mirrorlist/?country=DE&protocol=http&protocol=https&ip_version=4&use_mirror_status=on"
+curl -o /etc/pacman.d/mirrorlist "https://archlinux.org/mirrorlist/?country=${MIRRORLIST_COUNTRY}&protocol=http&protocol=https&ip_version=4&use_mirror_status=on"
 sed -i 's/^#Server/Server/' /etc/pacman.d/mirrorlist
 
 pacman -Sy
@@ -372,7 +384,7 @@ EOF
 	fi
 	
 
-	echo "KEYMAP=de" > /mnt/etc/vconsole.conf
+	echo "KEYMAP=${KEYMAP}" > /mnt/etc/vconsole.conf
 
 	arch-chroot /mnt pacman --noconfirm -S mkinitcpio-utils tinyssh-convert mkinitcpio-systemd-tool busybox openssh tinyssh cryptsetup
 
