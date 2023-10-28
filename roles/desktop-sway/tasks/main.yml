@@ -13,6 +13,7 @@
     - wofi
     - qt5ct
     - nemo
+    - foot
   tags:
     - install
 
