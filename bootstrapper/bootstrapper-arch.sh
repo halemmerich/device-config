@@ -13,6 +13,11 @@ then
 	fi
 fi
 
+if [ -z "$BOOT_SIZE" ]
+then
+	BOOT_SIZE=2
+fi
+
 function printhelp {
 	echo \
 "Usage: $(basename $0) <bootstraptype> <blockdevice> [NEW_HOSTNAME]
@@ -39,6 +44,7 @@ Environment variables:
   ADMIN_AUTHORIZED_KEYS   sets a list of newline separated ssh public keys for admin user, prevents reading of keyfiles
   REMOTE_UNLOCK_KEYS      sets a list of newline separated ssh public keys for root user, for unlocking in initrd, prevents reading of keyfiles
   SWAP_SIZE               set a size for the swap partition in GB
+  BOOT_SIZE               set a size for the boot/efi partition in GB
 
 Example commands to run on installer environments for remote install
   loadkeys de             # change to whatever keyboard layout you like
@@ -217,7 +223,7 @@ then
 	if [ "BOOT_TYPE" = "efi" ]
 	then
 	sgdisk \
-	  --new 1::+1G --typecode 1:ef00 --change-name 1:'ESP' \
+	  --new 1::+${BOOT_SIZE}G --typecode 1:ef00 --change-name 1:'ESP' \
 	  --new 2::+${SWAP_SIZE}G --typecode 2:8200 --change-name 2:'SWAP' \
 	  --new 3::-0 --typecode 3:8300 --change-name 3:'ROOT' \
 	  "$DEVICE"
@@ -225,7 +231,7 @@ then
 	else
 	sgdisk \
 	  --new 1::+1M --typecode 1:ef02 --change-name 1:'BIOSBOOT' \
-	  --new 2::+1G --typecode 2:8300 --change-name 2:'BOOT' \
+	  --new 2::+${BOOT_SIZE}G --typecode 2:8300 --change-name 2:'BOOT' \
 	  --new 3::+${SWAP_SIZE}G --typecode 3:8200 --change-name 3:'SWAP' \
 	  --new 4::-0 --typecode 4:8300 --change-name 4:'ROOT' \
 	  "$DEVICE"
