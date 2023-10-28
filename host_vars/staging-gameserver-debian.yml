@@ -58,7 +58,7 @@ linuxgsm_servers:
       - bc
       - jq
       - tmux
-      - netcat
+      - netcat-openbsd
       - lib32gcc-s1
       - lib32stdc++6
       - cpio
