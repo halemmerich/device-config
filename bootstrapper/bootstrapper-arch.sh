@@ -28,6 +28,12 @@ then
 	MIRRORLIST_COUNTRY=DE
 fi
 
+if [ -z "$SWAP_SIZE" ]
+then
+	MEMTOTAL=$(cat /proc/meminfo | grep MemTotal | sed -e "s|[^0-9]||g")
+	SWAP_SIZE=$(( ( $MEMTOTAL / ( 1024 * 1024 ) ) + 1 ))
+fi
+
 function printhelp {
 	echo \
 "Usage: $(basename $0) <bootstraptype> <blockdevice> [NEW_HOSTNAME]
@@ -53,7 +59,7 @@ Environment variables:
   BOOT_TYPE               sets boot type, bios or efi, prevents autodetection of current boot mode
   ADMIN_AUTHORIZED_KEYS   sets a list of newline separated ssh public keys for admin user, prevents reading of keyfiles
   REMOTE_UNLOCK_KEYS      sets a list of newline separated ssh public keys for root user, for unlocking in initrd, prevents reading of keyfiles
-  SWAP_SIZE               set a size for the swap partition in GB
+  SWAP_SIZE               set a size for the swap partition in GB, default is RAM size
   BOOT_SIZE               set a size for the boot/efi partition in GB
   KEYMAP                  set a keymap for the console
   MIRRORLIST_COUNTRY      set a country for the mirrorlist download
@@ -230,12 +236,6 @@ fi
 
 if [ -n "$STEP_BARE" ]
 then
-	if [ -z "$SWAP_SIZE" ]
-	then
-		MEMTOTAL=$(cat /proc/meminfo | grep MemTotal | sed -e "s|[^0-9]||g")
-		SWAP_SIZE=$(( ( $MEMTOTAL / ( 1024 * 1024 ) ) + 1 ))
-	fi
-
 	wipefs -a -f "$DEVICE"
 
 	sleep 2
