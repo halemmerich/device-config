@@ -1,11 +1,11 @@
 - name: Install
   package:
     name: samba
+    state: present
   register: samba_install
   notify: restart_samba
   tags:
     - install
-    - upgrade
 
 - name: 'Create config'
   template:
