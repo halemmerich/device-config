@@ -69,6 +69,12 @@ Example commands to run on installer environments for remote install
   passwd                  # set a root password 
   systemctl start sshd    # start ssh to copy over the bootstrapper script
   ip addr                 # get the ip for that
+
+  iwctl                   # launch a configuration console for wifi
+	device list
+	station <device> scan
+	station <device> get-networks
+	station <device> connect <SSID>
 "
 }
 
@@ -147,6 +153,26 @@ do
 		echo Passwords did not match
 	fi
 done
+
+echo \
+"Settings:
+ADMIN_PASSWORD          $ADMIN_PASSWORD
+LUKS_PASSWORD           $LUKS_PASSWORD
+BOOT_TYPE               $BOOT_TYPE
+ADMIN_AUTHORIZED_KEYS   $ADMIN_AUTHORIZED_KEYS
+REMOTE_UNLOCK_KEYS      $REMOTE_UNLOCK_KEYS
+SWAP_SIZE               $SWAP_SIZE
+BOOT_SIZE               $BOOT_SIZE
+KEYMAP                  $KEYMAP
+MIRRORLIST_COUNTRY      $MIRRORLIST_COUNTRY
+"
+
+read -p "Proceed? (y/n) " -n 1 -r
+if [ ! "$REPLY" = y ]
+then
+    echo Canceled
+	exit 1
+fi
 
 loadkeys $KEYMAP
 
