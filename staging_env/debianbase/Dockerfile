@@ -1,11 +1,11 @@
-FROM debian:bullseye
+FROM debian:bookworm
 ARG PASSWORD="ansible"
 ARG SSH_PUBKEY=""
 ARG TIMEZONE=Europe/Berlin
 
 RUN apt-get update
 RUN apt-get upgrade -y
-RUN apt-get install -y ssh python sudo ca-certificates nano python3-apt locales
+RUN apt-get install -y ssh python3 sudo ca-certificates nano python3-apt locales
 RUN ln -s /usr/lib/systemd/system/sshd.service /etc/systemd/system/multi-user.target.wants/sshd.service
 
 RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == systemd-tmpfiles-setup.service ] || rm -f $i; done);
