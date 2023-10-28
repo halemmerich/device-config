@@ -10,6 +10,7 @@
   package:
     name:
     - nginx
+    - libnginx-mod-stream
   when: ansible_os_family == "Debian"
   tags:
     - install
