@@ -426,7 +426,7 @@ EOF
 
 	echo "KEYMAP=${KEYMAP}" > /mnt/etc/vconsole.conf
 
-	arch-chroot /mnt pacman --noconfirm -S mkinitcpio-utils tinyssh-convert mkinitcpio-systemd-tool busybox openssh tinyssh cryptsetup
+	arch-chroot /mnt pacman --noconfirm -S mkinitcpio-utils mkinitcpio-systemd-tool busybox openssh tinyssh cryptsetup
 
 	mkdir -p /mnt/root/.ssh
 	
@@ -457,6 +457,9 @@ HOOKS=(base systemd autodetect modconf block keyboard sd-vconsole filesystems fs
 EOF
 
 	arch-chroot /mnt systemctl enable initrd-cryptsetup.path initrd-tinysshd.service initrd-network.service initrd-sysroot-mount.service
+
+	touch /mnt/etc/mkinitcpio-systemd-tools/config/authorized_keys
+
 	arch-chroot /mnt mkinitcpio -p linux-lts
 fi
 
