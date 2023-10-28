@@ -1,5 +1,8 @@
 nextcloud_path: /usr/share/webapps/nextcloud
-nextcloud_data_path: /var/lib/nextcloud/data
+nextcloud_rw_path: /var/lib/nextcloud
+nextcloud_data_path: "{{ nextcloud_rw_path }}/data"
+nextcloud_session_path: "{{ nextcloud_rw_path }}//sessions"
+nextcloud_apps_path: "{{ nextcloud_rw_path }}//apps"
 nextcloud_config_path: /etc/webapps/nextcloud/config/config.php
 nextcloud_php_config_path: /etc/webapps/nextcloud/config/php.ini
 nextcloud_config_path_ro: /usr/share/webapps/nextcloud/config/config.php

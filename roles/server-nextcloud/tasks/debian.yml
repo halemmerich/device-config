@@ -53,10 +53,11 @@
           mode: '{{ item.mode }}'
           state: directory
         loop:
-        - { path: '/var/lib/nextcloud', mode: '0755' }
-        - { path: '/var/lib/nextcloud/apps', mode: '0755' }
-        - { path: '/var/lib/nextcloud/data', mode: '0770' }
-        - { path: '/var/lib/nextcloud/sessions', mode: '0700' }
+        - { path: '{{ nextcloud_path }}', mode: '0755' }
+        - { path: '{{ nextcloud_rw_path }}', mode: '0755' }
+        - { path: '{{ nextcloud_apps_path }}', mode: '0755' }
+        - { path: '{{ nextcloud_data_path }}', mode: '0770' }
+        - { path: '{{ nextcloud_session_path }}', mode: '0700' }
 
       - name: 'Deploy version {{ nextcloud_version.stdout }}'
         unarchive:
@@ -105,6 +106,7 @@
   systemd:
     name: "{{ item }}"
     enabled: yes
+    state: started
   loop:
     - redis-server
   tags:
