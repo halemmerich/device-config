@@ -426,7 +426,7 @@ EOF
 
 	echo "KEYMAP=${KEYMAP}" > /mnt/etc/vconsole.conf
 
-	arch-chroot /mnt pacman --noconfirm -S mkinitcpio-utils mkinitcpio-systemd-tool busybox openssh tinyssh cryptsetup
+	arch-chroot /mnt pacman --noconfirm -S mkinitcpio-utils mkinitcpio-systemd-tool busybox openssh python tinyssh cryptsetup
 
 	mkdir -p /mnt/root/.ssh
 	
@@ -458,7 +458,7 @@ EOF
 
 	arch-chroot /mnt systemctl enable initrd-cryptsetup.path initrd-tinysshd.service initrd-network.service initrd-sysroot-mount.service
 
-	touch /mnt/etc/mkinitcpio-systemd-tools/config/authorized_keys
+	touch /mnt/etc/mkinitcpio-systemd-tool/config/authorized_keys
 
 	arch-chroot /mnt mkinitcpio -p linux-lts
 fi
@@ -526,3 +526,5 @@ then
 	swapoff /dev/mapper/luks-$UUID_SWAP
 	closeLuks
 fi
+
+echo 'All done :)'
