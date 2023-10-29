@@ -1,0 +1,29 @@
+- name: Install additional packages
+  package:
+    name: "{{ item }}"
+  loop: "{{software_packages}}"
+  tags:
+    - install
+
+- name: Install additional packages Arch
+  package:
+    name: "{{ item }}"
+  loop: "{{software_packages_arch}}"
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: Install additional packages Debian
+  package:
+    name: "{{ item }}"
+  loop: "{{software_packages_debian}}"
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+
+- name: Install flatpaks
+  flatpak:
+    name: "{{ item }}"
+  loop: "{{software_flatpaks}}"
+  tags:
+    - install
