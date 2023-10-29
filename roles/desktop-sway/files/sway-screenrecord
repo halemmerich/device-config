@@ -1,0 +1,12 @@
+#!/bin/sh
+PIDFILE=/tmp/${USER}_wf-recorder.pid
+if [ -e "$PIDFILE" ]
+then
+	echo Stopping recording
+	kill $(cat "$PIDFILE")
+	rm "$PIDFILE"
+else
+	echo Starting recording
+	wf-recorder $@ &
+	echo $! > "$PIDFILE"
+fi

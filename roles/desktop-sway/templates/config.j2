@@ -130,7 +130,7 @@ bindsym $mod+Shift+0 move container to workspace $ws10
 
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
-bindsym $mod+Shift+e exec "swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your X session.' -B 'Yes, exit sway' 'swaymsg exit'"
+bindsym $mod+Shift+e exec "swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your sway session.' -B 'Yes, exit sway' 'swaymsg exit'"
 
 mode "resize" {
         bindsym j resize shrink width 10 px or 10 ppt
@@ -168,6 +168,10 @@ bindsym XF86MonBrightnessUp exec brightnessctl set +5%
 bindsym XF86AudioPlay exec playerctl play-pause
 bindsym XF86AudioNext exec playerctl next
 bindsym XF86AudioPrev exec playerctl previous
+
+bindsym $mod+Print exec grim ~/screenshot_$$(date +"%Y-%m-%d_%H:%M:%S.png")
+bindsym $mod+Shift+Print exec slurp | grim -g - ~/screenshot_area_$$(date +"%Y-%m-%d_%H:%M:%S.png")
+bindsym $mod+Alt+Print exec sway-screenrecord -f ~/screenrecording_$$(date +"%Y-%m-%d_%H:%M:%S.mkv")
 
 for_window [app_id="launcher"] floating enable
 

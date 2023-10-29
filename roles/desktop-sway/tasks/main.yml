@@ -42,6 +42,9 @@
     - ttf-bitstream-vera
     - xwayland
     - wlr-randr
+    - grim
+    - slurp
+    - wf-recorder
   tags:
     - install
   when: ansible_os_family == "Debian"
@@ -76,6 +79,14 @@
   tags:
     - config
 
+- name: Create screenrecorder script
+  copy:
+    src: sway-screenrecord
+    dest: /usr/local/bin/sway_screenrecord
+    mode: '0666'
+  tags:
+    - config
+
 - name: Configure waybar
   template:
     src: waybar/config.j2
@@ -94,7 +105,7 @@
   tags:
     - config
 
-- name: Configure desktop capturing
+- name: Configure wireplumber
   become_user: "{{ item }}"
   systemd:
     name: wireplumber
