@@ -16,5 +16,7 @@ export SDL_VIDEODRIVER=wayland
 export GDK_BACKEND=wayland
 export QT_QPA_PLATFORMTHEME=qt5ct
 
+export PATH=$PATH:/var/lib/flatpak/exports/bin:~/.local/share/flatpak/exports/bin
+
 systemd-cat --identifier=sway sway $@
 
