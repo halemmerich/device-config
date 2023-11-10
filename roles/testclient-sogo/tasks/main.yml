@@ -2,6 +2,7 @@
   package:
     name:
     - vdirsyncer
+    state: present
   tags:
     - install
 

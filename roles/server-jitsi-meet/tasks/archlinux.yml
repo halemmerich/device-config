@@ -7,5 +7,6 @@
     - jitsi-meet-prosody-bin
     - jitsi-meet-turnserver-bin
     - jicofo-bin
+    state: present
   tags:
     - install

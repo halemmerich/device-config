@@ -57,6 +57,7 @@
   package:
     name:
     - inotify-tools
+    state: present
   tags:
     - install
 

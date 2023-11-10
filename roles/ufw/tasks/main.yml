@@ -2,6 +2,7 @@
   package:
     name:
     - ufw
+    state: present
   tags:
     - install
 

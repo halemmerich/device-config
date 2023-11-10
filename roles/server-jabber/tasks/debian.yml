@@ -1,8 +1,9 @@
 - name: 'Install'
   package:
     name:
-     - prosody-modules
-     - mercurial
+    - prosody-modules
+    - mercurial
+    state: present
   tags:
     - install
 

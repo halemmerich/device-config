@@ -2,6 +2,7 @@
   package:
     name:
     - jdk17-openjdk
+    state: present
   when: ansible_os_family == "Archlinux"
   tags:
     - install
@@ -11,6 +12,7 @@
     name:
     - openjdk-17-jdk
     - uuid-runtime
+    state: present
   when: ansible_os_family == "Debian"
   tags:
     - install
@@ -20,6 +22,7 @@
     name:
     - git
     - maven
+    state: present
   tags:
     - install
 

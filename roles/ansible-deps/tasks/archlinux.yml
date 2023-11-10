@@ -6,5 +6,6 @@
 - package:
     name:
       - python-lxml
+    state: present
   tags:
     - install

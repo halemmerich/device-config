@@ -6,6 +6,7 @@
   package:
     name:
     - coturn
+    state: present
   tags:
     - install
 

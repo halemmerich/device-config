@@ -2,6 +2,7 @@
   package:
     name:
     - fail2ban
+    state: present
   tags:
     - install
 

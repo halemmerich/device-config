@@ -2,6 +2,7 @@
   package:
     name:
     - nginx-mainline
+    state: present
   when: ansible_os_family == "Archlinux"
   tags:
     - install
@@ -11,6 +12,7 @@
     name:
     - nginx
     - libnginx-mod-stream
+    state: present
   when: ansible_os_family == "Debian"
   tags:
     - install

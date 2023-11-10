@@ -3,6 +3,7 @@
     name:
     - mariadb
     - python-pymysql
+    state: present
   when: ansible_os_family == "Archlinux"
   tags:
     - install
@@ -12,6 +13,7 @@
     name:
     - mariadb-server
     - python3-mysqldb
+    state: present
   when: ansible_os_family == "Debian"
   tags:
     - install

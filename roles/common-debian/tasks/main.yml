@@ -9,5 +9,6 @@
   package:
     name:
       - build-essential
+    state: present
   tags:
     - install

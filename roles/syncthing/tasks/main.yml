@@ -1,6 +1,7 @@
 - name: Install syncthing
   package:
     name: syncthing
+    state: present
   tags:
     - install
   

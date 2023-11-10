@@ -3,5 +3,6 @@
     name:
     - nginx-mainline-mod-dav-ext
     - apache-tools
+    state: present
   tags:
     - install

@@ -9,5 +9,6 @@
     - dovecot-imapd
     - postfix
     - postfix-mysql
+    state: present
   tags:
     - install

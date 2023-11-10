@@ -1,7 +1,8 @@
 - name: Install generic UI components
   package:
     name:
-    - ly
+      - ly
+    state: present
   tags:
     - install
 
@@ -18,7 +19,8 @@
 - name: Install generic UI components
   package:
     name:
-    - gdm3
+      - gdm3
+    state: present
   tags:
     - install
   when: ansible_os_family == "Debian"
@@ -34,8 +36,9 @@
 - name: Install sound support
   package:
     name:
-    - alsa-utils
-    - wireplumber
+      - alsa-utils
+      - wireplumber
+    state: present
   tags:
     - install
 

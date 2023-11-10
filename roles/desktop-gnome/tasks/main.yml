@@ -9,6 +9,7 @@
     - xdg-desktop-portal-gnome
     - xdg-user-dirs-gtk
     - foot
+    state: present
   tags:
     - install
     
@@ -16,6 +17,7 @@
   package:
     name:
     - gvfs-backends
+    state: present
   when: ansible_os_family == "Debian"
   tags:
     - install
@@ -27,6 +29,7 @@
     - gvfs-mtp
     - gvfs-gphoto2
     - gvfs-afc
+    state: present
   when: ansible_os_family == "Archlinux"
   tags:
     - install

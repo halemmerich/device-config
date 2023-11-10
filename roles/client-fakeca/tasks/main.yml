@@ -22,6 +22,7 @@
       package:
         name:
           - libnss3-tools
+        state: present
       tags:
         - install
   

@@ -41,6 +41,7 @@
   package:
     name:
       - bash-completion
+    state: present
   tags:
     - install
 
@@ -55,6 +56,7 @@
       - rsync
       - time
       - net-tools
+    state: present
   tags:
     - install
 

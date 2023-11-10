@@ -20,6 +20,7 @@
       - git
       - go
       - base-devel
+    state: present
   tags:
     - install
 

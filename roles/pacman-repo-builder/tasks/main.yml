@@ -3,6 +3,7 @@
     name:
     - base-devel
     - git
+    state: present
   tags:
     - install
 

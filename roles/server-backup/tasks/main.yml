@@ -3,6 +3,7 @@
     name:
     - sshfs
     - rsync
+    state: present
   tags:
     - install
 

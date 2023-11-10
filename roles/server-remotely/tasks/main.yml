@@ -2,6 +2,7 @@
   package:
     name:
     - aspnet-runtime
+    state: present
   tags:
     - install
     

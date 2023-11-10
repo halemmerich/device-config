@@ -14,6 +14,7 @@
     - php-redis
     - pwgen
     - redis-server
+    state: present
   tags:
     - install
 

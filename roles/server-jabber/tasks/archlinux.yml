@@ -1,6 +1,7 @@
 - name: 'Install'
   package:
     name:
-     - prosody-modules-hg
+    - prosody-modules-hg
+    state: present
   tags:
     - install

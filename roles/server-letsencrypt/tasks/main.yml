@@ -12,6 +12,7 @@
       package:
         name:
         - certbot
+        state: present
   when: not (letsencrypt_fake | default(false))
   tags:
     - install

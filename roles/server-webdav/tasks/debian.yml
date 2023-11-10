@@ -2,5 +2,6 @@
   package:
     name:
     - libnginx-mod-http-dav-ext
+    state: present
   tags:
     - install

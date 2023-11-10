@@ -7,5 +7,6 @@
       - python3-pymysql
       - apt-transport-https
       - acl
+    state: present
   tags:
     - install
