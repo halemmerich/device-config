@@ -174,6 +174,8 @@ then
 	exit 1
 fi
 
+echo
+
 loadkeys $KEYMAP
 
 if [ -z "$2" -a \( -n "$STEP_MOUNT" -o -n "$STEP_UMOUNT"  -o -n "$STEP_INSTALL" \) ]
