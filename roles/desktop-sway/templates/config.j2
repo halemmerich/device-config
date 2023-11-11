@@ -3,6 +3,8 @@ input * xkb_layout de
 input * drag enabled
 input * tap enabled
 
+output * scale 1
+
 {% if sway_outputs is defined %}
 {% for current in sway_outputs %}
 {% if current.position is defined %}
@@ -176,7 +178,6 @@ bindsym $mod+Alt+Print exec sway-screenrecord -f ~/screenrecording_$$(date +"%Y-
 
 for_window [app_id="launcher"] floating enable
 
-exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
 exec swayidle -w \
 	timeout 300 'swaylock --indicator-idle-visible -f -c 35383d' \
 	timeout 600 'swaymsg "output * power off"' \
@@ -185,4 +186,7 @@ exec swayidle -w \
 
 exec dex --autostart
 
-include include.d/*
+exec gnome-keyring-daemon --start --components=secrets
+
+include .config/sway/config.d/
+include /etc/sway/config.d/*

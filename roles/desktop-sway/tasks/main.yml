@@ -61,26 +61,6 @@
     - install
   when: ansible_os_family == "Archlinux"
 
-- name: Create config dir waybar
-  file:
-    path: /home/{{item}}/.config/waybar
-    state: directory
-    owner: "{{ item }}"
-    group: "{{ item }}"
-  loop: "{{ sway_users }}"
-  tags:
-    - config
-
-- name: Create config dir sway
-  file:
-    path: /home/{{item}}/.config/sway
-    state: directory
-    owner: "{{ item }}"
-    group: "{{ item }}"
-  loop: "{{ sway_users }}"
-  tags:
-    - config
-
 - name: Create screenrecorder script
   copy:
     src: sway-screenrecord
@@ -92,10 +72,8 @@
 - name: Configure waybar
   template:
     src: waybar/config.j2
-    dest: /home/{{item}}/.config/waybar/config
-    owner: "{{ item }}"
-    group: "{{ item }}"
-  loop: "{{ sway_users }}"
+    dest: /etc/xdg/waybar/config
+    mode: "0744"
   tags:
     - config
 
@@ -103,40 +81,15 @@
   systemd:
     name: 'user@{{ users[item].uid }}.service'
     state: started
-  loop: "{{ sway_users }}"
-  tags:
-    - config
-
-- name: Configure wireplumber
-  become_user: "{{ item }}"
-  systemd:
-    name: wireplumber
-    scope: user
-    enabled: yes
-  loop: "{{ sway_users }}"
-  tags:
-    - config
-  when: ansible_os_family == "Archlinux"
-
-- name: Configure desktop capturing
-  become_user: "{{ item }}"
-  systemd:
-    name: xdg-desktop-portal
-    scope: user
-    enabled: yes
-  loop: "{{ sway_users }}"
-  environment:
-    XDG_RUNTIME_DIR: "/run/user/{{ users[item].uid }}"
+  loop: "{{ desktop_users }}"
   tags:
     - config
 
 - name: Configure sway
   template:
     src: config.j2
-    dest: /home/{{item}}/.config/sway/config
-    owner: "{{ item }}"
-    group: "{{ item }}"
-  loop: "{{ sway_users }}"
+    dest: /etc/sway/config
+    mode: "0744"
   tags:
     - config
 
