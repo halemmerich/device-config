@@ -1,0 +1,31 @@
+- name: Install wireless support
+  pacman:
+    name:
+    - iw
+    - wpa_supplicant
+    - networkmanager
+    - wireless-regdb
+  tags:
+    - install
+
+- name: Enable NetworkManager service
+  systemd:
+    name: NetworkManager
+    enabled: yes
+  tags:
+    - config
+
+- name: Copy wireless configs
+  copy:
+    src: files/configs/
+    dest: /etc/NetworkManager/system-connections/
+  tags:
+    - config
+
+- name: 'Create regulatory domain config'
+  template:
+    src: wireless-regdom.j2
+    dest: '/etc/conf.d/wireless-regdom'
+    mode: '0644'
+  tags:
+    - config
