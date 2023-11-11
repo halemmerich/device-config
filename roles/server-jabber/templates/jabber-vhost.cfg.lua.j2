@@ -65,6 +65,8 @@ VirtualHost "{{ domain }}"
 Component "conference.{{ domain }}" "muc"
 	restrict_room_creation = "local"
 	max_history_messages = 2000
+	muc_log_expires_after = "1m"
+	muc_log_cleanup_interval = 36000
 	modules_enabled = {
 		"muc_mam";
 		"vcard_muc";
