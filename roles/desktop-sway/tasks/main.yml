@@ -16,6 +16,7 @@
     - nemo
     - foot
     - fprintd
+    - qt6-wayland
     state: present
   tags:
     - install
