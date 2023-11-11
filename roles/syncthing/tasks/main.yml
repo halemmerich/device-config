@@ -7,27 +7,9 @@
   
 - name: Enable syncthing per user
   systemd:
-    name: syncthing@{{item.key}}
+    name: syncthing@{{item}}
     state: started
     enabled: yes
-  loop: "{{ syncthing_users | dict2items }}"
-  tags:
-    - config
-  
-- name: Create folder for Sync per user
-  become: yes
-  become_user: "{{ item.key }}"
-  file:
-    path: /home/{{item.key}}/Sync
-    state: directory
-  loop: "{{ syncthing_users | dict2items }}"
-  tags:
-    - config
-  
-- name: Restart after config change
-  systemd:
-    name: syncthing@{{item.key}}
-    state: restarted
-  loop: "{{ syncthing_users | dict2items }}"
+  loop: "{{ desktop_users }}"
   tags:
     - config
