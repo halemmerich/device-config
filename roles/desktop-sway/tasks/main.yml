@@ -2,6 +2,7 @@
   package:
     name:
     - sway
+    - swayidle
     - dmenu
     - gnome-keyring
     - pavucontrol
@@ -14,13 +15,14 @@
     - qt5ct
     - nemo
     - foot
+    - fprintd
+    state: present
   tags:
     - install
 
 - name: Install generic UI components
   package:
     name:
-    - gdm
     - gvfs-smb
     - qt5-wayland
     - libgnome-keyring
@@ -36,7 +38,6 @@
 - name: Install generic UI components
   package:
     name:
-    - gdm3
     - gvfs-backends
     - qtwayland5
     - ttf-bitstream-vera
@@ -45,6 +46,7 @@
     - grim
     - slurp
     - wf-recorder
+    state: present
   tags:
     - install
   when: ansible_os_family == "Debian"
@@ -149,5 +151,13 @@
   template:
     src: custom-sway.desktop.j2
     dest: /usr/share/wayland-sessions/custom-sway.desktop
+  tags:
+    - config
+
+- name: Create swaylock PAM config
+  copy:
+    src: pam/swaylock
+    dest: /etc/pam.d/swaylock
+    mode: '0644'
   tags:
     - config
