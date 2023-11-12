@@ -17,6 +17,7 @@
     - foot
     - fprintd
     - qt6-wayland
+    - blueman
     state: present
   tags:
     - install
