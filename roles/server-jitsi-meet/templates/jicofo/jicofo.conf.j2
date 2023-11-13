@@ -158,6 +158,9 @@ jicofo {
       hostname = "localhost"
       port = 5222
       username = "focus"
+      password = "{{ jitsi_secret_focus_user }}"
+      domain = "auth.meet.{{ domain }}"
+
       client-proxy = "focus.meet.{{ domain }}"
 
       reply-timeout = 15 seconds
