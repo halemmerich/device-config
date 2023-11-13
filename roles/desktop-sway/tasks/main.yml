@@ -5,6 +5,7 @@
     - swayidle
     - dmenu
     - gnome-keyring
+    - polkit-gnome
     - pavucontrol
     - dex
     - gammastep
@@ -15,6 +16,11 @@
     - qt5ct
     - nemo
     - foot
+    - grim
+    - slurp
+    - wf-recorder
+    - swaybg
+    - brightnessctl
     - fprintd
     - qt6-wayland
     - blueman
@@ -33,6 +39,7 @@
     - wireplumber
     - otf-font-awesome
     - xorg-xwayland
+    state: present
   tags:
     - install
   when: ansible_os_family == "Archlinux"
@@ -45,23 +52,10 @@
     - ttf-bitstream-vera
     - xwayland
     - wlr-randr
-    - grim
-    - slurp
-    - wf-recorder
     state: present
   tags:
     - install
   when: ansible_os_family == "Debian"
-
-- name: Install software for sway desktop
-  kewlfft.aur.aur:
-    name:
-    - wlr-randr
-  become: yes
-  become_user: aur_builder
-  tags:
-    - install
-  when: ansible_os_family == "Archlinux"
 
 - name: Create screenrecorder script
   copy:
@@ -99,6 +93,7 @@
   template:
     src: sway.sh.j2
     dest: /usr/local/bin/sway-session
+    mode: "0644"
   tags:
     - config
 
