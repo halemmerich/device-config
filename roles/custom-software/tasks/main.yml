@@ -30,3 +30,12 @@
   loop: "{{software_flatpaks}}"
   tags:
     - install
+
+- name: 'Enable services'
+  systemd:
+    name: "systemd-timesyncd"
+    enabled: yes
+    state: restarted
+  loop: "{{software_services}}"
+  tags:
+    - config
