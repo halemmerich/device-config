@@ -1,0 +1,71 @@
+- name: 'Install'
+  package:
+    name:
+    - cpupower
+    state: present
+  tags:
+    - install
+
+- name: 'Create cpupower config'
+  template:
+    src: "cpupower.j2"
+    dest: '/etc/default/cpupower'
+    mode: '0644'
+  tags:
+    - config
+
+- name: 'Create wifi config'
+  template:
+    src: "iwlwifi.conf.j2"
+    dest: '/etc/modprobe.d/iwlwifi.conf'
+    mode: '0644'
+  tags:
+    - config
+
+- name: 'Create audio config'
+  template:
+    src: "snd_hda_intel.conf.j2"
+    dest: '/etc/modprobe.d/snd_hda_intel.conf'
+    mode: '0644'
+  tags:
+    - config
+
+- name: 'Disable NMI watchdog'
+  template:
+    src: "nmi_watchdog.conf.j2"
+    dest: '/etc/sysctl.d/nmi_watchdog.conf'
+    mode: '0644'
+  tags:
+    - config
+
+- name: 'Create ASPM config'
+  template:
+    src: "tmpfiles/aspm.conf.j2"
+    dest: '/etc/tmpfiles.d/aspm.conf'
+    mode: '0644'
+  tags:
+    - config
+
+- name: 'Create platform profile config'
+  template:
+    src: "tmpfiles/platform_profile.conf.j2"
+    dest: '/etc/tmpfiles.d/platform_profile.conf'
+    mode: '0644'
+  tags:
+    - config
+
+- name: 'Create EPP config'
+  template:
+    src: "tmpfiles/aspm.conf.j2"
+    dest: '/etc/tmpfiles.d/aspm.conf'
+    mode: '0644'
+  tags:
+    - config
+
+- name: 'Start services'
+  systemd:
+    name: cpupower
+    enabled: yes
+    state: restarted
+  tags:
+    - config
