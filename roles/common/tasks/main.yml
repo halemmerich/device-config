@@ -41,8 +41,6 @@
   package:
     name:
       - bash-completion
-      - btrfs-progs
-      - exfat-utils
   tags:
     - install
 
