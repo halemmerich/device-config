@@ -3,7 +3,11 @@ HoldPkg = pacman glibc
 Architecture = auto
 CheckSpace
 ParallelDownloads = 5
+{% if pacman_siglevel is defined%}
+SigLevel = {{ pacman_siglevel }}
+{% else %}
 SigLevel = Required DatabaseOptional
+{% endif %}
 LocalFileSigLevel = Optional
 HookDir = /etc/pacman.d/hooks
 
