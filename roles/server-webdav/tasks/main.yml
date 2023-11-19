@@ -31,7 +31,6 @@
     mode: '0770'
     state: directory
   loop:
-    - '/var/lib/webdav'
     - '/var/lib/webdav/shares'
   tags:
     - config
