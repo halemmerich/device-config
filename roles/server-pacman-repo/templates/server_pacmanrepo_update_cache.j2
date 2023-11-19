@@ -4,5 +4,5 @@ pacman -Qqe | grep -vx "$(pacman -Qqm)" | xargs pacman -Sdw --noconfirm
 
 echo Updating cache repo
 mkdir -p /var/lib/pacman-repo/packages/cache
-rsync --delete /var/cache/pacman/pkg/ /var/lib/pacman-repo/packages/cache/
+rsync -r --delete /var/cache/pacman/pkg/ /var/lib/pacman-repo/packages/cache/
 cp /var/lib/pacman/sync/*.db* /var/lib/pacman-repo/packages/cache/
