@@ -25,6 +25,12 @@
   roles:
   - pacman-repo-builder
 
+- hosts: staging_local
+  become: yes
+  remote_user: admin
+  roles:
+    - users
+
 - hosts: arch
   become: yes
   roles:
@@ -35,6 +41,11 @@
   roles:
   - common-debian
 
+- hosts: local
+  become: yes
+  remote_user: admin
+  roles:
+  - users
 
 - hosts: server_teamspeak
   become: yes

@@ -1,0 +1,37 @@
+- name: Make sure we have a 'wheel' group
+  group:
+    name: wheel
+    state: present
+  tags:
+    - config
+    
+- name: Allow 'wheel' group to use sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) ALL'
+    validate: 'visudo -cf %s'
+  tags:
+    - config
+
+- name: Adds several users
+  user:
+    name: "{{ item.key }}"
+    state: present
+    password: "{{ item.value.password }}"
+    groups: "{{ item.value.groups }}"
+    uid: "{{ item.value.uid }}"
+  loop: "{{ users | dict2items }}"
+  when: users is defined
+  tags:
+    - config
+
+- name: Create homes
+  file:
+    path: '/home/{{ item.key }}'
+    state: directory
+    mode: "750"
+    owner: '{{ item.key }}'
+    group: '{{ item.key }}'
+  loop: "{{ users | dict2items }}"
