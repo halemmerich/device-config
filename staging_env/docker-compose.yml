@@ -1,9 +1,32 @@
 version: '3'
 
 services:
+  arch-base:
+    build: archbase/
+    image: archbase:latest
+    entrypoint: "true"
+  debian-base:
+    build: debianbase/
+    image: debianbase:latest
+    entrypoint: "true"
+  arch-vnc:
+    build: archvnc/
+    image: archvnc:latest
+    entrypoint: "true"
+    depends_on:
+      - arch-base
+  debian-vnc:
+    build: debianvnc/
+    image: debianvnc:latest
+    entrypoint: "true"
+    depends_on:
+      - debian-base
+
   staging-repo-arch:
     build: archbase/
     image: archbase:latest
+    depends_on:
+      - arch-base
     cap_add:
       - SYS_ADMIN
     networks:
@@ -23,6 +46,8 @@ services:
   staging-dns-arch:
     build: archbase/
     image: archbase:latest
+    depends_on:
+      - arch-base
     cap_add:
       - SYS_ADMIN
     networks:
@@ -39,6 +64,8 @@ services:
   staging-dns-debian:
     build: debianbase/
     image: debianbase:latest
+    depends_on:
+      - debian-base
     cap_add:
       - SYS_ADMIN
     networks:
@@ -55,6 +82,8 @@ services:
   staging-server-arch:
     build: archbase/
     image: archbase:latest
+    depends_on:
+      - arch-base
     cap_add:
       - SYS_ADMIN
     networks:
@@ -71,6 +100,8 @@ services:
   staging-server-debian:
     build: debianbase/
     image: debianbase:latest
+    depends_on:
+      - debian-base
     cap_add:
       - SYS_ADMIN
     networks:
@@ -87,6 +118,8 @@ services:
   staging-desktop-arch:
     build: archvnc/
     image: archvnc:latest
+    depends_on:
+      - arch-vnc
     cap_add:
       - SYS_ADMIN
     networks:
@@ -104,6 +137,8 @@ services:
   staging-desktop-debian:
     build: debianvnc/
     image: debianvnc:latest
+    depends_on:
+      - arch-vnc
     cap_add:
       - SYS_ADMIN
     networks:
@@ -121,6 +156,8 @@ services:
   staging-testclient-arch:
     build: archvnc/
     image: archvnc:latest
+    depends_on:
+      - arch-vnc
     cap_add:
       - SYS_ADMIN
     networks:
@@ -138,6 +175,8 @@ services:
   staging-testclient-debian:
     build: debianvnc/
     image: debianvnc:latest
+    depends_on:
+      - debian-vnc
     cap_add:
       - SYS_ADMIN
     networks:
@@ -155,6 +194,8 @@ services:
   staging-nas-arch:
     build: archbase/
     image: archbase:latest
+    depends_on:
+      - arch-base
     cap_add:
       - SYS_ADMIN
     networks:
@@ -171,6 +212,8 @@ services:
   staging-nas-debian:
     build: debianbase/
     image: debianbase:latest
+    depends_on:
+      - debian-base
     cap_add:
       - SYS_ADMIN
     networks:
@@ -187,6 +230,8 @@ services:
   staging-gameserver-arch:
     build: archbase/
     image: archbase:latest
+    depends_on:
+      - arch-base
     cap_add:
       - SYS_ADMIN
     networks:
@@ -203,6 +248,8 @@ services:
   staging-gameserver-debian:
     build: debianbase/
     image: debianbase:latest
+    depends_on:
+      - debian-base
     cap_add:
       - SYS_ADMIN
     networks:

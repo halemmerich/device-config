@@ -15,7 +15,7 @@ then
 	KEY_SOURCE="/home/$1/.ssh/id_rsa.pub"
 fi
 
-docker-compose up -d
+docker-compose up -d --build
 sleep 5
 
 echo
