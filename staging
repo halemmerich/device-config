@@ -3,6 +3,8 @@ staging-desktop-arch
 staging-desktop-debian
 staging-server-arch
 staging-server-debian
+staging-nas-arch
+staging-nas-debian
 staging-testclient-arch
 staging-testclient-debian
 staging-gameserver-arch
@@ -45,6 +47,10 @@ staging-repo-arch
 
 [builder_pacman_repo]
 staging-repo-arch
+
+[nas]
+staging-nas-arch
+staging-nas-debian
 
 [server_arch]
 staging-server-arch

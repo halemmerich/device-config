@@ -1,5 +1,5 @@
-domain: "staging.arch"
-hostname: "staging-nas-arch"
+domain: "staging.debian"
+hostname: "staging-nas-debian"
 fqdn: "{{ hostname }}.{{ domain }}"
 public_ip_v4: "{{ netconf[hostname].ip_v4 }}"
 public_ip_v6: "{{ netconf[hostname].ip_v6 }}"
@@ -8,20 +8,6 @@ locales:
   - en_US.UTF-8
 keymaps:
   - en-latin1-nodeadkeys
-
-pacman_repos:
-  - name: "testrepo"
-    server: "https://repo.staging.arch"
-    siglevel: Optional
-
-hosts_entries:
-  - name: staging-repo-arch
-    ip: "{{ hostvars['staging-repo-arch'].public_ip_v4 }}"
-    domain: staging.arch
-    subdomains:
-      - repo
-    aliases:
-    - repo-arch
 
 users:
   user:
