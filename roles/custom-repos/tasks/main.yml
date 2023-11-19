@@ -15,3 +15,9 @@
   when: pacman_mirrorlist is defined and ansible_os_family == "Archlinux"
   tags:
     - config
+
+- name: Update Databases
+  shell: pacman -Sy
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
