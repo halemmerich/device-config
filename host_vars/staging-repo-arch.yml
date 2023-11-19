@@ -8,7 +8,24 @@ locales:
   - en_US.UTF-8
 keymaps:
   - en-latin1-nodeadkeys
-  
+
+pacman_repos:
+  - name: "core"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "extra"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "community"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "multilib"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "testrepo"
+    server: "https://repo.staging.arch"
+    siglevel: Optional
+
+pacman_siglevel: Never
+pacman_mirrorlist:
+  - "https://archive.archlinux.org/repos/2022/01/10/$repo/os/$arch"
+
 letsencrypt_mail: "hostmaster@{{ domain }}"
 letsencrypt_port: "8000"
 letsencrypt_fake: true
@@ -39,10 +56,6 @@ pacman_repos:
     servers:
      -  file:///var/lib/pacman-repo/packages
     siglevel: Optional
-    
-pacman_mirrorlist:
-  - "http://ftp.halifax.rwth-aachen.de/archlinux/$repo/os/$arch"
-  - "http://linux.rz.rub.de/archlinux/$repo/os/$arch"
 
 server_pacmanrepo_name: "testrepo"
 server_pacmanrepo_allow_sign_fail: "true"

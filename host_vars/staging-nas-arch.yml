@@ -9,6 +9,23 @@ locales:
 keymaps:
   - en-latin1-nodeadkeys
 
+pacman_repos:
+  - name: "core"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "extra"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "community"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "multilib"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "testrepo"
+    server: "https://repo.staging.arch"
+    siglevel: Optional
+
+pacman_siglevel: Never
+pacman_mirrorlist:
+  - "https://archive.archlinux.org/repos/2022/01/10/$repo/os/$arch"
+
 hosts_entries:
   - name: staging-repo-arch
     ip: "{{ hostvars['staging-repo-arch'].public_ip_v4 }}"
