@@ -9,11 +9,17 @@ keymaps:
   - en-latin1-nodeadkeys
 
 pacman_repos:
+  - name: "core"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "extra"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "community"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "multilib"
+    include: "/etc/pacman.d/mirrorlist"
   - name: "testrepo"
     server: "https://repo.staging.arch"
     siglevel: Optional
-  - name: "multilib"
-    include: "/etc/pacman.d/mirrorlist"
 
 letsencrypt_fake: true
 

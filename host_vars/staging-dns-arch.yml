@@ -30,6 +30,8 @@ server_dns_zones:
       - { name: "ns02",               type: AAAA,  data: '{{ netconf["staging-dns-debian"].ip_v6 }}'                            }
       - { name: mail,                 type: A,     data: '{{ netconf[hostname].ip_v4 }}'                                        }
       - { name: mail,                 type: AAAA,  data: '{{ netconf[hostname].ip_v6 }}'                                        }
+      - { name: repo,                 type: A,     data: '{{ netconf["staging-repo-arch"].ip_v4 }}'                             }
+      - { name: repo,                 type: AAAA,  data: '{{ netconf["staging-repo-arch"].ip_v6 }}'                             }
       - { name: "@",                  type: MX 10, data: 'mail'                                                                 }
       - { name: "@",                  type: TXT,   data: '"v=spf1 +mx +a  -all"'                                                }
       - { name: "@",                  type: A,     data: '{{ netconf["staging-server-arch"].ip_v4 }}'                           }

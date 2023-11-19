@@ -1,0 +1,42 @@
+domain: "staging.arch"
+hostname: "staging-nas-arch"
+fqdn: "{{ hostname }}.{{ domain }}"
+public_ip_v4: "{{ netconf[hostname].ip_v4 }}"
+public_ip_v6: "{{ netconf[hostname].ip_v6 }}"
+
+locales:
+  - en_US.UTF-8
+keymaps:
+  - en-latin1-nodeadkeys
+
+hosts_entries:
+  - name: staging-repo-arch
+    ip: "{{ hostvars['staging-repo-arch'].public_ip_v4 }}"
+    domain: staging.arch
+    subdomains:
+      - repo
+    aliases:
+    - repo-arch
+
+users:
+  user:
+    password: $6$user$.0YKoey4twE3UDoG7VwhMgDXK0hnQqYHSJWlWOSICaAGRMchCbs4eDGHJgU8HFe.xtN0sUEyfS50QPjuRmVg91
+    groups:
+    uid: 2000
+    fullname: Test User
+    mail: testuser@{{ domain }}
+    
+server_samba_shares:
+  - name: testshare
+    path: /tmp
+    validusers:
+      - user
+  - name: testshare-guest
+    path: /tmp
+    guestok: "yes"
+  - name: testshare-guest-ro
+    path: /tmp
+    readonly: "yes"
+    guestok: "yes"
+
+letsencrypt_fake: true
