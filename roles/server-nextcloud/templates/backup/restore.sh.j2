@@ -17,6 +17,7 @@ mkdir -p {{ nextcloud_data_path }}
 rsync_restore nextcloud/data/ {{ nextcloud_data_path }}
 
 chown {{ nextcloud_user }}:{{ nextcloud_group }} -R {{ nextcloud_data_path }}
+chown {{ nextcloud_user }}:{{ nextcloud_group }} {{ nextcloud_config_path }}
 find /var/lib/nextcloud/data -type f -print0 | xargs -0 chmod 644
 find /var/lib/nextcloud/data -type d -print0 | xargs -0 chmod 755
 
