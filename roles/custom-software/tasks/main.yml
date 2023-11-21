@@ -24,18 +24,24 @@
   tags:
     - install
 
-- name: Install flatpaks
-  flatpak:
-    name: "{{ item }}"
-  loop: "{{software_flatpaks}}"
+- name: Install flatpak
+  package:
+    name: flatpak
+    state: present
+  when: software_flatpaks is defined
   tags:
     - install
 
-- name: 'Enable services'
-  systemd:
-    name: "systemd-timesyncd"
-    enabled: yes
-    state: restarted
-  loop: "{{software_services}}"
+- name: Install custom flatpaks
+  flatpak:
+    name: "{{ item }}"
+  loop: "{{software_flatpaks}}"
+  when: software_flatpaks is defined
   tags:
-    - config
+    - install
+
+- name: Update flatpaks
+  command: "flatpak update --noninteractive"
+  when: software_flatpaks is defined
+  tags:
+    - upgrade
