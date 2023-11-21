@@ -1,0 +1,27 @@
+#!/bin/bash
+
+cd
+
+mkdir -p .dotfiles
+
+for C in .dotfiles/*/FOLDERS
+do
+	cat "$C" | while read F
+	do
+		APP=$(basename $(dirname "$C"))
+        	echo Handling "$APP":"$F"
+	        [ -d "$F" -a ! -L "$F" ] && mkdir -p  ".dotfiles/$APP/$F" && mv "$F" ".dotfiles/$APP/$(dirname $F)" && echo Moved "$F"
+	        [ ! -L "$F" -a -d ~/".dotfiles/$APP/$F" ] && ln -s ~/".dotfiles/$APP/$F" "$F" && echo Linked "$F"
+	done	 
+done
+
+for C in .dotfiles/*/FILES
+do
+	cat "$C" | while read F
+	do
+		APP=$(basename $(dirname "$C"))
+        	echo Handling "$APP":"$F"
+	        [ -f "$F" -a ! -L "$F" ] && mv "$F" ".dotfiles/$APP/$(dirname $F)" && echo Moved "$F"
+	        [ ! -L "$F" -a -f ~/".dotfiles/$APP/$F" ] && ln -s ~/".dotfiles/$APP/$F" "$F" && echo Linked "$F"
+	done	 
+done

@@ -143,6 +143,7 @@
   roles:
   - kernel-zen
   - kernel
+  - dotfiles
   - automount
   - desktop
   - desktop-sway

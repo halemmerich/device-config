@@ -1,0 +1,7 @@
+- name: Add script for updating dotfiles
+  copy:
+    src: files/dotfiles_update
+    dest: /usr/local/bin/dotfiles_update
+    mode: "0755"
+  tags:
+    - config
