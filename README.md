@@ -1,5 +1,9 @@
 # Experimental ansible roles for setting up Debian or Arch servers and clients
 
+## Use of run_limited* scripts
+
+These expect a secrets.yml file created with `ansible-vault create secrets.yml` containing entries of the form `become_pass_<hostname>: P4ssW0rD` where `<hostname>` is to be replaced with hostnames as used in the production inventory.
+
 ## Role naming scheme:
 
 - `server-*`
