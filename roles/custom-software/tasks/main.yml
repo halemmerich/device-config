@@ -24,6 +24,15 @@
   tags:
     - install
 
+- name: Remove absent custom packages
+  flatpak:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{software_packages_absent}}"
+  when: software_packages_absent is defined
+  tags:
+    - install
+
 - name: Install flatpak
   package:
     name: flatpak
@@ -35,8 +44,18 @@
 - name: Install custom flatpaks
   flatpak:
     name: "{{ item }}"
+    state: present
   loop: "{{software_flatpaks}}"
   when: software_flatpaks is defined
+  tags:
+    - install
+
+- name: Remove absent custom flatpaks
+  flatpak:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ software_flatpaks_absent }}"
+  when: software_flatpaks_absent is defined
   tags:
     - install
 
