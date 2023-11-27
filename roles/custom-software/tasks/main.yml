@@ -65,3 +65,12 @@
   when: software_flatpaks is defined
   tags:
     - upgrade
+
+- name: Add user binaries
+  copy:
+    src: "files/custom-software/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: "0755"
+  loop: "{{ software_userbinaries }}"
+  tags:
+    - config
