@@ -19,12 +19,4 @@ export QT_QPA_PLATFORMTHEME=qt5ct
 
 export PATH=$PATH:/var/lib/flatpak/exports/bin:~/.local/share/flatpak/exports/bin
 
-/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
-
-systemctl --user start wireplumber
-systemctl --user start xdg-desktop-portal
-
 systemd-cat --identifier=sway sway $@
-
-systemctl --user stop wireplumber
-systemctl --user stop xdg-desktop-portal

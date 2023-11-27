@@ -189,6 +189,11 @@ exec swayidle -w \
 exec dex --autostart
 
 exec gnome-keyring-daemon --start --components=secrets
+exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 
 include /etc/sway/config.d/*
+
+exec systemctl --user start wireplumber
+exec systemctl --user start xdg-desktop-portal
+
 include ~/.config/sway/config.d/*
