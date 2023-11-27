@@ -12,6 +12,7 @@
     - wf-recorder
     - waybar
     - xdg-desktop-portal-wlr
+    - xdg-desktop-portal-gtk
     - wofi
     - qt5ct
     - nemo
