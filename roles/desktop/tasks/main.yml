@@ -59,3 +59,11 @@
   when: ansible_os_family == "Archlinux"
   tags:
     - config
+
+- name: 'Configure system for lower latency'
+  copy:
+    src: "latency.conf"
+    dest: '/etc/tmpfiles.d/latency.conf'
+    mode: '0644'
+  tags:
+    - config
