@@ -150,9 +150,5 @@
   - desktop-gnome
   - custom-software
   - syncthing
-
-- hosts: mobile
-  become: yes
-  roles:
-  - powersave
+  - powermanagement
 

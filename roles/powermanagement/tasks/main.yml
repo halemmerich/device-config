@@ -71,13 +71,13 @@
     - config
 
 - name: Add scripts for changing some power settings
-  copy:
-    src: "files/{{ item }}"
+  template:
+    src: "{{ item }}.j2"
     dest: "/usr/local/bin/{{ item }}"
     mode: "0755"
   loop:
     - desktop_energy_low
-    - desktop_energy_balanced
+    - desktop_energy_default
     - desktop_energy_performance
   tags:
     - config
