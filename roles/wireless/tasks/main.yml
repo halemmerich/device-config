@@ -26,13 +26,6 @@
   tags:
     - config
 
-- name: Copy wireless configs
-  copy:
-    src: files/configs/
-    dest: /etc/NetworkManager/system-connections/
-  tags:
-    - config
-
 - name: 'Create regulatory domain config'
   template:
     src: wireless-regdom.j2
