@@ -186,8 +186,6 @@ exec swayidle -w \
 		resume 'swaymsg "output * power on"' \
 	before-sleep 'swaylock --indicator-idle-visible -f -c 35383d'
 
-exec dex --autostart
-
 exec gnome-keyring-daemon --start --components=secrets
 exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 
