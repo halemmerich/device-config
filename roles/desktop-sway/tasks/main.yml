@@ -25,6 +25,7 @@
     - fprintd
     - qt6-wayland
     - blueman
+    - dunst
     state: present
   tags:
     - install
