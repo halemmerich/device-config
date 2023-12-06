@@ -6,6 +6,16 @@
   tags:
     - install
 
+- name: Install additional packages as dependencies Arch
+  pacman:
+    name: "{{ item }}"
+    reason: "dependency"
+    state: present
+  loop: "{{software_packages}}"
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
 - name: Install additional packages Arch
   package:
     name: "{{ item }}"
