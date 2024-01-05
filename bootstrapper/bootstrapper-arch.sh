@@ -438,17 +438,17 @@ EOF
 	then
 		if [ -n $( find . -maxdepth 1 -name "*.pub" -print -quit ) ]
 		then
-			cat *.pub >> /mnt/root/.ssh/authorized_keys
+			cat *.pub >> /etc/mkinitcpio-systemd-tool/config/authorized_keys
 		fi
 		if [ -d unlockkeys ]
 		then
 			for C in unlockkeys/*
 			do
-				cat $C >> /mnt/root/.ssh/authorized_keys
+				cat $C >> /etc/mkinitcpio-systemd-tool/config/authorized_keys
 			done
 		fi
 	else
-		echo "$REMOTE_UNLOCK_KEYS" > /mnt/root/.ssh/authorized_keys
+		echo "$REMOTE_UNLOCK_KEYS" > /etc/mkinitcpio-systemd-tool/config/authorized_keys
 	fi
 
 	tee /mnt/etc/mkinitcpio.conf << EOF
