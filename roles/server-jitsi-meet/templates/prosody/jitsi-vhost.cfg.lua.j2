@@ -23,8 +23,8 @@ VirtualHost "meet.{{ domain }}"
     c2s_require_encryption = false
     s2s_require_encryption = false
 
-	turncredentials_secret = "{{ turnserver_secret }}";
-	turncredentials = {
+    external_service_secret = "{{ turnserver_secret }}";
+    external_services = {
 		{
 			type = "stun",
 			host = "{{ turnserver_dns }}",
