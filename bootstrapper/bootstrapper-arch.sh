@@ -436,19 +436,19 @@ EOF
 
 	if [ -z "$REMOTE_UNLOCK_KEYS" ]
 	then
-		if [ -n $( find . -maxdepth 1 -name "*.pub" -print -quit ) ]
+		if [ -n "$( find . -maxdepth 1 -name "*.pub" -print -quit )" ]
 		then
-			cat *.pub >> /etc/mkinitcpio-systemd-tool/config/authorized_keys
+			cat *.pub >> /mnt/etc/mkinitcpio-systemd-tool/config/authorized_keys
 		fi
 		if [ -d unlockkeys ]
 		then
 			for C in unlockkeys/*
 			do
-				cat $C >> /etc/mkinitcpio-systemd-tool/config/authorized_keys
+				cat $C >> /mnt/etc/mkinitcpio-systemd-tool/config/authorized_keys
 			done
 		fi
 	else
-		echo "$REMOTE_UNLOCK_KEYS" > /etc/mkinitcpio-systemd-tool/config/authorized_keys
+		echo "$REMOTE_UNLOCK_KEYS" > /mnt/etc/mkinitcpio-systemd-tool/config/authorized_keys
 	fi
 
 	tee /mnt/etc/mkinitcpio.conf << EOF
@@ -496,7 +496,7 @@ EOF
 	
 	if [ -z "$ADMIN_AUTHORIZED_KEYS" ]
 	then
-		if [ -n $( find . -maxdepth 1 -name "*.pub" -print -quit ) ]
+		if [ -n "$( find . -maxdepth 1 -name "*.pub" -print -quit )" ]
 		then
 			cat *.pub >> /mnt/home/admin/.ssh/authorized_keys
 		fi
