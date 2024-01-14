@@ -84,3 +84,12 @@
   loop: "{{ software_userbinaries }}"
   tags:
     - config
+
+- name: Add custom files
+  copy:
+    src: "files/custom-software/{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0755"
+  loop: "{{ software_files }}"
+  tags:
+    - config
