@@ -383,25 +383,39 @@ then
 
 	case $CPU_VENDOR in
 		GenuineIntel)
-		MICROCODE="initrd /intel-ucode.img"
-		arch-chroot /mnt pacman --noconfirm -S intel-ucode
+			MICROCODE="initrd /intel-ucode.img"
+			arch-chroot /mnt pacman --noconfirm -S intel-ucode
 		;;
-	AuthenticAMD)
-		MICROCODE="initrd /amd-ucode.img"
-		arch-chroot /mnt pacman --noconfirm -S amd-ucode
+		AuthenticAMD)
+			MICROCODE="initrd /amd-ucode.img"
+			arch-chroot /mnt pacman --noconfirm -S amd-ucode
 		;;
 	esac
 
 	if [ $BOOT_TYPE = efi ]
 	then
 		arch-chroot /mnt bootctl install
+		mkdir -p /mnt/etc/cmdline.d
 
-		tee /mnt/boot/loader/entries/arch-lts.conf << EOF
-title Arch Linux LTS
-linux /vmlinuz-linux-lts
-${MICROCODE}
-initrd /initramfs-linux-lts.img
-options ip=::::${NEW_HOSTNAME}:eth0:dhcp: netconf_timeout=5 luks.uuid=${UUID_ROOT} luks.uuid=${UUID_SWAP} luks.options=allow-discards root=/dev/mapper/luks-${UUID_ROOT} resume=/dev/mapper/luks-${UUID_SWAP} rw
+		tee /mnt/cmdline.d/network.conf << EOF
+ip=::::${NEW_HOSTNAME}:eth0:dhcp: netconf_timeout=5
+EOF
+
+		tee /mnt/cmdline.d/luks.conf << EOF
+luks.uuid=${UUID_ROOT}
+luks.uuid=${UUID_SWAP}
+luks.options=allow-discards
+root=/dev/mapper/luks-${UUID_ROOT}
+resume=/dev/mapper/luks-${UUID_SWAP} rw
+EOF
+
+		tee /mnt/etc/mkinitcpio.d/linux-lts.conf << EOF
+ALL_kver="/boot/vmlinuz-linux-lts"
+ALL_microcode=(/boot/*-ucode.img)
+PRESETS=('default' 'fallback')
+default_uki="/boot/EFI/Linux/arch-linux-lts.efi"
+fallback_uki="/boot/EFI/Linux/arch-linux-lts-fallback.efi"
+fallback_options="-S autodetect"
 EOF
 
 	else
@@ -455,7 +469,17 @@ EOF
 MODULES=()
 BINARIES=()
 FILES=()
-HOOKS=(base systemd autodetect modconf block keyboard sd-vconsole filesystems fsck systemd-tool)
+HOOKS=(base kvm systemd autodetect modconf block keyboard sd-vconsole filesystems fsck systemd-tool)
+EOF
+
+	tee /mnt/etc/mkinitcpio.d/linux-lts.preset << EOF
+ALL_kver="/boot/vmlinuz-linux-lts"
+ALL_microcode=(/boot/*-ucode.img)
+
+PRESETS=('default' 'fallback')
+default_uki="/boot/EFI/Linux/arch-linux-lts.efi"
+fallback_uki="/boot/EFI/Linux/arch-linux-lts-fallback.efi"
+fallback_options="-S autodetect"
 EOF
 
 	arch-chroot /mnt systemctl enable initrd-cryptsetup.path initrd-tinysshd.service initrd-network.service initrd-sysroot-mount.service
