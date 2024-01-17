@@ -81,6 +81,8 @@
     - storage-maintenance-full.timer
     - storage-maintenance-mini.service
     - storage-maintenance-mini.timer
+    - storage-backup.service
+    - storage-backup.timer
   register: systemd
 
 - name: Reload systemd
