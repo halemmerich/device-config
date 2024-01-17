@@ -93,3 +93,14 @@
   loop: "{{ software_files }}"
   tags:
     - config
+
+- name: 'Enable and start services'
+  systemd:
+    name: "{{ item }}"
+    daemon-reload: yes
+    enabled: yes
+    started: yes
+  loop: "{{ software_services }}"
+  when: software_services is defined
+  tags:
+    - config
