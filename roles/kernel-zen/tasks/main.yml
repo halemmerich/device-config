@@ -1,47 +1,62 @@
-- name: Install zen kernel
+- name: Install Kernel and Headers
   pacman:
     name:
-    - linux-zen
-    - linux-zen-headers
+      - linux-zen
+      - linux-zen-headers
+    state: present
   tags:
     - install
 
-- name: Detect systemd loader
+- name: Detect mkinitcpio folder
   stat:
-    path: /boot/loader
-  register: systemd_loader_folder
+    path: /etc/mkinitcpio.d
+  register: mkinitcpio_folder
+  tags:
+    - config
 
-- name: Config systemd loader
+- name: Config mkinitcpio presets
   block:
-  - name: Copy loader file for systemd boot
+  - name: Create tempfile
+    ansible.builtin.tempfile:
+      state: file
+      suffix: temp
+    register: tempfile
+
+  - name: Copy config file for mkinitcpio
     copy:
-      src: /boot/loader/entries/arch-lts.conf
-      dest: /boot/loader/entries/arch-zen.conf
+      src: /etc/mkinitcpio.d/linux-lts.preset
+      dest: "{{ tempfile.path }}"
       remote_src: yes
     tags:
       - config
 
-  - lineinfile:
-      path: /boot/loader/entries/arch-zen.conf
-      regexp: 'linux /vmlinuz-linux'
-      line: 'linux /vmlinuz-linux-zen'
+  - ansible.builtin.replace:
+      path: "{{ tempfile.path }}"
+      regexp: 'linux-lts'
+      replace: 'linux-zen'
     tags:
       - config
 
-  - lineinfile:
-      path: /boot/loader/entries/arch-zen.conf
-      regexp: 'title'
-      line: 'Arch Linux Zen'
+  - name: Copy config file for mkinitcpio
+    copy:
+      src: "{{ tempfile.path }}"
+      dest: /etc/mkinitcpio.d/linux-zen.preset
+      remote_src: yes
+    register: copied_preset
     tags:
       - config
+  
+  - name: Rebuild kernel image
+    shell:
+      cmd: "mkinitcpio -p linux-zen"
+    when:  copied_preset is changed
 
-  - lineinfile:
-      path: /boot/loader/entries/arch-zen.conf
-      regexp: 'initrd /initramfs-linux.img'
-      line: 'initrd /initramfs-linux-zen.img'
-    tags:
-      - config
-  when: systemd_loader_folder.stat.exists
+  - name: Remove tempfile
+    ansible.builtin.file:
+      path: "{{ tempfile.path }}"
+      state: absent
+    when: tempfile.path is defined
+  when: mkinitcpio_folder.stat.exists
 
 - name: Detect grub
   stat:
