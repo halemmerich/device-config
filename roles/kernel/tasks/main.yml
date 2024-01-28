@@ -7,44 +7,56 @@
   tags:
     - install
 
-- name: Detect systemd loader
+- name: Detect mkinitcpio folder
   stat:
-    path: /boot/loader
-  register: systemd_loader_folder
+    path: /etc/mkinitcpio.d
+  register: mkinitcpio_folder
   tags:
     - config
 
-- name: Config systemd loader
+- name: Config mkinitcpio presets
   block:
-  - name: Copy loader file for systemd boot
+  - name: Create tempfile
+    ansible.builtin.tempfile:
+      state: file
+      suffix: temp
+    register: tempfile
+
+  - name: Copy config file for mkinitcpio
     copy:
-      src: /boot/loader/entries/arch-lts.conf
-      dest: /boot/loader/entries/arch.conf
+      src: /etc/mkinitcpio.d/linux-lts.preset
+      dest: "{{ tempfile.path }}"
       remote_src: yes
     tags:
       - config
 
-  - lineinfile:
-      path: /boot/loader/entries/arch.conf
-      regexp: 'linux /vmlinuz-linux'
-      line: 'linux /vmlinuz-linux'
+  - ansible.builtin.replace:
+      path: "{{ tempfile.path }}"
+      regexp: 'linux-lts'
+      replace: 'linux'
     tags:
       - config
 
-  - lineinfile:
-      path: /boot/loader/entries/arch.conf
-      regexp: 'title'
-      line: 'Arch Linux'
+  - name: Copy config file for mkinitcpio
+    copy:
+      src: "{{ tempfile.path }}"
+      dest: /etc/mkinitcpio.d/linux.preset
+      remote_src: yes
+    register: copied_preset
     tags:
       - config
+  
+  - name: Rebuild kernel image
+    shell:
+      cmd: "mkinitcpio -p linux"
+    when:  copied_preset is changed
 
-  - lineinfile:
-      path: /boot/loader/entries/arch.conf
-      regexp: 'initrd /initramfs-linux'
-      line: 'initrd /initramfs-linux.img'
-    tags:
-      - config
-  when: systemd_loader_folder.stat.exists
+  - name: Remove tempfile
+    ansible.builtin.file:
+      path: "{{ tempfile.path }}"
+      state: absent
+    when: tempfile.path is defined
+  when: mkinitcpio_folder.stat.exists
 
 - name: Detect grub
   stat:
