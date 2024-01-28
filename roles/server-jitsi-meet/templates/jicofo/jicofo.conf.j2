@@ -6,6 +6,7 @@ jicofo {
     enable-auto-login = true
   }
   bridge {
+    brewery-jid: "JvbBrewery@internal.auth.{{ domain }}"
     max-bridge-participants = -1
     max-bridge-packet-rate = 50000
     average-participant-packet-rate-pps = 500
@@ -162,6 +163,7 @@ jicofo {
       domain = "auth.meet.{{ domain }}"
 
       client-proxy = "focus.meet.{{ domain }}"
+      xmpp-domain = "meet.{{ domain }}"
 
       reply-timeout = 15 seconds
       conference-muc-jid = "conference.meet.{{ domain }}"
