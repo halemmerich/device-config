@@ -1,0 +1,71 @@
+input * xkb_layout de
+
+input * drag enabled
+input * tap enabled
+input * dwt disabled
+
+output * scale 1
+
+{% if sway_outputs is defined %}
+{% for current in sway_outputs %}
+{% if current.position is defined %}
+output {{ current.output }} position {{ current.position }}
+{% endif %}
+{% if current.mode is defined %}
+output {{ current.output }} mode {{ current.mode }}
+{% endif %}
+{% if current.scale is defined %}
+output {{ current.output }} scale {{ current.scale }}
+{% endif %}
+{% if current.scale_filter is defined %}
+output {{ current.output }} scale_filter {{ current.scale_filter }}
+{% endif %}
+{% if current.adaptive is defined %}
+output {{ current.output }} adaptive_sync {{ current.adaptive }}
+{% endif %}
+
+{% endfor %}
+{% endif %}
+
+set $cl_fore #ffffff
+set $cl_blue #2980b9
+set $cl_indi #e1c600
+set $cl_lgrey #4c555c
+set $cl_dgrey #35383d
+set $cl_urge #eb4d4b
+
+# Colors                border    bg       text     indi     childborder
+client.focused          $cl_dgrey $cl_blue $cl_fore $cl_indi $cl_dgrey
+client.focused_inactive $cl_lgrey $cl_lgrey $cl_fore $cl_indi $cl_dgrey
+client.unfocused        $cl_dgrey $cl_dgrey $cl_fore $cl_indi $cl_dgrey
+client.urgent           $cl_urge $cl_urge $cl_fore $cl_urge $cl_urge
+
+focus_follows_mouse no
+
+titlebar_padding 2
+
+font pango:monospace 12px
+
+bar {
+        swaybar_command waybar
+}
+
+for_window [app_id="launcher"] floating enable
+
+exec swayidle -w \
+	timeout 300 'swaylock --indicator-idle-visible -f -c 35383d' \
+	timeout 600 'swaymsg "output * power off"' \
+		resume 'swaymsg "output * power on"' \
+	before-sleep 'swaylock --indicator-idle-visible -f -c 35383d'
+
+exec gnome-keyring-daemon --start --components=secrets
+exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+
+include /etc/sway/config.d/*
+
+exec systemctl --user start wireplumber
+exec systemctl --user start xdg-desktop-portal
+
+exec dunst
+
+include ~/.config/sway/config.d/*

@@ -3,8 +3,9 @@
     name:
     - sway
     - swayidle
-    - dmenu
+    - fuzzel
     - gnome-keyring
+    - otf-font-awesome
     - polkit-gnome
     - pavucontrol
     - dex
@@ -13,7 +14,6 @@
     - waybar
     - xdg-desktop-portal-wlr
     - xdg-desktop-portal-gtk
-    - wofi
     - qt5ct
     - nemo
     - foot
@@ -75,6 +75,14 @@
   tags:
     - config
 
+- name: Configure fuzzel
+  template:
+    src: fuzzel.ini.j2
+    dest: /etc/xdg/fuzzel/fuzzel.ini
+    mode: "0744"
+  tags:
+    - config
+
 - name: Start user managers
   systemd:
     name: 'user@{{ users[item].uid }}.service'
@@ -85,9 +93,12 @@
 
 - name: Configure sway
   template:
-    src: config.j2
-    dest: /etc/sway/config
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
     mode: "0744"
+  loop:
+    - { src: sway/config.j2, dest: /etc/sway/config }
+    - { src: sway/00_keybindings.conf.j2, dest: /etc/sway/config.d/00_keybindings.conf }
   tags:
     - config
 
