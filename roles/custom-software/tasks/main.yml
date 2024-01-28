@@ -99,7 +99,7 @@
     name: "{{ item }}"
     daemon-reload: yes
     enabled: yes
-    started: yes
+    state: started
   loop: "{{ software_services }}"
   when: software_services is defined
   tags:
