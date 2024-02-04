@@ -8,6 +8,7 @@
     - otf-font-awesome
     - polkit-gnome
     - pavucontrol
+    - pipewire-pulse
     - dex
     - gammastep
     - wf-recorder
