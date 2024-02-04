@@ -4,6 +4,8 @@
 
 # check for dependencies
 
+[ "$DEBUG" = 1 ] && set -x
+
 function checkMetaData {
 	STORAGE_META_DIR="$1"
 	[ ! -f "$STORAGE_META_DIR/.created" ] || [ ! "$(cat "$STORAGE_META_DIR/.created")" == "single" ] && { echo Single pool marker file missing, invalid meta data dir && exit 1; }

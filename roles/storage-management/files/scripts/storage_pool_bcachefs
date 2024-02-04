@@ -1,0 +1,138 @@
+#!/bin/bash
+
+. /usr/local/bin/storage_helpers 
+
+! command -v mkfs.bcachefs 2>&1 > /dev/null && echo bcachefs-tools missing && exit 1
+
+[ "$DEBUG" = 1 ] && set -x
+
+function getMountableDevice {
+	STORAGE_META_DIR="$1"
+	DEVICELIST=""
+	for C in $(cat "$STORAGE_META_DIR"/devices)
+	do
+		echoerr checking $C
+		DEVICE="$(getTopDevice "$C")"
+		blkid "$DEVICE" | grep -q bcachefs && DEVICELIST="$DEVICELIST:$(echo "$DEVICE")"
+	done
+	echo $DEVICELIST | sed -e "s|^:||"
+}
+
+function create {
+	STORAGE_META_DIR="$1"
+	
+	[ ! -f "$STORAGE_META_DIR/.created" ] && storage_pool create "$STORAGE_META_DIR"
+	
+	[ -f "$STORAGE_META_DIR/.created" ] && [ "$(cat "$STORAGE_META_DIR/.created")" == "bcachefs" ] && echo Already initialized, exiting && exit 1
+
+	echo "bcachefs" > "$STORAGE_META_DIR/.created"
+}
+
+function changeProfile {
+	echo NOT IMPLEMENTED
+	exit 1
+}
+
+function add {
+	STORAGE_META_DIR="$1"
+	DEVICE="$2"
+	TYPE="$3"
+	
+	[ -z "$TYPE" ] && TYPE=slow
+	[ "$TYPE" != slow -a "$TYPE" != fast ] && echo Type must be slow or fast && return 1
+	
+	ID="$(getDeviceId "$DEVICE")"
+	
+	[ ! -f "$STORAGE_META_DIR/.created" ] || [ ! "$(cat "$STORAGE_META_DIR/.created")" == "bcachefs" ] && { echo bcachefs pool marker file missing, invalid meta data dir && exit 1; }
+	[ ! -f "$STORAGE_META_DIR/count" ]	&& echo 0 > "$STORAGE_META_DIR/count"
+
+
+	umountPool "$STORAGE_META_DIR"
+	
+	if [ -n "$(getMountableDevice "$STORAGE_META_DIR")" ]
+	then
+		mountPool "$STORAGE_META_DIR"
+		[ "$TYPE" = slow ] && TARGET_OPTIONS="--background_target=$TYPE" || TARGET_OPTIONS="--promote_target=$TYPE --foreground_target=$TYPE"
+		bcachefs device add "$(getMountpoint "$STORAGE_META_DIR")" --label "$TYPE.disk$(cat "$STORAGE_META_DIR/count")" "$(getTopDevice $DEVICE)" && echo $(( $(cat "$STORAGE_META_DIR/count") + 1 )) > "$STORAGE_META_DIR/count" || return 1
+		bcachefs set-option $TARGET_OPTIONS "$(getTopDevice $DEVICE)" || return 1
+		umountPool "$STORAGE_META_DIR" || return 1
+	else
+		storage_pool openDevices "$STORAGE_META_DIR"
+		mkfs.bcachefs --foreground_target=$TYPE --background_target=$TYPE --promote_target=$TYPE --label "$TYPE.disk$(cat "$STORAGE_META_DIR/count")" "$(getTopDevice $DEVICE)" && echo 1 > "$STORAGE_META_DIR/count" && echo "$ID" > "$STORAGE_META_DIR/devices" || return 1
+	fi
+	
+	storage_pool closeDevices "$STORAGE_META_DIR"
+}
+
+function mountPool {
+	STORAGE_META_DIR="$1"
+	
+	storage_pool openDevices "$STORAGE_META_DIR"
+
+	MOUNT_DIR="$(getMountpoint "$STORAGE_META_DIR")"
+	mkdir -p $MOUNT_DIR || return 1
+	cat teststorage/devices
+	bcachefs mount "$(getMountableDevice "$STORAGE_META_DIR")" $MOUNT_DIR || return 1
+}
+
+function umountPool {	
+	STORAGE_META_DIR="$1"
+	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
+	[ -d "$MOUNT_DIR" ] && mountpoint "$MOUNT_DIR" > /dev/null && umount "$MOUNT_DIR" || return 1
+	
+	storage_pool closeDevices "$STORAGE_META_DIR"
+}
+
+function balance {
+	echo NOT IMPLEMENTED
+	exit 1
+}
+
+function scrub {
+	echo NOT IMPLEMENTED
+	exit 1
+}
+
+function maintenance {
+	echo NOT IMPLEMENTED
+	exit 1
+}
+
+function status {
+	echo NOT IMPLEMENTED
+	exit 1
+}
+
+function backup {
+	echo NOT IMPLEMENTED
+	exit 1
+}
+
+COMMAND=$1
+shift
+ 
+case $COMMAND in
+	mount) mountPool "$@" ;;
+	umount) umountPool "$@" ;;
+	create) create "$@" ;;
+	add) add "$@" ;;
+	remove) remove "$@" ;;
+	balance) balance "$@" ;;
+	scrub) scrub "$@" ;;
+	status) status "$@" ;;
+	backup) backup "$@" ;;
+	changeProfile) changeProfile "$@" ;;
+	*) echo "Usage:
+storage_pool_bcachefs <mount|umount> <metadir>
+storage_pool_bcachefs create <metadir>
+storage_pool_bcachefs add <metadir> <device> [type:slow/fast]
+storage_pool_bcachefs balance <metadir>
+storage_pool_bcachefs scrub <metadir> <filters>
+storage_pool_bcachefs maintenance <metadir> <type>
+storage_pool_bcachefs analyse <metadir>
+storage_pool_bcachefs status <metadir>
+storage_pool_bcachefs changeProfile <metadir> <profiledata> [profilemeta]
+storage_pool_bcachefs backup <metadir> <type>" ;;
+esac
+
+

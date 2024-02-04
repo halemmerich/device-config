@@ -4,6 +4,8 @@
 
 # check for dependencies
 
+[ "$DEBUG" = 1 ] && set -x
+
 STORAGE_META_DIR="$2"
 
 function openDevices {

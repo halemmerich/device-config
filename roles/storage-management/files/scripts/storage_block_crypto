@@ -275,7 +275,7 @@ COMMAND=$1
 shift
 
 set +e
- 
+
 case $COMMAND in
 	map) mapAll "$@" ;;
 	umap) unmapAll "$@" ;;

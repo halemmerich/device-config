@@ -7,8 +7,8 @@
 
 - name: Snapper template
   copy:
-    src: "/snapraid"
-    dest: /usr/local/bin/
+    src: "snapraid"
+    dest: /etc/snapper/config-templates/snapraid
     mode: u=rw,g=r,o=r
 
 - name: Create temporary file

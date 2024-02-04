@@ -4,6 +4,8 @@
 
 ! command -v mkfs.btrfs 2>&1 > /dev/null && echo btrfs-progs missing && exit 1
 
+[ "$DEBUG" = 1 ] && set -x
+
 function getMountableDevice {
 	STORAGE_META_DIR="$1"
 	for C in $(cat "$STORAGE_META_DIR"/devices)

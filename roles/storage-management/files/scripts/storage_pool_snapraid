@@ -11,6 +11,8 @@
 ! command -v snapraid-btrfs 2>&1 > /dev/null && echo snapraid-btrfs missing && exit 1
 ! command -v snapper 2>&1 > /dev/null && echo snapper missing && exit 1
 
+[ "$DEBUG" = 1 ] && set -x
+
 function snapraid_wrap {
 	CONFIG="$1"
 	shift
@@ -84,7 +86,7 @@ function add {
 		echo "$TYPE $(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/snapraid.parity" >> "snapraid.conf"
 	fi
 	cd "$ORIGDIR"
-	
+
 	umount "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID" 2>&1 > /dev/null
 	
 	storage_block_crypto umap "$STORAGE_META_DIR/keyfiles"

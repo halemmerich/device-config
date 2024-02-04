@@ -1,7 +1,6 @@
 #!/bin/bash
 
 ! command -v dmidecode 2>&1 > /dev/null && echo dmidecode missing && exit 1
-
 ! command -v vgscan 2>&1 > /dev/null && echo lvm2 missing && exit 1
 
 dmidecode | grep -i vendor | grep -q -i "innotek\|OVMF" || ( echo "ERROR: NOT A VIRTUAL MACHINE
@@ -49,6 +48,7 @@ function prepareTestDevice {
 }
 
 function logResult {
+	[ -n "${-//[^x]/}" ] && RESET=1 && set +x
 	VALUE=$1
 	shift
 	MESSAGE="$@"
@@ -57,6 +57,7 @@ function logResult {
 	[ "$VALUE" == FAIL ] && COLOR=$'\e[1;31m' && OVERALL_FAILS=$(( OVERALL_FAILS + 1))
 	
 	echo $COLOR$VALUE$'\e[0m' - $MESSAGE - ${FUNCNAME[1]} >> "$RESULT_LOG"
+	[ -n "$RESET" ] && set -x
 }
 
 function logResultNewTest {
@@ -66,6 +67,7 @@ function logResultNewTest {
 }
 
 function createTestFiles {
+	[ -n "${-//[^x]/}" ] && RESET=1 && set +x
 	TARGET="$1"
 	[ -z "$TARGET" ] && echo Needs target for test file creation && exit 1
 	
@@ -74,9 +76,11 @@ function createTestFiles {
 		echo ORIGINAL > "$TARGET/$C"
 		touch -t 0001010000 "$TARGET/$C"
 	done
+	[ -n "$RESET" ] && set -x
 }
 
 function modifyTestFiles {
+	[ -n "${-//[^x]/}" ] && RESET=1 && set +x
 	TARGET="$1"
 	[ -z "$TARGET" ] && echo Needs target for test file modification && exit 1
 	
@@ -85,9 +89,11 @@ function modifyTestFiles {
 		echo -BROKEN- > "$TARGET/$C"
 		touch -t 0001010000 "$TARGET/$C"
 	done
+	[ -n "$RESET" ] && set -x
 }
 
 function updateTestFiles {
+	[ -n "${-//[^x]/}" ] && RESET=1 && set +x
 	TARGET="$1"
 	[ -z "$TARGET" ] && echo Needs target for test file update && exit 1
 	
@@ -95,9 +101,11 @@ function updateTestFiles {
 	do
 		echo UPDATED > "$TARGET/$C"
 	done
+	[ -n "$RESET" ] && set -x
 }
 
 function checkTestFiles {
+	[ -n "${-//[^x]/}" ] && RESET=1 && set +x
 	TARGET="$1"
 	CONTENT="$2"
 	[ -z "$TARGET" ] && echo Needs target for test file modification && exit 1
@@ -107,6 +115,7 @@ function checkTestFiles {
 	do
 		[ "$(cat "$TARGET/$C")" != "$CONTENT" ] && ERRORS=$(( ERRORS + 1 ))
 	done
+	[ -n "$RESET" ] && set -x
 	return $ERRORS
 }
 
@@ -116,8 +125,8 @@ function getStartingBlock {
 }
 
 function cleanup {
+	[ -n "${-//[^x]/}" ] && RESET=1 && set +x
 	(
-	set +x
 	log Cleanup
 
 	RC=0
@@ -127,8 +136,10 @@ function cleanup {
 		[ -f "$C" ] && snapper -c "$(basename "$C")" delete-config
 		rm -f "$C"
 	done
-	echo 'SNAPPER_CONFIGS="
+	echo 'SNAPPER_CONFIGS=""
 DISABLE_APT_SNAPSHOT="yes"' > /etc/default/snapper
+	echo 'SNAPPER_CONFIGS=""
+DISABLE_APT_SNAPSHOT="yes"' > /etc/conf.d/snapper
 	
 	rm -rf /etc/storage
 	mkdir -p /etc/storage/maintenance
@@ -197,7 +208,9 @@ DISABLE_APT_SNAPSHOT="yes"' > /etc/default/snapper
 	lvscan
 	vgscan
 	pvscan
+	echo Cleanup done
 	)
+	[ -n "$RESET" ] && set -x
 }
 
 # Test cases following
@@ -219,6 +232,21 @@ function btrfsAddPlain {
 	done
 	
 	logResult $([ "$(cat teststorage/devices | wc -l)" -eq 2 ] && echo OK || echo FAIL) Devices list complete
+	
+	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+}
+
+function bcachefsAddPlain {
+	storage_pool_bcachefs create teststorage; (( RC |= $? ))
+	TYPES=( "" "slow" "fast" )
+	for C in {0..2}
+	do
+		storage_pool addPlain teststorage "$(getTestDevice $C)"; (( RC |= $? ))
+		storage_pool_bcachefs add teststorage "$(getTestDevice $C)" ${TYPES[$C]} ; (( RC |= $? ))
+		logResult $([ "$(cat teststorage/count)" -eq "$(( C + 1 ))" ] && echo OK || echo FAIL) Devices count incremented
+	done
+	
+	logResult $([ "$(cat teststorage/devices | wc -l)" -eq 3 ] && echo OK || echo FAIL) Devices list complete
 	
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }
@@ -437,10 +465,8 @@ function snapraidExtendUmounted {
 	log Mount pool
 	storage_pool_snapraid mount teststorage; (( RC |= $? ))
 
-	for C in testfile{000..999}
-	do
-		dd if=/dev/zero of=/mnt/teststorage/$C bs=1K count=1 status=none; (( RC |= $? ))
-	done
+	createTestFiles /mnt/teststorage
+
 	storage_pool_snapraid sync teststorage; (( RC |= $? ))
 
 	storage_pool_snapraid scrub teststorage; (( RC |= $? ))
@@ -456,10 +482,8 @@ function snapraidExtendMounted {
 	log Mount pool
 	storage_pool_snapraid mount teststorage; (( RC |= $? ))
 
-	for C in testfile{000..999}
-	do
-		dd if=/dev/zero of=/mnt/teststorage/$C bs=1K count=1 status=none; (( RC |= $? ))
-	done
+	createTestFiles /mnt/teststorage
+
 	storage_pool_snapraid sync teststorage; (( RC |= $? ))
 
 	log Scrub pool
@@ -470,10 +494,8 @@ function snapraidExtendMounted {
 function snapraidScrub {
 	snapraidMount
 
-	for C in testfile{000..999}
-	do
-		dd if=/dev/zero of=/mnt/teststorage/$C bs=1K count=1 status=none; (( RC |= $? ))
-	done
+	createTestFiles /mnt/teststorage
+
 	storage_pool_snapraid sync teststorage; (( RC |= $? ))
 
 	log Scrub pool
@@ -542,6 +564,7 @@ function snapraidCreatePlain {
 		storage_pool_snapraid add parity teststorage $C; (( RC |= $? ))
 	done
 
+	logResult $([ $(ls /etc/snapper/configs | wc -l) -eq 2 ] && echo OK || echo FAIL) Snapper configs created
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }
 
@@ -745,10 +768,10 @@ function backupRunRsnapshot {
 
 function backupTargetFullRsnapshot {
 	backupAddRsnapshot
-	truncate -s 700M /mnt/backupsource/big1.img
+	truncate -s 1400M /mnt/backupsource/big1.img
 	storage_backup backup teststorage; (( RC |= $? ))
 	rm /mnt/backupsource/big1.img
-	truncate -s 700M /mnt/backupsource/big2.img
+	truncate -s 1400M /mnt/backupsource/big2.img
 	storage_backup backup teststorage
 	logResult $( [ "$?" -ne 0 ] && echo OK || echo FAIL) Second big file backup fails
 	
@@ -915,7 +938,7 @@ function poolCloseDevices {
 	poolOpenDevices
 	storage_pool closeDevices teststorage; (( RC |= $? ))
 	
-	logResult $([ $(ls -A /dev/mapper) == "control" ] && echo OK || echo FAIL) Only control in mapped
+	logResult $([ -z "$(ls -A /dev/mapper/*_*)" ] && echo OK || echo FAIL) No test devices in mapped
 	
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }
@@ -961,8 +984,6 @@ function cryptoCreateCrypted {
 }
 
 function cryptoCreateIntegrity {
-	
-	
 	storage_pool create teststorage; (( RC |= $? ))
 	echo -e "y\nYES\n" | storage_block_crypto create teststorage/keyfiles "$(getTestDevice 1)" yes; (( RC |= $? ))
 	
@@ -977,7 +998,10 @@ function cryptoCreateIntegrity {
 function wrapTest {
 	logResultNewTest $1
 	cleanup
+	echo Running $1
+	[ "$DEBUG" = 1 ] && set -x
 	( "$1" )
+	[ "$DEBUG" = 1 ] && set +x
 }
 
 if [ -z "$1" ]

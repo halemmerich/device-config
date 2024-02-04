@@ -34,6 +34,7 @@ function getDeviceId {
 }
 
 function getTopDevice {
+	set +x
 	ID="$1"
 	DEVICE=""
 	[ -b "$ID" ] && DEVICE="$ID" && ID="$(getDeviceId "$DEVICE")"
