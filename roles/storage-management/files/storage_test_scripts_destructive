@@ -1,5 +1,9 @@
 #!/bin/bash
 
+! command -v dmidecode 2>&1 > /dev/null && echo dmidecode missing && exit 1
+
+! command -v vgscan 2>&1 > /dev/null && echo lvm2 missing && exit 1
+
 dmidecode | grep -i vendor | grep -q -i "innotek\|OVMF" || ( echo "ERROR: NOT A VIRTUAL MACHINE
 THIS WILL DESTROY DATA ON MANY DRIVES"; exit 1 )
 
