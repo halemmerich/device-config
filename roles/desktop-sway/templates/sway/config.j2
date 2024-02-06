@@ -53,6 +53,7 @@ bar {
 for_window [app_id="launcher"] floating enable
 
 exec swayidle -w \
+	lock 'swaylock --indicator-idle-visible -f -c 35383d' \
 	timeout 300 'swaylock --indicator-idle-visible -f -c 35383d' \
 	timeout 600 'swaymsg "output * power off"' \
 		resume 'swaymsg "output * power on"' \

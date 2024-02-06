@@ -88,7 +88,7 @@ bindsym $mod+Shift+0 move container to workspace $ws10
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
 bindsym $mod+Shift+e exec "swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your sway session.' -B 'Yes, exit sway' 'swaymsg exit'"
-bindsym $mod+Escape exec "swaylock --indicator-idle-visible -f -c 35383d"
+bindsym $mod+Escape exec "loginctl lock-session"
 bindsym $mod+Alt+Escape exec "systemctl suspend"
 
 mode "resize" {
