@@ -85,6 +85,14 @@
   tags:
     - config
 
+- name: Add custom folders
+  file:
+    path: "{{item}}"
+    state: directory
+  loop: "{{ software_folders }}"
+  tags:
+    - config
+
 - name: Add custom files
   copy:
     src: "files/custom-software/{{ item.src }}"
