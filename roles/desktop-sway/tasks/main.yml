@@ -113,8 +113,8 @@
 
 - name: Session launcher
   template:
-    src: custom-sway.desktop.j2
-    dest: /usr/share/wayland-sessions/custom-sway.desktop
+    src: sway.desktop.j2
+    dest: /usr/share/wayland-sessions/sway.desktop
   tags:
     - config
 
