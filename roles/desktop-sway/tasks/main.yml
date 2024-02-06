@@ -62,8 +62,8 @@
 
 - name: Create screenrecorder script
   copy:
-    src: sway-screenrecord
-    dest: /usr/local/bin/sway_screenrecord
+    src: desktop_sway_screenrecord
+    dest: /usr/local/bin/desktop_sway_screenrecord
     mode: '0666'
   tags:
     - config
