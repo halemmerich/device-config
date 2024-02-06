@@ -11,7 +11,7 @@
     name: "{{ item }}"
     reason: "dependency"
     state: present
-  loop: "{{software_packages}}"
+  loop: "{{software_packages_dependencies}}"
   when: ansible_os_family == "Archlinux"
   tags:
     - install
