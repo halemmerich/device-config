@@ -4,4 +4,4 @@ Description=Backup
 [Service]
 Type=oneshot
 User=root
-ExecStart=bash /usr/local/bin/storage_backup auto
+ExecStart=/bin/systemd-inhibit --what sleep --who Backups /bin/bash /usr/local/bin/storage_backup auto

@@ -5,4 +5,4 @@ Description=Snapraid sync
 Type=oneshot
 User=root
 WorkingDirectory=/
-ExecStart=bash /usr/local/bin/storage_maintenance full
+ExecStart=/bin/systemd-inhibit --what sleep --who Maintenance /bin/bash /usr/local/bin/storage_maintenance mini
