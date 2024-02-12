@@ -18,13 +18,13 @@
   tags:
     - config
 
-- name: 'Create online check units'
+- name: 'Create wake units'
   template:
-    src: "onlinecheck.j2"
-    dest: "/etc/systemd/system/{{ item }}-online.service"
+    src: "wake.j2"
+    dest: "/etc/systemd/system/wake-{{ item.escapedname }}.service"
     mode: '0644'
-  loop: "{{ automount_onlinechecks }}"
-  when: automount_onlinechecks is defined
+  loop: "{{ automount_mounts }}"
+  when: automount_mounts is defined and item.mac is defined
   tags:
     - config
 

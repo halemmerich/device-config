@@ -1,7 +1,6 @@
 [Unit]
   Description=cifs mount script {{ item.src }}
-  {% if item.waitfor is defined %}Requires={{ item.waitfor }}-online.service
-  After={{ item.waitfor }}-online.service{% endif %}
+  Requires=wake-{{ item.escapedname }}.service
 
 [Mount]
   What={{ item.src }}
@@ -9,6 +8,7 @@
   {% if item.options is defined %}Options={{ item.options }}
 {% endif %}
   Type={{ item.type }}
+  TimeoutSec=45s
 
 [Install]
   WantedBy=multi-user.target

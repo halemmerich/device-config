@@ -42,22 +42,18 @@ automount_credentials:
   - username: tester
     password: "{{ lookup('password', 'credentials/staging-nas-debian.staging.debian/samba/tester length=12') }}"
 
-automount_onlinechecks:
-  - "staging-nas-debian"
-
 automount_mounts:
   - escapedname: "media-testshare"
     src: "//staging-nas-debian/testshare"
     path: "/media/testshare"
     type: "cifs"
-    waitfor: "staging-nas-debian"
+    host: "staging-nas-arch"
+    mac: "11:22:33:44:55:66"
   - escapedname: "media-testshare-guest"
     src: "//staging-nas-debian/testshare-guest"
     path: "/media/testshare-guest"
     type: "cifs"
-    waitfor: "staging-nas-debian"
   - escapedname: "media-testshare-guest"
     src: "//staging-nas-debian/testshare-guest-ro"
     path: "/media/testshare-guest-ro"
     type: "cifs"
-    waitfor: "staging-nas-debian"

@@ -67,22 +67,18 @@ automount_credentials:
   - username: tester
     password: "{{ lookup('password', 'credentials/{{ fqdn }}/samba/tester length=12') }}"
 
-automount_onlinechecks:
-  - "staging-nas-arch"
-
 automount_mounts:
   - escapedname: "media-testshare"
     src: "//staging-nas-arch/testshare"
     path: "/media/testshare"
     type: "cifs"
-    waitfor: "staging-nas-arch"
+    host: "staging-nas-arch"
+    mac: "11:22:33:44:55:66"
   - escapedname: "media-testshare_guest"
     src: "//staging-nas-arch/testshare-guest"
     path: "/media/testshare_guest"
     type: "cifs"
-    waitfor: "staging-nas-arch"
   - escapedname: "media-testshare_guest_ro"
     src: "//staging-nas-arch/testshare-guest-ro"
     path: "/media/testshare_guest_ro"
     type: "cifs"
-    waitfor: "staging-nas-arch"
