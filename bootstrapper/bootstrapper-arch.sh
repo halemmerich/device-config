@@ -63,6 +63,7 @@ Environment variables:
   BOOT_SIZE               set a size for the boot/efi partition in GB
   KEYMAP                  set a keymap for the console
   MIRRORLIST_COUNTRY      set a country for the mirrorlist download
+  DONT_ENCRYPT            set any value to prevent encryption
 
 Example commands to run on installer environments for remote install
   loadkeys de             # change to whatever keyboard layout you like
@@ -126,19 +127,22 @@ c*)
 	;;
 esac
 
-while [ -z "$LUKS_PASSWORD" -a \( -n "$STEP_BARE" -o -n "$STEP_MOUNT" \) ]
-do
-	echo Enter LUKS password: 
-	read -s LUKS_PASSWORD1
-	echo again: 
-	read -s LUKS_PASSWORD2
-	if [ "$LUKS_PASSWORD1" = "$LUKS_PASSWORD2" ]
-	then	
-		LUKS_PASSWORD="$LUKS_PASSWORD1"
-	else
-		echo Passwords did not match
-	fi
-done
+if [ -z "$DONT_ENCRYPT" ]
+then
+	while [ -z "$LUKS_PASSWORD" -a \( -n "$STEP_BARE" -o -n "$STEP_MOUNT" \) ]
+	do
+		echo Enter LUKS password: 
+		read -s LUKS_PASSWORD1
+		echo again: 
+		read -s LUKS_PASSWORD2
+		if [ "$LUKS_PASSWORD1" = "$LUKS_PASSWORD2" ]
+		then	
+			LUKS_PASSWORD="$LUKS_PASSWORD1"
+		else
+			echo Passwords did not match
+		fi
+	done
+fi
 
 while [ -z "$ADMIN_PASSWORD" -a -n "$STEP_CONFIG" ]
 do
@@ -204,6 +208,19 @@ else
 		SWAP=${DEVICE}${PREFIX}3
 		ROOT=${DEVICE}${PREFIX}4
 	fi
+
+	UUID_ROOT=$(blkid "$ROOT" | cut -d ' ' -f 2 | sed -e "s|\"||g" | cut -d '=' -f 2)
+	UUID_SWAP=$(blkid "$SWAP" | cut -d ' ' -f 2 | sed -e "s|\"||g" | cut -d '=' -f 2)
+
+
+	if [ -z "$DONT_ENCRYPT" ]
+	then
+		ROOT_TARGET="/dev/mapper/luks-$UUID_ROOT"
+		SWAP_TARGET="/dev/mapper/luks-$UUID_SWAP"
+	else
+		ROOT_TARGET="$ROOT"
+		SWAP_TARGET="$SWAP"
+	fi
 fi
 
 if [ -n "$STEP_CONFIG" -a -z "$3" ]
@@ -215,14 +232,9 @@ else
 	NEW_HOSTNAME=$3
 fi
 
-
-function getUuids {
-	UUID_ROOT=$(blkid "$ROOT" | cut -d ' ' -f 2 | sed -e "s|\"||g" | cut -d '=' -f 2)
-	UUID_SWAP=$(blkid "$SWAP" | cut -d ' ' -f 2 | sed -e "s|\"||g" | cut -d '=' -f 2)
-}
-
 function openLuks {
-	getUuids
+	[ -n "$DONT_ENCRYPT" ] && return
+	
 	if [ -e /dev/mapper/luks-$UUID_ROOT ]
 	then
 		echo /dev/mapper/luks-$UUID_ROOT already mapped
@@ -238,7 +250,8 @@ function openLuks {
 }
 
 function closeLuks {
-	getUuids
+	[ -n "$DONT_ENCRYPT" ] && return
+	
 	set +e
 	cryptsetup close luks-$UUID_ROOT
 	cryptsetup close luks-$UUID_SWAP
@@ -300,10 +313,10 @@ then
 	set -e
 
 	wipefs -a "$ROOT"
-	echo -n "$LUKS_PASSWORD" | cryptsetup luksFormat "$ROOT"
+	[ -z "$DONT_ENCRYPT" ] && echo -n "$LUKS_PASSWORD" | cryptsetup luksFormat "$ROOT"
 
 	wipefs -a "$SWAP"
-	echo -n "$LUKS_PASSWORD" | cryptsetup luksFormat "$SWAP"
+	[ -z "$DONT_ENCRYPT" ] && echo -n "$LUKS_PASSWORD" | cryptsetup luksFormat "$SWAP"
 	
 	openLuks
 
@@ -317,11 +330,11 @@ then
 		mkfs.ext4 "$BOOT"
 	fi
 
-	mkswap /dev/mapper/luks-$UUID_SWAP
+	mkswap "$SWAP_TARGET"
 
-	mkfs.btrfs /dev/mapper/luks-$UUID_ROOT
+	mkfs.btrfs "$ROOT_TARGET"
 
-	mount /dev/mapper/luks-$UUID_ROOT /mnt
+	mount "$ROOT_TARGET" /mnt
 
 	mkdir /mnt/boot
 	mkdir /mnt/var
@@ -335,11 +348,11 @@ if [ -n "$STEP_MOUNT" ]
 then
 	openLuks
 	
-	if mount | grep "/mnt " | grep /dev/mapper/luks-$UUID_ROOT > /dev/null
+	if mount | grep "/mnt " | grep "$ROOT_TARGET" > /dev/null
 	then
-		echo /dev/mapper/luks-$UUID_ROOT already mounted at /mnt
+		echo "$ROOT_TARGET" already mounted at /mnt
 	else
-		mount /dev/mapper/luks-$UUID_ROOT /mnt
+		mount "$ROOT_TARGET" /mnt
 	fi
 	
 	if [ "$BOOT_TYPE" = "efi" ]
@@ -361,11 +374,11 @@ then
 	fi	
 
 
-	if swapon | grep $(realpath /dev/mapper/luks-$UUID_SWAP) > /dev/null
+	if swapon | grep $(realpath "$SWAP_TARGET") > /dev/null
 	then
-		echo /dev/mapper/luks-$UUID_SWAP already used as swap
+		echo "$SWAP_TARGET" already used as swap
 	else
-		swapon /dev/mapper/luks-$UUID_SWAP
+		swapon "$SWAP_TARGET"
 	fi
 fi
 
@@ -379,7 +392,7 @@ if [ -n "$STEP_BOOTLOADER" ]
 then
 	genfstab -U /mnt > /mnt/etc/fstab
 
-	CPU_VENDOR=$(cat /proc/cpuinfo | grep vendor_id | sed "s|[[:blank:]]*||g" | cut -d ':' -f 2)
+	CPU_VENDOR=$(cat /proc/cpuinfo | grep vendor_id | sed "s|[[:blank:]]*||g" | cut -d ':' -f 2 | sort -u)
 
 	case $CPU_VENDOR in
 		GenuineIntel)
@@ -401,15 +414,18 @@ then
 ip=::::${NEW_HOSTNAME}:eth0:dhcp: netconf_timeout=5
 EOF
 
-		tee /mnt/cmdline.d/luks.conf << EOF
+		if [ -z "$DONT_ENCRYPT" ]
+		then
+			tee /mnt/cmdline.d/luks.conf << EOF
 luks.uuid=${UUID_ROOT}
 luks.uuid=${UUID_SWAP}
 luks.options=allow-discards
 root=/dev/mapper/luks-${UUID_ROOT}
 resume=/dev/mapper/luks-${UUID_SWAP} rw
 EOF
+		fi
 
-		tee /mnt/etc/mkinitcpio.d/linux-lts.conf << EOF
+		tee /mnt/etc/mkinitcpio.d/linux-lts.preset << EOF
 ALL_kver="/boot/vmlinuz-linux-lts"
 ALL_microcode=(/boot/*-ucode.img)
 PRESETS=('default' 'fallback')
@@ -422,12 +438,15 @@ EOF
 		arch-chroot /mnt pacman --noconfirm -S grub
 		arch-chroot /mnt grub-install --target=i386-pc "$DEVICE"
 
+		LUKS_PARAMS=""
+		[ -z "$DONT_ENCRYPT" ] && LUKS_PARAMS="luks.uuid=${UUID_ROOT} luks.uuid=${UUID_SWAP} root=/dev/mapper/luks-${UUID_ROOT} resume=/dev/mapper/luks-${UUID_SWAP} "
+
 		tee /mnt/etc/default/grub << EOF
 GRUB_DEFAULT=0
 GRUB_TIMEOUT=2
 GRUB_DISTRIBUTOR="Arch"
 GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"
-GRUB_CMDLINE_LINUX="ip=::::${NEW_HOSTNAME}:eth0:dhcp: netconf_timeout=5 luks.uuid=${UUID_ROOT} luks.uuid=${UUID_SWAP} root=/dev/mapper/luks-${UUID_ROOT} resume=/dev/mapper/luks-${UUID_SWAP} rw"
+GRUB_CMDLINE_LINUX="ip=::::${NEW_HOSTNAME}:eth0:dhcp: netconf_timeout=5 ${LUKS_PARAMS} rw"
 GRUB_PRELOAD_MODULES="part_gpt part_msdos"
 GRUB_TIMEOUT_STYLE=menu
 GRUB_TERMINAL_INPUT=console
@@ -469,17 +488,7 @@ EOF
 MODULES=()
 BINARIES=()
 FILES=()
-HOOKS=(base kvm systemd autodetect modconf block keyboard sd-vconsole filesystems fsck systemd-tool)
-EOF
-
-	tee /mnt/etc/mkinitcpio.d/linux-lts.preset << EOF
-ALL_kver="/boot/vmlinuz-linux-lts"
-ALL_microcode=(/boot/*-ucode.img)
-
-PRESETS=('default' 'fallback')
-default_uki="/boot/EFI/Linux/arch-linux-lts.efi"
-fallback_uki="/boot/EFI/Linux/arch-linux-lts-fallback.efi"
-fallback_options="-S autodetect"
+HOOKS=(base kms systemd autodetect modconf block keyboard sd-vconsole filesystems fsck systemd-tool)
 EOF
 
 	arch-chroot /mnt systemctl enable initrd-cryptsetup.path initrd-tinysshd.service initrd-network.service initrd-sysroot-mount.service
@@ -548,8 +557,8 @@ then
 	set +e
 	umount /mnt/boot
 	umount /mnt
-	getUuids
-	swapoff /dev/mapper/luks-$UUID_SWAP
+
+	swapoff "$SWAP_TARGET"
 	closeLuks
 fi
 
