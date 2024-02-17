@@ -1,45 +1,57 @@
 - name: Install additional packages
   package:
-    name: "{{ item }}"
+    name: "{{ item.1 }}"
     state: present
-  loop: "{{software_packages}}"
+  loop: "{{ custom_software_packages | subelements('packages')}}"
+  when:
+    - custom_software_packages is defined
+    - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
 
 - name: Install additional packages as dependencies Arch
   pacman:
-    name: "{{ item }}"
+    name: "{{ item.1 }}"
     reason: "dependency"
     state: present
-  loop: "{{software_packages_dependencies}}"
-  when: ansible_os_family == "Archlinux"
+  loop: "{{ custom_software_packages_dependencies | subelements('packages')}}"
+  when:
+    - ansible_os_family == "Archlinux"
+    - custom_software_packages_dependencies is defined
+    - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
 
 - name: Install additional packages Arch
   package:
-    name: "{{ item }}"
+    name: "{{ item.1 }}"
     state: present
-  loop: "{{software_packages_arch}}"
-  when: ansible_os_family == "Archlinux"
+  loop: "{{ custom_software_packages_arch | subelements('packages')}}"
+  when:
+    - ansible_os_family == "Archlinux"
+    - custom_software_packages_arch is defined
+    - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
 
 - name: Install additional packages Debian
   package:
-    name: "{{ item }}"
+    name: "{{ item.1 }}"
     state: present
-  loop: "{{software_packages_debian}}"
-  when: ansible_os_family == "Debian"
+  loop: "{{ custom_software_packages_debian | subelements('packages')}}"
+  when:
+    - ansible_os_family == "Debian"
+    - custom_software_packages_debian is defined
+    - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
 
 - name: Remove absent custom packages
   flatpak:
-    name: "{{ item }}"
+    name: "{{ item.1 }}"
     state: absent
-  loop: "{{software_packages_absent}}"
-  when: software_packages_absent is defined
+  loop: "{{ custom_software_packages_absent | default([]) | subelements('packages')}}"
+  when: ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
 
@@ -47,68 +59,85 @@
   package:
     name: flatpak
     state: present
-  when: software_flatpaks is defined
+  when:
+    - custom_software_flatpaks is defined
+    - custom_software_flatpaks | selectattr("group", 'in', group_names)
   tags:
     - install
 
 - name: Install custom flatpaks
   flatpak:
-    name: "{{ item }}"
+    name: "{{ item.1 }}"
     state: present
-  loop: "{{software_flatpaks}}"
-  when: software_flatpaks is defined
+  loop: "{{ custom_software_flatpaks | subelements('packages')}}"
+  when:
+    - custom_software_flatpaks is defined
+    - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
 
 - name: Remove absent custom flatpaks
   flatpak:
-    name: "{{ item }}"
+    name: "{{ item.1 }}"
     state: absent
-  loop: "{{ software_flatpaks_absent }}"
-  when: software_flatpaks_absent is defined
+  loop: "{{ custom_software_flatpaks_absent | subelements('packages')}}"
+  when:
+    - custom_software_flatpaks_absent is defined
+    - ( item.0.group == "all" or item.0.group in group_names )
   ignore_errors: true
   tags:
     - install
 
 - name: Update flatpaks
   command: "flatpak update --noninteractive"
-  when: software_flatpaks is defined
+  when: custom_software_flatpaks is defined or custom_software_host_flatpaks is defined
   tags:
     - upgrade
 
 - name: Add user binaries
   copy:
-    src: "files/custom-software/{{ item }}"
-    dest: "/usr/local/bin/{{ item }}"
+    src: "files/custom-software/{{ item.0.group }}/{{ item.1 }}"
+    dest: "/usr/local/bin/"
     mode: "0755"
-  loop: "{{ software_userbinaries }}"
+  loop: "{{ custom_software_userbinaries | subelements('packages')}}"
+  when:
+    - custom_software_userbinaries is defined
+    - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - config
 
 - name: Add custom folders
   file:
-    path: "{{item}}"
+    path: "{{ item.1 }}"
     state: directory
-  loop: "{{ software_folders }}"
+  loop: "{{ custom_software_folders | subelements('packages')}}"
+  when:
+    - custom_software_folders is defined
+    - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - config
 
 - name: Add custom files
   copy:
-    src: "files/custom-software/{{ item.src }}"
-    dest: "{{ item.dest }}"
+    src: "files/custom-software/{{ item.0.group }}/{{ item.1.src }}"
+    dest: "{{ item.1.dest }}"
     mode: "0755"
-  loop: "{{ software_files }}"
+  loop: "{{ custom_software_files | subelements('packages') }}"
+  when:
+    - custom_software_files is defined
+    - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - config
 
 - name: 'Enable and start services'
   systemd:
-    name: "{{ item }}"
+    name: "{{ item.1 }}"
     daemon-reload: yes
     enabled: yes
     state: started
-  loop: "{{ software_services }}"
-  when: software_services is defined
+  loop: "{{ custom_software_services_enabled | subelements('packages')}}"
+  when:
+    - custom_software_services_enabled is defined
+    - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - config
