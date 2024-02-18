@@ -99,7 +99,7 @@
     src: "files/custom-software/{{ item.0.group }}/{{ item.1 }}"
     dest: "/usr/local/bin/"
     mode: "0755"
-  loop: "{{ custom_software_userbinaries | subelements('packages')}}"
+  loop: "{{ custom_software_userbinaries | subelements('files')}}"
   when:
     - custom_software_userbinaries is defined
     - ( item.0.group == "all" or item.0.group in group_names )
@@ -110,7 +110,7 @@
   file:
     path: "{{ item.1 }}"
     state: directory
-  loop: "{{ custom_software_folders | subelements('packages')}}"
+  loop: "{{ custom_software_folders | subelements('folders')}}"
   when:
     - custom_software_folders is defined
     - ( item.0.group == "all" or item.0.group in group_names )
@@ -122,7 +122,7 @@
     src: "files/custom-software/{{ item.0.group }}/{{ item.1.src }}"
     dest: "{{ item.1.dest }}"
     mode: "0755"
-  loop: "{{ custom_software_files | subelements('packages') }}"
+  loop: "{{ custom_software_files | subelements('files') }}"
   when:
     - custom_software_files is defined
     - ( item.0.group == "all" or item.0.group in group_names )
@@ -135,7 +135,7 @@
     daemon-reload: yes
     enabled: yes
     state: started
-  loop: "{{ custom_software_services_enabled | subelements('packages')}}"
+  loop: "{{ custom_software_services_enabled | subelements('services')}}"
   when:
     - custom_software_services_enabled is defined
     - ( item.0.group == "all" or item.0.group in group_names )
