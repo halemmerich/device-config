@@ -4,4 +4,5 @@ Description=Backup
 [Service]
 Type=oneshot
 User=root
-ExecStart=/bin/systemd-inhibit --what sleep --who Backups /bin/bash /usr/local/bin/storage_backup auto
+ExecStartPre=/bin/bash -c "while ! systemd-inhibit true; do sleep 1; echo Could not get inhibitor; done"
+ExecStart=/bin/systemd-inhibit --what=sleep --who=Backups /bin/bash /usr/local/bin/storage_backup auto
