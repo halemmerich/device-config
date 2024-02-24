@@ -26,7 +26,7 @@
     - fprintd
     - qt6-wayland
     - blueman
-    - dunst
+    - fnott
     state: present
   tags:
     - install
@@ -80,6 +80,21 @@
   template:
     src: fuzzel.ini.j2
     dest: /etc/xdg/fuzzel/fuzzel.ini
+    mode: "0744"
+  tags:
+    - config
+
+- name: Create fnott config dir
+  file:
+    path: "/etc/xdg/fnott"
+    state: directory
+  tags:
+    - config  
+
+- name: Configure fnott
+  template:
+    src: fnott.ini.j2
+    dest: /etc/xdg/fnott/fnott.ini
     mode: "0744"
   tags:
     - config
