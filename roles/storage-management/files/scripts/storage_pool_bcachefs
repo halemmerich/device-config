@@ -48,6 +48,7 @@ function add {
 
 
 	umountPool "$STORAGE_META_DIR"
+	storage_pool openDevices "$STORAGE_META_DIR"
 	
 	if [ -n "$(getMountableDevice "$STORAGE_META_DIR")" ]
 	then
@@ -57,10 +58,9 @@ function add {
 		bcachefs set-option $TARGET_OPTIONS "$(getTopDevice $DEVICE)" || return 1
 		umountPool "$STORAGE_META_DIR" || return 1
 	else
-		storage_pool openDevices "$STORAGE_META_DIR"
-		mkfs.bcachefs --foreground_target=$TYPE --background_target=$TYPE --promote_target=$TYPE --label "$TYPE.disk$(cat "$STORAGE_META_DIR/count")" "$(getTopDevice $DEVICE)" && echo 1 > "$STORAGE_META_DIR/count" && echo "$ID" > "$STORAGE_META_DIR/devices" || return 1
+		mkfs.bcachefs --foreground_target=$TYPE --background_target=$TYPE --promote_target=$TYPE --label "$TYPE.disk$(cat "$STORAGE_META_DIR/count")" "$(getTopDevice $DEVICE)" && echo 1 > "$STORAGE_META_DIR/count" || return 1
 	fi
-	
+
 	storage_pool closeDevices "$STORAGE_META_DIR"
 }
 

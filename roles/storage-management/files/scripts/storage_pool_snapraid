@@ -4,8 +4,8 @@
 
 # check for dependencies
 
-! command -v mkfs.btrfs 2>&1 > /dev/null && echo xfsprogs missing && exit 1
-! command -v mkfs.xfs 2>&1 > /dev/null && echo btrfs-progs missing && exit 1
+! command -v mkfs.xfs 2>&1 > /dev/null && echo xfsprogs missing && exit 1
+! command -v mkfs.btrfs 2>&1 > /dev/null && echo btrfs-progs missing && exit 1
 ! command -v mergerfs 2>&1 > /dev/null && echo mergerfs missing && exit 1
 ! command -v snapraid 2>&1 > /dev/null && echo snapraid missing && exit 1
 ! command -v snapraid-btrfs 2>&1 > /dev/null && echo snapraid-btrfs missing && exit 1
@@ -44,14 +44,16 @@ function create {
 }
 
 function add {
-	TYPE="$1"
-	STORAGE_META_DIR="$2"
-	DEVICE="$3"
+	STORAGE_META_DIR="$1"
+	DEVICE="$2"
+	TYPE="$3"
 	ID="$(getDeviceId "$DEVICE")"
 	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
+	POOL_DIR=$(getMountpoint "$STORAGE_META_DIR" "pools")
 	
 	[ ! -f "$STORAGE_META_DIR/.created" ] || [ ! "$(cat "$STORAGE_META_DIR/.created")" == "snapraid" ] && { echo Snapraid pool marker file missing, invalid meta data dir && exit 1; }
-	
+	[ -z "$TYPE" ] && TYPE=data
+
 	umountPool "$STORAGE_META_DIR"
 	
 	DEVICES=""
@@ -68,26 +70,26 @@ function add {
 	
 	mkfs.$FS "$(getTopDevice "$DEVICE")"
 	
-	mkdir -p "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID"
+	mkdir -p "$POOL_DIR/$ID"
 	
-	mount "$(getTopDevice "$DEVICE")" "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID"
+	mount "$(getTopDevice "$DEVICE")" "$POOL_DIR/$ID"
 	ORIGDIR=$(pwd)
 	cd "$STORAGE_META_DIR"
 	if [ "$TYPE" == data ]
 	then
-		echo "content $(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/snapraid.content" >> "snapraid.conf"
-		echo "data $ID $(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data" >> "snapraid.conf"
-		btrfs subvolume create "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data"
+		echo "content $POOL_DIR/$ID/snapraid.content" >> "snapraid.conf"
+		echo "data $ID $POOL_DIR/$ID/data" >> "snapraid.conf"
+		btrfs subvolume create "$POOL_DIR/$ID/data"
 		
-		snapper -c snapraid_$(getPoolName "$STORAGE_META_DIR")_$ID create-config --template snapraid "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data"
-		mkdir "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data/pool"
-		! [ -d $(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data/.snapshots ] && echo WARNING: snapshot subvolume was not created && btrfs subvolume create "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/data/.snapshots"
+		[ "$FS" = btrfs ] && snapper -c snapraid_$(getPoolName "$STORAGE_META_DIR")_$ID create-config --template snapraid "$POOL_DIR/$ID/data"
+		mkdir "$POOL_DIR/$ID/data/pool"
+		! [ -d "$POOL_DIR/$ID/data/.snapshots" ] && echo WARNING: snapshot subvolume was not created && btrfs subvolume create "$POOL_DIR/$ID/data/.snapshots"
 	else
-		echo "$TYPE $(getMountpoint "$STORAGE_META_DIR" "pools")/$ID/snapraid.parity" >> "snapraid.conf"
+		echo "$TYPE $POOL_DIR/$ID/snapraid.parity" >> "snapraid.conf"
 	fi
 	cd "$ORIGDIR"
 
-	umount "$(getMountpoint "$STORAGE_META_DIR" "pools")/$ID" 2>&1 > /dev/null
+	umount "$POOL_DIR/$ID" 2>&1 > /dev/null
 	
 	storage_block_crypto umap "$STORAGE_META_DIR/keyfiles"
 
@@ -98,8 +100,6 @@ function mountPool {
 	STORAGE_META_DIR="$1"
 	
 	storage_pool openDevices "$STORAGE_META_DIR"
-	
-	btrfs device scan
 	
 	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
 

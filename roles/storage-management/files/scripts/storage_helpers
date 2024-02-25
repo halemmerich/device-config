@@ -10,6 +10,13 @@ function echoerr {
 	echo "$@" 1>&2;
 }
 
+function rescanDevices {
+	command -v pvscan > /dev/null && pvscan -q > /dev/null 
+	command -v vgscan > /dev/null && vgscan -q
+	command -v lvscan > /dev/null && lvscan -q
+	command -v btrfs > /dev/null && btrfs -q device scan
+}
+
 function getDeviceId {
 	(
 	set +x

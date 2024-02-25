@@ -18,9 +18,7 @@ function openDevices {
 		storage_block_crypto map "$STORAGE_META_DIR/keyfiles" || return 1
 	fi
 	
-	pvscan
-	vgscan
-	lvscan
+	rescanDevices
 }
 function closeDevices {
 	STORAGE_META_DIR="$1"
@@ -32,9 +30,7 @@ function closeDevices {
 		storage_block_crypto umap "$STORAGE_META_DIR/keyfiles"
 	fi
 	
-	pvscan
-	vgscan
-	lvscan
+	rescanDevices
 }
 
 function defer {
@@ -51,22 +47,24 @@ function create {
 	touch "$STORAGE_META_DIR/.created"
 }
 
-function addPlain {
+function add {
 	STORAGE_META_DIR="$1"
 	DEVICE="$2"
 	[ ! -f "$STORAGE_META_DIR/.created" ] && echo This is not a storage meta dir && exit 1
 	[ -z "$DEVICE" ] && echo Device to add is needed && exit 1
 	DEVICE_ID="$(getDeviceId $DEVICE)" || ( echo Could not get device ID; return 1 )
 	[ -z "$DEVICE_ID" ] && echo Device ID empty && return 1
+	grep -q "$DEVICE_ID" "$STORAGE_META_DIR"/devices && echo Device ID already added && return 1
 	echo "$DEVICE_ID" >> "$STORAGE_META_DIR"/devices
+	defer "$@"
 }
 
 function automount {
 	[ ! -f /etc/storage/automount ] && { echo Storage automount config not found; exit 1; }
 	COMMAND=mount
-	for C in $(cat /etc/storage/automount)
+	cat /etc/storage/automount | while read C
 	do
-		defer "$C"
+		[ -d "$C" ] && defer "$C" || echo Storage metadata folder \""$C"\" not existing
 	done
 }
 
@@ -84,7 +82,7 @@ storage_pool maintenance <metadir> <type>
 storage_pool fix <metadir>
 	Repairs easy to fix errors
 storage_pool status <metadir> <type>
-storage_pool addPlain <metadir> <device>
+storage_pool add <metadir> <device>
 storage_pool automount <metadir>
 storage_pool openDevices <metadir>
 storage_pool closeDevices <metadir>"
@@ -92,7 +90,7 @@ storage_pool closeDevices <metadir>"
 echo -e "\n"
 
 case $COMMAND in
-	addPlain) addPlain "$@" ;;
+	add) add "$@" ;;
 	create) create "$@" ;;
 	automount) automount "$@" ;;
 	openDevices) openDevices "$@" ;;

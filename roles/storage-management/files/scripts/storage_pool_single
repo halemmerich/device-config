@@ -61,8 +61,6 @@ function mountPool {
 	
 	storage_pool openDevices "$STORAGE_META_DIR"
 	
-	btrfs device scan
-	
 	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
 
 	mkdir -p "$MOUNT_DIR"

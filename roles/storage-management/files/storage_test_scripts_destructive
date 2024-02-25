@@ -3,13 +3,16 @@
 ! command -v dmidecode 2>&1 > /dev/null && echo dmidecode missing && exit 1
 ! command -v vgscan 2>&1 > /dev/null && echo lvm2 missing && exit 1
 
-dmidecode | grep -i vendor | grep -q -i "innotek\|OVMF" || ( echo "ERROR: NOT A VIRTUAL MACHINE
+( dmidecode | grep -i vendor | grep -q -i "innotek\|OVMF" || dmidecode | grep QEMU ) > /dev/null || ( echo "ERROR: NOT A VIRTUAL MACHINE
 THIS WILL DESTROY DATA ON MANY DRIVES"; exit 1 )
 
 . /usr/local/bin/storage_helpers
 
 RESULT_LOG=$(mktemp)
 RC=0;
+TESTSTORAGE_NAME=teststorage
+TESTSTORAGE_PATH=/root/$TESTSTORAGE_NAME
+cd /root
 
 function log {
 	echo $'\e[1;33m'${FUNCNAME[1]} - "$*"$'\e[0m'
@@ -60,8 +63,34 @@ function logResult {
 	[ -n "$RESET" ] && set -x
 }
 
+function logCommand {
+	[ -n "${-//[^x]/}" ] && RESET=1 && set +x
+	COMMAND="$1"
+	shift
+	MESSAGE="$@"
+	COLOR=$'\e[33m'
+
+	eval "$COMMAND" && { COLOR=$'\e[1;32m'; VALUE=" OK "; } || { COLOR=$'\e[1;31m'; VALUE=FAIL; OVERALL_FAILS=$(( OVERALL_FAILS + 1)); }
+	
+	echo $COLOR$VALUE$'\e[0m' - $MESSAGE - ${FUNCNAME[1]} >> "$RESULT_LOG"
+	[ -n "$RESET" ] && set -x
+}
+
+function logRC {
+	[ -n "${-//[^x]/}" ] && RESET=1 && set +x
+	CODE="$1"
+	EXPECTED="$2"
+	[ -z "$EXPECTED" ] && EXPECTED=0
+
+	COLOR=$'\e[33m'
+	[ "$1" -eq "$EXPECTED" ] && { COLOR=$'\e[1;32m'; VALUE=" OK "; } || { COLOR=$'\e[1;31m'; VALUE=FAIL; OVERALL_FAILS=$(( OVERALL_FAILS + 1)); }
+	
+	echo $COLOR$VALUE$'\e[0m' - exit code was $CODE while expecting $EXPECTED - ${FUNCNAME[1]} >> "$RESULT_LOG"
+	[ -n "$RESET" ] && set -x
+}
+
 function logResultNewTest {
-	VALUE=$1
+	VALUE="$1 $2"
 	echo
 	echo $'\e[1;33m'$VALUE$'\e[0m' >> "$RESULT_LOG"
 }
@@ -205,50 +234,104 @@ DISABLE_APT_SNAPSHOT="yes"' > /etc/conf.d/snapper
 		prepareTestDevice $C
 	done
 	
-	lvscan
-	vgscan
-	pvscan
+	rescanDevices
 	echo Cleanup done
 	)
 	[ -n "$RESET" ] && set -x
 }
 
+# Generic test cases
+
+
+function loopTest {
+	TYPES="$2"
+	[ -z "$TYPES" ] && TYPES="btrfs bcachefs snapraid"
+	for C in $TYPES
+	do
+		log Running generic test for $C
+		wrapTest "$1" $C 
+	done
+}
+
+function tinyCreateCrypted {
+	echo -e "y\nYES\n" | storage_block_crypto create teststorage/keyfiles "$C"
+}
+
+function tinyCreatePlain {
+	echo Do nothing for plain
+}
+
+function implPoolCreate {
+	TYPE="$1"
+	CREATE_FUNCTION="$2"
+	DISKS="$(getTestDevice 1) $(getTestDevice 2)"
+
+	log Create pool
+	storage_pool_"$TYPE" create teststorage; (( RC |= $? ))
+
+	log Add devices
+
+	for C in $DISKS
+	do
+		log Create disk $C
+		$CREATE_FUNCTION; (( RC |= $? ))
+		storage_pool add teststorage "$C"; (( RC |= $? ))
+	done
+
+	log Mount
+	storage_pool mount teststorage; (( RC |= $? ))
+	logCommand 'mountpoint /mnt/teststorage' mounted
+	log Unmount
+	storage_pool umount teststorage; (( RC |= $? ))
+	logCommand '! mountpoint /mnt/teststorage' unmounted
+
+	logCommand '[ -f teststorage/devices ]' devices file exists
+	logCommand 'grep -q $(getDeviceId "$(getTestDevice 1)") teststorage/devices' devices file contains new device 1
+	logCommand 'grep -q $(getDeviceId "$(getTestDevice 2)") teststorage/devices' devices file contains new device 2
+	logRC $RC
+}
+
+
+function genericPoolCreatePlain {
+	implPoolCreate "$1" tinyCreatePlain
+}
+
+function genericPoolCreateCrypted {
+	implPoolCreate "$1" tinyCreateCrypted
+}
+
+function genericPoolScrubMiniPlain {
+	TYPE="$1"
+	implPoolCreate "$TYPE" tinyCreatePlain
+
+	storage_pool scrub teststorage mini 5s; (( RC |= $? ))
+
+	logRC $RC
+}
+
+
 # Test cases following
 
 function poolAddPlain {
 	storage_pool create teststorage
-	storage_pool addPlain teststorage "$(getTestDevice 1)"; (( RC |= $? ))
+	storage_pool add teststorage "$(getTestDevice 1)"; (( RC |= $? ))
 	logResult $([ -f teststorage/devices ] && echo OK || echo FAIL) devices file exists
 	logResult $(grep -q $(getDeviceId "$(getTestDevice 1)") teststorage/devices && echo OK || echo FAIL) devices file contains new device
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }
 
-function btrfsAddPlain {
-	storage_pool_btrfs create teststorage; (( RC |= $? ))
-	for C in {0..1}
-	do
-		storage_pool addPlain teststorage "$(getTestDevice $C)"; (( RC |= $? ))
-		storage_pool_btrfs add teststorage "$(getTestDevice $C)"; (( RC |= $? ))
-	done
-	
-	logResult $([ "$(cat teststorage/devices | wc -l)" -eq 2 ] && echo OK || echo FAIL) Devices list complete
-	
-	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
-}
-
-function bcachefsAddPlain {
+function bcachefsAddTypes {
 	storage_pool_bcachefs create teststorage; (( RC |= $? ))
 	TYPES=( "" "slow" "fast" )
 	for C in {0..2}
 	do
-		storage_pool addPlain teststorage "$(getTestDevice $C)"; (( RC |= $? ))
+		storage_pool add teststorage "$(getTestDevice $C)"; (( RC |= $? ))
 		storage_pool_bcachefs add teststorage "$(getTestDevice $C)" ${TYPES[$C]} ; (( RC |= $? ))
-		logResult $([ "$(cat teststorage/count)" -eq "$(( C + 1 ))" ] && echo OK || echo FAIL) Devices count incremented
+		logCommand '[ "$(cat teststorage/count)" -eq "$(( C + 1 ))" ]' Devices count incremented
 	done
-	
-	logResult $([ "$(cat teststorage/devices | wc -l)" -eq 3 ] && echo OK || echo FAIL) Devices list complete
-	
-	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+
+	logCommand '[ "$(cat teststorage/devices | wc -l)" -eq 3 ]' Devices list complete
+	logRC $RC
 }
 
 function singleAddPlainExisting {
@@ -288,7 +371,6 @@ function singleUmount {
 }
 
 function singleAddPlainTwoDevices {
-	
 	storage_pool_single create teststorage; (( RC |= $? ))
 	for C in {0..1}
 	do
@@ -307,16 +389,16 @@ function btrfsGetMountableDevice {
 	
 	logResult $([ -z "$(getMountableDevice teststorage)" ] && echo OK || echo FAIL) No device available, none returned
 	
-	storage_pool addPlain teststorage "$(getTestDevice 1)"; (( RC |= $? ))
+	storage_pool add teststorage "$(getTestDevice 1)"; (( RC |= $? ))
 	
 	logResult $([ -z "$(getMountableDevice teststorage)" ] && echo OK || echo FAIL) One device available, none mountable
 	
-	storage_pool addPlain teststorage "$(getTestDevice 2)"; (( RC |= $? ))
+	storage_pool add teststorage "$(getTestDevice 2)"; (( RC |= $? ))
 	mkfs.btrfs "$(getTestDevice 2)"
 	
 	logResult $([ "$(getMountableDevice teststorage)" == "$(getTestDevice 2)" ] && echo OK || echo FAIL) Two devices available, second mountable
 	
-	storage_pool addPlain teststorage "$(getTestDevice 3)"; (( RC |= $? ))
+	storage_pool add teststorage "$(getTestDevice 3)"; (( RC |= $? ))
 	
 	logResult $([ "$(getMountableDevice teststorage)" == "$(getTestDevice 2)" ] && echo OK || echo FAIL) Three devices available, second mountable
 	
@@ -324,72 +406,27 @@ function btrfsGetMountableDevice {
 }
 
 function btrfsCreatePlain {
-	
 	DISKS="$(getTestDevice 1) $(getTestDevice 2)"
-	[ -n "$1" ] && DISKS="$1"
 	log Create initial pool
 	storage_pool_btrfs create teststorage; (( RC |= $? ))
-	ADDED=0
 	for C in $DISKS
 	do
-		storage_pool addPlain teststorage "$C"; (( RC |= $? ))
 		storage_pool_btrfs add teststorage "$C"; (( RC |= $? ))
-		(( ADDED += 1 ))
 	done
-	
-	if [ "$ADDED" -gt 1 ]
-	then
-		storage_pool_btrfs changeProfile teststorage raid1 raid1; (( RC |= $? ))
-	else
-		storage_pool umount teststorage
-	fi
-	
-	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+	logRC $RC
 }
 
-function btrfsCreateCrypted {
-	
-	DISKS="$(getTestDevice 1) $(getTestDevice 2)"
-	[ -n "$1" ] && DISKS="$1"
-	log Create initial pool
-	storage_pool create teststorage
-	for C in $DISKS
-	do
-		echo -e "y\nYES\n" | storage_block_crypto create teststorage/keyfiles "$C"; (( RC |= $? ))
-	done
-	storage_pool_btrfs create teststorage; (( RC |= $? ))
-	
-	for C in $DISKS
-	do
-		storage_pool_btrfs add teststorage "$C"; (( RC |= $? ))
-	done
-	
+function btrfsChangeProfile {
+	btrfsCreatePlain
 	storage_pool_btrfs changeProfile teststorage raid1 raid1; (( RC |= $? ))
 	
-	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
-}
-
-function btrfsMount {
-	btrfsCreatePlain
-	
-	log Mount pool
-	storage_pool_btrfs mount teststorage; (( RC |= $? ))
-	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
-}
-
-function btrfsUmount {
-	btrfsMount
-	
-	log Unount pool
-	storage_pool_btrfs umount teststorage; (( RC |= $? ))
-	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
+	logRC $RC
 }
 
 function btrfsExtend {
 	btrfsCreatePlain
 
 	log Add one disk while pool unmounted
-	storage_pool addPlain teststorage "$(getTestDevice 3)"; (( RC |= $? ))
 	storage_pool_btrfs add teststorage "$(getTestDevice 3)"; (( RC |= $? ))
 	storage_pool_btrfs mount teststorage; (( RC |= $? ))
 	
@@ -458,8 +495,7 @@ function btrfsDestroySuperblock {
 function snapraidExtendUmounted {
 	snapraidCreatePlain
 
-	storage_pool addPlain teststorage "$(getTestDevice 4)"; (( RC |= $? ))
-	storage_pool_snapraid add data teststorage "$(getTestDevice 4)"; (( RC |= $? ))
+	storage_pool_snapraid add teststorage "$(getTestDevice 4)" data; (( RC |= $? ))
 	storage_pool_snapraid sync teststorage; (( RC |= $? ))
 
 	log Mount pool
@@ -476,8 +512,7 @@ function snapraidExtendUmounted {
 function snapraidExtendMounted {
 	snapraidMount
 
-	storage_pool addPlain teststorage "$(getTestDevice 4)"; (( RC |= $? ))
-	storage_pool_snapraid add data teststorage "$(getTestDevice 4)"; (( RC |= $? ))
+	storage_pool_snapraid add teststorage "$(getTestDevice 4)" data; (( RC |= $? ))
 
 	log Mount pool
 	storage_pool_snapraid mount teststorage; (( RC |= $? ))
@@ -555,13 +590,11 @@ function snapraidCreatePlain {
 
 	for C in $DISKS
 	do
-		storage_pool addPlain teststorage $C; (( RC |= $? ))
-		storage_pool_snapraid add data teststorage $C; (( RC |= $? ))
+		storage_pool_snapraid add teststorage $C data; (( RC |= $? ))
 	done
 	for C in $PARITY
 	do
-		storage_pool addPlain teststorage $C; (( RC |= $? ))
-		storage_pool_snapraid add parity teststorage $C; (( RC |= $? ))
+		storage_pool_snapraid add teststorage $C parity; (( RC |= $? ))
 	done
 
 	logResult $([ $(ls /etc/snapper/configs | wc -l) -eq 2 ] && echo OK || echo FAIL) Snapper configs created
@@ -580,9 +613,9 @@ function snapraidCreateCrypted {
 	echo -e "y\nYES\n" | storage_block_crypto create teststorage/keyfiles "$(getTestDevice 2)"; (( RC |= $? ))
 	echo -e "y\nYES\n" | storage_block_crypto create teststorage/keyfiles "$(getTestDevice 3)"; (( RC |= $? ))
 	
-	storage_pool_snapraid add data teststorage "$(getTestDevice 1)"; (( RC |= $? ))
-	storage_pool_snapraid add data teststorage "$(getTestDevice 2)"; (( RC |= $? ))
-	storage_pool_snapraid add parity teststorage "$(getTestDevice 3)"; (( RC |= $? ))
+	storage_pool_snapraid add teststorage "$(getTestDevice 1)" data; (( RC |= $? ))
+	storage_pool_snapraid add teststorage "$(getTestDevice 2)" data; (( RC |= $? ))
+	storage_pool_snapraid add teststorage "$(getTestDevice 3)" parity; (( RC |= $? ))
 	
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }
@@ -803,7 +836,7 @@ function backupRunRsnapshotEmptySource {
 
 function backupCheck {
 	mkdir -p teststorage
-	echo /root/teststorage > /etc/storage/autobackup
+	echo "$TESTSTORAGE_PATH" > /etc/storage/autobackup
 	
 	CURRENT="$(getTimestamp)"
 	PASSED_30M=$(( CURRENT - 1800 ))
@@ -827,8 +860,8 @@ function backupCheck {
 
 function helperCheckDevicesAvailable {
 	storage_pool create teststorage
-	storage_pool addPlain "$(getTestDevice 1)"
-	storage_pool addPlain "$(getTestDevice 2)"
+	storage_pool add "$(getTestDevice 1)"
+	storage_pool add "$(getTestDevice 2)"
 	checkDevicesAvailable teststorage
 	logResult $([ $? -eq 0 ] && echo OK || echo FAIL) All devices found
 	echo sdfa >> teststorage/devices
@@ -862,8 +895,8 @@ function helperGetPoolName {
 
 function helperCheckDevicesAvailableNotExisting {
 	storage_pool create teststorage
-	storage_pool addPlain "$(getTestDevice 1)"
-	storage_pool addPlain "$(getTestDevice 2)"
+	storage_pool add "$(getTestDevice 1)"
+	storage_pool add "$(getTestDevice 2)"
 	echo asdf >> teststorage/devices
 	checkDevicesAvailable teststorage
 	logResult $([ $? -ne 0 ] && echo OK || echo FAIL) Not existing devices device detected
@@ -871,21 +904,21 @@ function helperCheckDevicesAvailableNotExisting {
 
 function maintenanceFull {
 	snapraidCreatePlain
-	echo /root/teststorage > /etc/storage/maintenance/full
+	echo "$TESTSTORAGE_PATH" > /etc/storage/maintenance/full
 	storage_maintenance full; (( RC |= $? ))
 	logResult $([ $? -eq 0 ] && echo OK || echo FAIL) exit code
 }
 
 function maintenanceMini {
 	snapraidCreatePlain
-	echo /root/teststorage > /etc/storage/maintenance/mini
+	echo "$TESTSTORAGE_PATH" > /etc/storage/maintenance/mini
 	storage_maintenance mini; (( RC |= $? ))
 	logResult $([ $? -eq 0 ] && echo OK || echo FAIL) exit code
 }
 
 function backupAuto {
 	backupAddRsync
-	echo /root/teststorage > /etc/storage/autobackup
+	echo "$TESTSTORAGE_PATH" > /etc/storage/autobackup
 	storage_backup auto; (( RC |= $? ))
 	
 	storage_pool mount teststorage; (( RC |= $? ))
@@ -900,16 +933,15 @@ function backupAutoNotAvailable {
 	echo "not
 	existing" > teststorage/devices
 	
-	echo /root/teststorage > /etc/storage/autobackup
+	echo "$TESTSTORAGE_PATH" > /etc/storage/autobackup
 	storage_backup auto; (( RC |= $? ))
 	
 	logResult $([ $? -eq 0 ] && echo OK || echo FAIL)
 }
 
 function poolAutomount {
-	snapraidCreatePlain
-	echo /root/teststorage > /etc/storage/automount
-	echo 88888888888888888888888888
+	singleCreatePlain
+	echo "$TESTSTORAGE_PATH" > /etc/storage/automount
 	storage_pool automount; (( RC |= $? ))
 	
 	logResult $(mount | grep -q /mnt/teststorage && echo OK || echo FAIL) teststorage mounted
@@ -917,11 +949,24 @@ function poolAutomount {
 	logResult $([ $RC -eq 0 ] && echo OK || echo FAIL) exit code
 }
 
+function poolAutomountNotExisting {
+	singleCreatePlain
+	echo "$TESTSTORAGE_PATH" > /etc/storage/automount
+	echo "Not existing with spaces" >> /etc/storage/automount
+	echo "/root/notexisting" >> /etc/storage/automount
+	storage_pool automount; (( RC |= $? ))
+	
+	logCommand 'mount | grep -q /mnt/teststorage' teststorage mounted
+	logCommand '! { mount | grep -q /mnt/notexisting; }' notexisting not mounted
+	
+	logRC $RC
+}
+
 function poolOpenDevices {
 	storage_pool create teststorage; (( RC |= $? ))
 	echo -e "y\nYES\n" | storage_block_crypto create teststorage/keyfiles "$(getTestDevice 1)"; (( RC |= $? ))
 	echo -e "y\nYES\n" | storage_block_crypto create teststorage/keyfiles "$(getTestDevice 2)" yes; (( RC |= $? ))
-	storage_pool addPlain teststorage "$(getTestDevice 3)"; (( RC |= $? ))
+	storage_pool add teststorage "$(getTestDevice 3)"; (( RC |= $? ))
 	
 	storage_pool openDevices teststorage; (( RC |= $? ))
 	
@@ -949,9 +994,9 @@ function cacheCreate {
 	storage_pool create teststorage; (( RC |= $? ))
 	#echo -e "y\nYES\n" | storage_block_crypto create teststorage/keyfiles "$(getTestDevice 1)"; (( RC |= $? ))
 	#echo -e "y\nYES\n" | storage_block_crypto create teststorage/keyfiles "$(getTestDevice 2)" yes; (( RC |= $? ))
-	storage_pool addPlain teststorage "$(getTestDevice 1)"; (( RC |= $? ))
-	storage_pool addPlain teststorage "$(getTestDevice 2)"; (( RC |= $? ))
-	storage_pool addPlain teststorage "$(getTestDevice 3)"; (( RC |= $? ))
+	storage_pool add teststorage "$(getTestDevice 1)"; (( RC |= $? ))
+	storage_pool add teststorage "$(getTestDevice 2)"; (( RC |= $? ))
+	storage_pool add teststorage "$(getTestDevice 3)"; (( RC |= $? ))
 	
 	storage_block_cache create teststorage; (( RC |= $? ))
 	storage_block_cache addCache teststorage "$(getTestDevice 1)"; (( RC |= $? ))
@@ -996,21 +1041,23 @@ function cryptoCreateIntegrity {
 }
 
 function wrapTest {
-	logResultNewTest $1
+	logResultNewTest $1 $2
 	cleanup
-	echo Running $1
+	echo Running $1 $2
 	[ "$DEBUG" = 1 ] && set -x
-	( "$1" )
+	( "$1" "$2" )
 	[ "$DEBUG" = 1 ] && set +x
 }
 
 if [ -z "$1" ]
 then
 	echo "Commands:"
-	echo "all"
-	echo "regex"
-	echo "cleanup";
+	echo "all       Runs all availalable tests"
+	echo "regex     Runs all matching tests, generic tests are fully looped"
+	echo "generic   Runs one generic test, optionally additional parametes string can be used to limit loop. Default is \"btrfs bcachefs snapraid\")"
+	echo "cleanup   Just clean up";
 	set | grep '()' | grep pool | sed -e "s| ()||"
+	set | grep '()' | grep generic | sed -e "s| ()||"
 	set | grep '()' | grep btrfs | sed -e "s| ()||"
 	set | grep '()' | grep snapraid | sed -e "s| ()||"
 	set | grep '()' | grep backup | sed -e "s| ()||"
@@ -1023,6 +1070,10 @@ fi
 
 if [ "$1" == all ]
 then
+	for C in $(set | grep '()' | grep ^generic | sed -e "s| ()||")
+	do
+		loopTest $C
+	done
 	COMMANDS=$(set | grep '()' | grep ^pool | sed -e "s| ()||")
 	COMMANDS="$COMMANDS $(set | grep '()' | grep ^single | sed -e "s| ()||")"
 	COMMANDS="$COMMANDS $(set | grep '()' | grep ^btrfs | sed -e "s| ()||")"
@@ -1036,17 +1087,26 @@ then
 	do
 		wrapTest $C
 	done
+elif [ "$1" == generic ]
+then
+	if echo "$2" | grep ^generic
+	then
+		loopTest "$2" "$3"
+	else
+		echo Can only loop tests starting with \"generic\"
+	fi
 elif [ "$1" == regex ]
 then
 	COMMANDS=$(set | grep '()' | grep -e "$2" | sed -e "s| ()||")
+
 	for C in $COMMANDS
 	do
-		wrapTest $C
+		echo "$C" | grep ^generic && loopTest "$C" || wrapTest "$C"
 	done
 else
 	for C in "$@"
 	do
-		wrapTest $C
+		echo "$C" | grep ^generic && loopTest "$C" || wrapTest "$C"
 	done
 fi
 
