@@ -72,7 +72,7 @@ function add {
 	
 	mkdir -p "$POOL_DIR/$ID"
 	
-	mount "$(getTopDevice "$DEVICE")" "$POOL_DIR/$ID"
+	mount -t $FS "$(getTopDevice "$DEVICE")" "$POOL_DIR/$ID"
 	ORIGDIR=$(pwd)
 	cd "$STORAGE_META_DIR"
 	if [ "$TYPE" == data ]
@@ -90,10 +90,14 @@ function add {
 	cd "$ORIGDIR"
 
 	umount "$POOL_DIR/$ID" 2>&1 > /dev/null
-	
-	storage_block_crypto umap "$STORAGE_META_DIR/keyfiles"
 
 	storage_pool closeDevices "$STORAGE_META_DIR"
+
+	mountPool "$STORAGE_META_DIR"
+
+	sync "$STORAGE_META_DIR"
+
+	umountPool "$STORAGE_META_DIR"
 }
 
 function mountPool {
@@ -194,6 +198,8 @@ function umountPool {
 function sync {	
 	STORAGE_META_DIR="$1"
 	
+	assertMounted "$STORAGE_META_DIR"
+
 	snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" sync && date > "$STORAGE_META_DIR/state_last_sync"
 	umountLastSyncedSnapshot "$STORAGE_META_DIR"
 	mountLastSyncedSnapshot "$STORAGE_META_DIR"
@@ -202,6 +208,8 @@ function sync {
 
 function fix {	
 	STORAGE_META_DIR="$1"
+
+	assertMounted "$STORAGE_META_DIR"
 	
 	snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" fix -e
 }
@@ -213,6 +221,8 @@ function scrub {
 	[ -z "$SCRUB_MINI_PERCENTAGE" ] && SCRUB_MINI_PERCENTAGE=10
 	[ -z "$SCRUB_MINI_AGE_DAYS" ] && SCRUB_MINI_AGE_DAYS=10
 	
+	assertMounted "$STORAGE_META_DIR"
+
 	if [ "$TYPE" == mini ]
 	then
 		snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" scrub -p "$SCRUB_MINI_PERCENTAGE" -o "$SCRUB_MINI_AGE_DAYS"
@@ -232,6 +242,8 @@ function maintenance {
 	[ -z "$MAINTENANCE_MINI_SCRUB_PERCENTAGE" ] && MAINTENANCE_MINI_SCRUB_PERCENTAGE=10
 	[ -z "$MAINTENANCE_MINI_SCRUB_AGE_DAYS" ] && MAINTENANCE_MINI_SCRUB_AGE_DAYS=10
 	
+	assertMounted "$STORAGE_META_DIR"
+
 	# finished running aborted
 	snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" sync
 	scrub "$STORAGE_META_DIR" "$TYPE"
@@ -243,6 +255,8 @@ function status {
 	[ -e "$STORAGE_META_DIR/config" ] && . $STORAGE_META_DIR/config
 	TYPE="$2"
 	
+	assertMounted "$STORAGE_META_DIR"
+
 	# finished running aborted
 	
 	OUTPUT="$(snapraid_wrap "$STORAGE_META_DIR/snapraid.conf" status)"

@@ -278,16 +278,28 @@ function implPoolCreate {
 		storage_pool add teststorage "$C"; (( RC |= $? ))
 	done
 
+	if [ "$TYPE" = snapraid ]
+	then
+		$CREATE_FUNCTION; (( RC |= $? ))
+		storage_pool add teststorage "$(getTestDevice 3)" parity; (( RC |= $? ))
+	fi
+
 	log Mount
 	storage_pool mount teststorage; (( RC |= $? ))
 	logCommand 'mountpoint /mnt/teststorage' mounted
 	log Unmount
 	storage_pool umount teststorage; (( RC |= $? ))
 	logCommand '! mountpoint /mnt/teststorage' unmounted
+	log Remount
+	storage_pool mount teststorage; (( RC |= $? ))
+	logCommand 'mountpoint /mnt/teststorage' remounted
 
 	logCommand '[ -f teststorage/devices ]' devices file exists
 	logCommand 'grep -q $(getDeviceId "$(getTestDevice 1)") teststorage/devices' devices file contains new device 1
 	logCommand 'grep -q $(getDeviceId "$(getTestDevice 2)") teststorage/devices' devices file contains new device 2
+
+	[ "$TYPE" = snapraid ] && logCommand 'grep -q $(getDeviceId "$(getTestDevice 3)") teststorage/devices' devices file contains new device 3
+
 	logRC $RC
 }
 

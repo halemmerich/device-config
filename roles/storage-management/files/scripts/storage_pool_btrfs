@@ -90,6 +90,9 @@ function balance {
 	STORAGE_META_DIR="$1"
 	FILTERS="$2"
 	[ -z "$FILTERS" ] && FILTERS="usage=30"
+
+	assertMounted "$STORAGE_META_DIR"
+
 	btrfs balance start -d$2 -m$2 $(getMountpoint "$STORAGE_META_DIR")|| return 1
 }
 
@@ -100,6 +103,8 @@ function scrub {
 	MINI_SCRUB_TIME="$3"
 	[ -z "$MINI_SCRUB_TIME" ] && MINI_SCRUB_TIME=1h
 	
+	assertMounted "$STORAGE_META_DIR"
+
 	STATUS=$(btrfs scrub status $(getMountpoint "$STORAGE_META_DIR") | grep Status | tr -s ' ' | cut -d ' ' -f2)
 	
 	[ -z "$STATUS" ] && STATUS=finished
@@ -141,6 +146,8 @@ function maintenance {
 	[ -z "$MAINTENANCE_MINI_SCRUB_TIME" ] && MAINTENANCE_MINI_SCRUB_TIME=1h
 	[ -z "$MAINTENANCE_MINI_BALANCE_PERCENTAGE" ] && MAINTENANCE_MINI_BALANCE_PERCENTAGE=20
 	
+	assertMounted "$STORAGE_META_DIR"
+
 	STATUS=$(btrfs scrub status "$(getMountpoint "$STORAGE_META_DIR")" | grep Status | tr -s ' ' | cut -d ' ' -f2)
 	
 	# finished running aborted
@@ -159,6 +166,8 @@ function maintenance {
 function status {
 	STORAGE_META_DIR="$1"
 	TYPE="$2"
+
+	assertMounted "$STORAGE_META_DIR"
 	
 	OUTPUT="$(btrfs scrub status $(getMountpoint "$STORAGE_META_DIR"))"
 	RESULT=0

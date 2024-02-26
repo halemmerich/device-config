@@ -66,6 +66,16 @@ function getDeviceForId {
 	done
 }
 
+function assertMounted {
+	STORAGE_META_DIR="$1"
+	mountpoint "$(getMountpoint "$STORAGE_META_DIR")" || exit 1
+}
+
+function assertUnmounted {
+	STORAGE_META_DIR="$1"
+	mountpoint "$(getMountpoint "$STORAGE_META_DIR")" || exit 1
+}
+
 function getMountpoint {
 	STORAGE_META_DIR="$1"
 	PREFIX=/"$2"
