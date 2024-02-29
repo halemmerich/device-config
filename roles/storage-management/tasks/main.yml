@@ -104,3 +104,10 @@
     - storage-backup.timer
   tags:
     - config
+
+- name: Create configuration directory
+  file:
+    path: "/etc/storage/maintenance"
+    state: directory
+  tags:
+    - config
