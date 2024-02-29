@@ -26,6 +26,7 @@
   become: yes
   roles:
   - custom-repos
+  - custom-software
 
 - hosts: arch
   become: yes
@@ -148,7 +149,6 @@
   - desktop
   - desktop-sway
   - desktop-gnome
-  - custom-software
   - syncthing
   - powermanagement
   - wireless
