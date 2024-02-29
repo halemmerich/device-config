@@ -3,8 +3,8 @@ Description=Mount
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/mountscript mount /root/keyfiles /media/storage
-ExecStop=/usr/local/bin/mountscript umount /root/keyfiles /media/storage
+ExecStart=/usr/local/bin/storage_pool automount
+ExecStop=/usr/local/bin/storage_pool autoumount
 RemainAfterExit=yes
 
 [Install]

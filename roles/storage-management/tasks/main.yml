@@ -83,6 +83,7 @@
     - storage-maintenance-mini.timer
     - storage-backup.service
     - storage-backup.timer
+    - storage-mount.service
   register: systemd
 
 - name: Reload systemd
@@ -98,7 +99,8 @@
     enabled: yes
     state: started
   loop:
-    - storage-maintenance-full
-    - storage-maintenance-mini
+    - storage-maintenance-full.timer
+    - storage-maintenance-mini.timer
+    - storage-backup.timer
   tags:
     - config

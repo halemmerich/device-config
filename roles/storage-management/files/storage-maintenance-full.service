@@ -1,5 +1,5 @@
 [Unit]
-Description=Snapraid sync
+Description=Perform full storage maintenance tasks
  
 [Service]
 Type=oneshot
