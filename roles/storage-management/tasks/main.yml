@@ -55,7 +55,7 @@
 
     - name: 'Deploy snapraid-btrfs {{ latest_determined.stdout }}'
       unarchive:
-        src: 'https://github.com/automorphism88/snapraid-btrfs/archive/refs/tags/{{ latest_determined.stdout }}.zip'
+        src: 'https://github.com/automorphism88/snapraid-btrfs/archive/refs/tags/{{ latest_determined.stdout }}.tar.gz'
         dest: '/opt/snapraid-btrfs/{{ latest_determined.stdout }}'
         remote_src: yes
         extra_opts: [--strip-components=1]
