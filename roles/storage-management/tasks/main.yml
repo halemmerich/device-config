@@ -3,7 +3,7 @@
     src: "{{ item }}"
     dest: /usr/local/bin/
     mode: u=rx,g=rx,o=rx
-  loop: "{{ lookup('fileglob', '/scripts/*', wantlist=True) }}"
+  loop: "{{ lookup('fileglob', 'scripts/*', wantlist=True) }}"
 
 - name: Snapper template
   copy:
