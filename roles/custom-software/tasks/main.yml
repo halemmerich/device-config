@@ -129,12 +129,11 @@
   tags:
     - config
 
-- name: 'Enable and start services'
+- name: 'Enable services'
   systemd:
     name: "{{ item.1 }}"
     daemon-reload: yes
     enabled: yes
-    state: started
   loop: "{{ custom_software_services_enabled | subelements('services')}}"
   when:
     - custom_software_services_enabled is defined
