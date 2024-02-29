@@ -60,8 +60,17 @@ function add {
 }
 
 function automount {
-	[ ! -f /etc/storage/automount ] && { echo Storage automount config not found; exit 1; }
+	[ ! -f /etc/storage/automount ] && { echo Storage automount config not found; exit 0; }
 	COMMAND=mount
+	cat /etc/storage/automount | while read C
+	do
+		[ -d "$C" ] && defer "$C" || echo Storage metadata folder \""$C"\" not existing
+	done
+}
+
+function autoumount {
+	[ ! -f /etc/storage/automount ] && { echo Storage automount config not found; exit 0; }
+	COMMAND=umount
 	cat /etc/storage/automount | while read C
 	do
 		[ -d "$C" ] && defer "$C" || echo Storage metadata folder \""$C"\" not existing
@@ -93,6 +102,7 @@ case $COMMAND in
 	add) add "$@" ;;
 	create) create "$@" ;;
 	automount) automount "$@" ;;
+	autoumount) autoumount "$@" ;;
 	openDevices) openDevices "$@" ;;
 	closeDevices) closeDevices "$@" ;;
 	*) defer "$@" ;;
