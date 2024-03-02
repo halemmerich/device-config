@@ -2,7 +2,7 @@
   package:
     name: "{{ item.1 }}"
     state: present
-  loop: "{{ custom_software_packages | subelements('packages')}}"
+  loop: "{{ custom_software_packages | subelements('packages', skip_missing=true)}}"
   when:
     - custom_software_packages is defined
     - ( item.0.group == "all" or item.0.group in group_names )
@@ -14,7 +14,7 @@
     name: "{{ item.1 }}"
     reason: "dependency"
     state: present
-  loop: "{{ custom_software_packages_dependencies | subelements('packages')}}"
+  loop: "{{ custom_software_packages_dependencies | subelements('packages', skip_missing=true)}}"
   when:
     - ansible_os_family == "Archlinux"
     - custom_software_packages_dependencies is defined
@@ -26,7 +26,7 @@
   package:
     name: "{{ item.1 }}"
     state: present
-  loop: "{{ custom_software_packages_arch | subelements('packages')}}"
+  loop: "{{ custom_software_packages_arch | subelements('packages', skip_missing=true)}}"
   when:
     - ansible_os_family == "Archlinux"
     - custom_software_packages_arch is defined
@@ -38,7 +38,7 @@
   package:
     name: "{{ item.1 }}"
     state: present
-  loop: "{{ custom_software_packages_debian | subelements('packages')}}"
+  loop: "{{ custom_software_packages_debian | subelements('packages', skip_missing=true)}}"
   when:
     - ansible_os_family == "Debian"
     - custom_software_packages_debian is defined
@@ -50,7 +50,7 @@
   flatpak:
     name: "{{ item.1 }}"
     state: absent
-  loop: "{{ custom_software_packages_absent | default([]) | subelements('packages')}}"
+  loop: "{{ custom_software_packages_absent | default([]) | subelements('packages', skip_missing=true)}}"
   when: ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
@@ -69,7 +69,7 @@
   flatpak:
     name: "{{ item.1 }}"
     state: present
-  loop: "{{ custom_software_flatpaks | subelements('packages')}}"
+  loop: "{{ custom_software_flatpaks | subelements('packages', skip_missing=true)}}"
   when:
     - custom_software_flatpaks is defined
     - ( item.0.group == "all" or item.0.group in group_names )
@@ -80,7 +80,7 @@
   flatpak:
     name: "{{ item.1 }}"
     state: absent
-  loop: "{{ custom_software_flatpaks_absent | subelements('packages')}}"
+  loop: "{{ custom_software_flatpaks_absent | subelements('packages', skip_missing=true)}}"
   when:
     - custom_software_flatpaks_absent is defined
     - ( item.0.group == "all" or item.0.group in group_names )
