@@ -26,6 +26,10 @@
   become: yes
   roles:
   - custom-repos
+
+- hosts: custom
+  become: yes
+  roles:
   - custom-software
 
 - hosts: arch
