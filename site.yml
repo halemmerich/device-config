@@ -27,12 +27,6 @@
   roles:
   - custom-repos
 
-- hosts: server_pacman_cache
-  become: yes
-  roles:
-  - util-package-upgrade
-  - server-pacman-cache
-
 - hosts: all
   become: yes
   roles:
