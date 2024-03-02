@@ -8,5 +8,7 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 
 export PATH=$PATH:/var/lib/flatpak/exports/bin:~/.local/share/flatpak/exports/bin
 
+/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+
 # Dnoscanout works around VRR not working in full screen
 systemd-cat --identifier=sway sway -Dnoscanout $@
