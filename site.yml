@@ -27,6 +27,21 @@
   roles:
   - custom-repos
 
+- hosts: arch
+  become: yes
+  roles:
+  - common-arch
+
+- hosts: debian
+  become: yes
+  roles:
+  - common-debian
+
+- hosts: all
+  become: yes
+  roles:
+  - common
+
 - hosts: all
   become: yes
   roles:
@@ -44,21 +59,6 @@
   remote_user: admin
   roles:
     - users
-
-- hosts: arch
-  become: yes
-  roles:
-  - common-arch
-
-- hosts: debian
-  become: yes
-  roles:
-  - common-debian
-
-- hosts: all
-  become: yes
-  roles:
-  - common
 
 - hosts: local
   become: yes
