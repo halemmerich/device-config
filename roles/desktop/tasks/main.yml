@@ -3,6 +3,7 @@
     name:
       - ly
     state: present
+  when: ansible_os_family == "Archlinux"
   tags:
     - install
 
