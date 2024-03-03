@@ -14,6 +14,7 @@
     - lib32stdc++6
     - curl
     - iproute2
+    - file
     state: present
   when: ansible_os_family == "Debian"
   tags:

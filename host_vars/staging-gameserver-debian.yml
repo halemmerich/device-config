@@ -28,7 +28,7 @@ linuxgsm_servers:
         gameworld="vhserver"
         port="2456"
     dependencies:
-      - netcat
+      - netcat-openbsd
       - cpio
       - bsdmainutils
       - libsdl2-2.0-0:i386
