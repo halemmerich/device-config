@@ -5,8 +5,6 @@
     - swayidle
     - fuzzel
     - gnome-keyring
-    - otf-font-awesome
-    - polkit-gnome
     - pavucontrol
     - pipewire-pulse
     - dex
@@ -26,7 +24,6 @@
     - fprintd
     - qt6-wayland
     - blueman
-    - fnott
     state: present
   tags:
     - install
@@ -42,6 +39,9 @@
     - wireplumber
     - otf-font-awesome
     - xorg-xwayland
+    - otf-font-awesome
+    - polkit-gnome
+    - fnott
     state: present
   tags:
     - install
@@ -55,6 +55,9 @@
     - ttf-bitstream-vera
     - xwayland
     - wlr-randr
+    - fonts-font-awesome
+    - policykit-1-gnome
+    - dunst
     state: present
   tags:
     - install
@@ -84,28 +87,23 @@
   tags:
     - config
 
-- name: Create fnott config dir
-  file:
-    path: "/etc/xdg/fnott"
-    state: directory
-  tags:
-    - config  
+- name: Install fnott
+  block:
+  - name: Create fnott config dir
+    file:
+      path: "/etc/xdg/fnott"
+      state: directory
+    tags:
+      - config  
 
-- name: Configure fnott
-  template:
-    src: fnott.ini.j2
-    dest: /etc/xdg/fnott/fnott.ini
-    mode: "0744"
-  tags:
-    - config
-
-- name: Start user managers
-  systemd:
-    name: 'user@{{ users[item].uid }}.service'
-    state: started
-  loop: "{{ desktop_users }}"
-  tags:
-    - config
+  - name: Configure fnott
+    template:
+      src: fnott.ini.j2
+      dest: /etc/xdg/fnott/fnott.ini
+      mode: "0744"
+    tags:
+      - config
+  when: ansible_os_family == "Archlinux"
 
 - name: Configure sway
   template:
