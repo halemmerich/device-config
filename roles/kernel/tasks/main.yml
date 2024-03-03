@@ -1,69 +1,75 @@
-- name: Install Kernel and Headers
-  pacman:
-    name:
-      - linux
-      - linux-headers
-    state: present
-  tags:
-    - install
+- name: Arch kernel install
+  block:
+  - name: Install Kernel and Headers
+    pacman:
+      name:
+        - linux
+        - linux-headers
+      state: present
+    tags:
+      - install
 
-- name: Detect mkinitcpio folder
-  stat:
-    path: /etc/mkinitcpio.d
-  register: mkinitcpio_folder
+  - name: Detect mkinitcpio folder
+    stat:
+      path: /etc/mkinitcpio.d
+    register: mkinitcpio_folder
+    tags:
+      - config
+
+  - name: Config mkinitcpio presets
+    block:
+    - name: Create tempfile
+      ansible.builtin.tempfile:
+        state: file
+        suffix: temp
+      register: tempfile
+
+    - name: Copy config file for mkinitcpio
+      copy:
+        src: /etc/mkinitcpio.d/linux-lts.preset
+        dest: "{{ tempfile.path }}"
+        remote_src: yes
+      tags:
+        - config
+
+    - ansible.builtin.replace:
+        path: "{{ tempfile.path }}"
+        regexp: 'linux-lts'
+        replace: 'linux'
+      tags:
+        - config
+
+    - name: Copy config file for mkinitcpio
+      copy:
+        src: "{{ tempfile.path }}"
+        dest: /etc/mkinitcpio.d/linux.preset
+        remote_src: yes
+      register: copied_preset
+      tags:
+        - config
+    
+    - name: Rebuild kernel image
+      shell:
+        cmd: "mkinitcpio -p linux"
+      when:  copied_preset is changed
+
+    - name: Remove tempfile
+      ansible.builtin.file:
+        path: "{{ tempfile.path }}"
+        state: absent
+      when: tempfile.path is defined
+    when: mkinitcpio_folder.stat.exists
+
+  - name: Detect grub
+    stat:
+      path: /boot/grub/grub.cfg
+    register: grub_config_file
+    
+  - name: Reconfig grub
+    shell:
+      cmd: "grub-mkconfig -o /boot/grub/grub.cfg"
+    when: grub_config_file.stat.exists
+  when: ansible_os_family == "Archlinux"
   tags:
     - config
-
-- name: Config mkinitcpio presets
-  block:
-  - name: Create tempfile
-    ansible.builtin.tempfile:
-      state: file
-      suffix: temp
-    register: tempfile
-
-  - name: Copy config file for mkinitcpio
-    copy:
-      src: /etc/mkinitcpio.d/linux-lts.preset
-      dest: "{{ tempfile.path }}"
-      remote_src: yes
-    tags:
-      - config
-
-  - ansible.builtin.replace:
-      path: "{{ tempfile.path }}"
-      regexp: 'linux-lts'
-      replace: 'linux'
-    tags:
-      - config
-
-  - name: Copy config file for mkinitcpio
-    copy:
-      src: "{{ tempfile.path }}"
-      dest: /etc/mkinitcpio.d/linux.preset
-      remote_src: yes
-    register: copied_preset
-    tags:
-      - config
-  
-  - name: Rebuild kernel image
-    shell:
-      cmd: "mkinitcpio -p linux"
-    when:  copied_preset is changed
-
-  - name: Remove tempfile
-    ansible.builtin.file:
-      path: "{{ tempfile.path }}"
-      state: absent
-    when: tempfile.path is defined
-  when: mkinitcpio_folder.stat.exists
-
-- name: Detect grub
-  stat:
-    path: /boot/grub/grub.cfg
-  register: grub_config_file
-  
-- name: Reconfig grub
-  shell:
-    cmd: "grub-mkconfig -o /boot/grub/grub.cfg"
-  when: grub_config_file.stat.exists
+    - install
