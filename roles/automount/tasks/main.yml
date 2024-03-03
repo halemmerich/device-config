@@ -1,3 +1,24 @@
+- include_vars: "vars/{{ ansible_os_family | lower }}.yml"
+
+- name: Install dependencies
+  package:
+    name:
+      - wol
+    state: present
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: Install dependencies
+  package:
+    name:
+      - wakeonlan
+      - iputils-ping
+    state: present
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+
 - name: 'Create mount units'
   template:
     src: "mount.j2"
@@ -54,15 +75,5 @@
     enabled: yes
   loop: "{{ automount_mounts }}"
   when: automount_mounts is defined
-  tags:
-    - config
-
-- name: 'Start automount units, ignore errors'
-  systemd:
-    name: "{{ item.escapedname }}.automount"
-    state: started
-  loop: "{{ automount_mounts }}"
-  when: automount_mounts is defined
-  ignore_errors: true
   tags:
     - config

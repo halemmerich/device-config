@@ -4,5 +4,5 @@ After=network.target network-online.target
 PartOf={{ item.escapedname }}.mount
 
 [Service]
-ExecStartPre=/bin/sh -c 'for n in `seq 1 4`; do ping -W 1 -c 1 {{ item.host }} && break || wol {{ item.mac }} && sleep 10; done'
-ExecStart=/bin/sh -c 'while :; do (ping -W 1 -c 1 {{ item.host }} && echo "Host up!" && sleep 30) || break; done'
+ExecStartPre=/bin/sh -c 'for n in `seq 1 {{ item.sleepiterations | default(4) }}`; do ping -W 1 -c 1 {{ item.host }} && break || {{ automount_wol_command }} {{ item.mac }} && sleep {{ item.sleeptime | default(10) }}; done'
+ExecStart=/bin/sh -c 'while :; do (ping -W 1 -c 1 {{ item.host }} && echo "Host up!" && sleep {{ item.sleepafterwake | default(30) }}) || break; done'
