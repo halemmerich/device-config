@@ -10,3 +10,12 @@ keymaps:
   - en-latin1-nodeadkeys
 
 letsencrypt_fake: true
+
+hosts_entries:
+  - name: staging-repo-arch
+    ip: "{{ hostvars['staging-repo-arch'].public_ip_v4 }}"
+    domain: staging.arch
+    subdomains:
+      - repo
+    aliases:
+    - repo-arch
