@@ -1,12 +1,29 @@
 - name: Install wireless support
-  pacman:
+  package:
     name:
     - iw
-    - wpa_supplicant
-    - networkmanager
     - wireless-regdb
     - bluez
+  tags:
+    - install
+
+- name: Install wireless support
+  package:
+    name:
+    - wpa_supplicant
+    - networkmanager
     - bluez-utils
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - install
+
+- name: Install wireless support
+  package:
+    name:
+    - wpasupplicant
+    - network-manager
+    - bluez-tools
+  when: ansible_os_family == "Debian"
   tags:
     - install
 
@@ -31,5 +48,15 @@
     src: wireless-regdom.j2
     dest: '/etc/conf.d/wireless-regdom'
     mode: '0644'
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - config
+
+- name: 'Create regulatory domain config'
+  copy:
+    content: "{{ wireless_regulatory_domain | default('00') }}"
+    dest: '/etc/default/crda'
+    mode: '0644'
+  when: ansible_os_family == "Debian"
   tags:
     - config
