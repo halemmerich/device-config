@@ -11,5 +11,6 @@
     state: started
     enabled: yes
   loop: "{{ desktop_users }}"
+  when: desktop_users is defined
   tags:
     - config
