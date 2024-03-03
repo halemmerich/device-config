@@ -5,14 +5,36 @@
     state: present
   tags:
     - install
+  when: ansible_os_family == "Archlinux"
 
-- name: 'Create cpupower config'
-  template:
-    src: "cpupower.j2"
-    dest: '/etc/default/cpupower'
-    mode: '0644'
+- name: Install
+  package:
+    name:
+    - linux-cpupower
+    state: present
   tags:
-    - config
+    - install
+  when: ansible_os_family == "Debian"
+
+- name: Configure cpupower service
+  block:
+  - name: 'Create cpupower config'
+    template:
+      src: "cpupower.j2"
+      dest: '/etc/default/cpupower'
+      mode: '0644'
+    tags:
+      - config
+
+  - name: 'Start services'
+    systemd:
+      name: cpupower
+      enabled: yes
+      state: restarted
+    tags:
+      - config
+  when: ansible_os_family == "Archlinux"
+  
 
 - name: 'Create wifi config'
   template:
@@ -59,14 +81,6 @@
     src: "tmpfiles/aspm.conf.j2"
     dest: '/etc/tmpfiles.d/aspm.conf'
     mode: '0644'
-  tags:
-    - config
-
-- name: 'Start services'
-  systemd:
-    name: cpupower
-    enabled: yes
-    state: restarted
   tags:
     - config
 
