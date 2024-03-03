@@ -49,11 +49,20 @@ automount_mounts:
     type: "cifs"
     host: "staging-nas-arch"
     mac: "11:22:33:44:55:66"
-  - escapedname: "media-testshare-guest"
+    sleeptime: 1
+    sleepiterations: 1
+    sleepafterwake: 1
+  - escapedname: "media-testshare_guest"
     src: "//staging-nas-debian/testshare-guest"
-    path: "/media/testshare-guest"
+    path: "/media/testshare_guest"
     type: "cifs"
-  - escapedname: "media-testshare-guest"
+    sleeptime: 1
+    sleepiterations: 1
+    sleepafterwake: 1
+  - escapedname: "media-testshare_guest_ro"
     src: "//staging-nas-debian/testshare-guest-ro"
-    path: "/media/testshare-guest-ro"
+    path: "/media/testshare_guest_ro"
     type: "cifs"
+    sleeptime: 1
+    sleepiterations: 1
+    sleepafterwake: 1
