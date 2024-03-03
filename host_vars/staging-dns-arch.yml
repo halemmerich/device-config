@@ -14,8 +14,8 @@ pacman_repos:
     include: "/etc/pacman.d/mirrorlist"
   - name: "extra"
     include: "/etc/pacman.d/mirrorlist"
-  - name: "community"
-    include: "/etc/pacman.d/mirrorlist"
+#  - name: "community"
+#    include: "/etc/pacman.d/mirrorlist"
 
 server_dns_allowrecursion:
   - any

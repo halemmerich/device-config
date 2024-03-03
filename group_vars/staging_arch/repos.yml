@@ -1,0 +1,15 @@
+pacman_repos:
+  - name: "core"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "extra"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "community"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "multilib"
+    include: "/etc/pacman.d/mirrorlist"
+  - name: "testrepo"
+    server: "https://repo.staging.arch"
+    siglevel: Optional
+
+pacman_mirrorlist:
+  - "https://archive.archlinux.org/repos/2024/01/15/$repo/os/$arch"
