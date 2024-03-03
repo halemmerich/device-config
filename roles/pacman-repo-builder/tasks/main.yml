@@ -96,6 +96,20 @@
 - name: Ensure config is set
   ansible.builtin.lineinfile:
     path: /etc/pacmanrepo.conf
+    regex: '^NEVER_FAIL'
+    line: 'NEVER_FAIL={{ server_pacmanrepo_never_fail | default("") }}'
+    create: yes
+
+- name: Ensure config is set
+  ansible.builtin.lineinfile:
+    path: /etc/pacmanrepo.conf
+    regex: '^MULTICORE_BUILD'
+    line: 'MULTICORE_BUILD={{ server_pacmanrepo_multicore_build | default("") }}'
+    create: yes
+
+- name: Ensure config is set
+  ansible.builtin.lineinfile:
+    path: /etc/pacmanrepo.conf
     regex: '^TARGET'
     line: 'TARGET={{ server_pacmanrepo_target | default("") }}'
     create: yes

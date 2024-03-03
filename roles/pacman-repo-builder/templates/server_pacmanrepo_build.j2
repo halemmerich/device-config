@@ -5,6 +5,8 @@ then
 	. /etc/pacmanrepo.conf
 fi
 
+[ "$MULTICORE_BUILD" = YES ] && export MAKEFLAGS="-j$(expr $(nproc))"
+
 if [ -z "$REPO_NAME" ]
 then
 	REPO_NAME=$1
@@ -41,11 +43,13 @@ then
 		fi
 		cd "$C"
 		su pacmanrepobuilder -c 'git pull'
+
+		rm *.tar.zst
 		
 		su pacmanrepobuilder -c 'makepkg -sf --sign --noconfirm'
 		CRC=$?
 		
-		if [ ! \( "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
+		if [ ! \( "$ALLOW_SIGN_FAIL" = YES -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
 		then
 			(( RC++ ))
 		fi
@@ -67,10 +71,12 @@ then
 		cd "$C"
 		su pacmanrepobuilder -c 'git pull'
 		
+		rm *.tar.zst
+
 		su pacmanrepobuilder -c 'makepkg -sf --sign --noconfirm'
 		
 		CRC=$?
-		if [ ! \( "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
+		if [ ! \( "$ALLOW_SIGN_FAIL" = YES -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
 		then
 			(( RC++ ))
 		fi
@@ -95,4 +101,5 @@ then
 fi
 
 echo Aggregated return code is $RC
-exit $RC
+
+[ "$NEVER_FAIL" = YES ] || exit $RC
