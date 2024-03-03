@@ -27,10 +27,12 @@ server_nginx_default_domains:
   - "{{ domain }}"
 
 server_pacmanrepo_name: "testrepo"
+server_pacmanrepo_allow_sign_fail: "YES"
+server_pacmanrepo_multicore_build: "YES"
 server_pacmanrepo_build: true
 server_pacmanrepo_deploy: true
 server_pacmanrepo_target: "/var/lib/pacman-repo/packages"
-server_pacmanrepo_keyserver: pgp.mit.edu
+server_pacmanrepo_keyserver: hkps://pgp.mit.edu
 server_pacmanrepo_keys:
   - 0FDE7BE0E88F5E48
 server_pacmanrepo_deps:
@@ -48,5 +50,3 @@ server_pacmanrepo_packages:
   - prosody-modules-hg
   - nginx-mainline-mod-dav-ext
   - lua-event
-  - wlr-randr
-  - xboxdrv
