@@ -33,3 +33,18 @@
   when: ansible_os_family == "Archlinux"
   tags:
     - install
+
+- name: Session launcher
+  template:
+    src: gnome.j2
+    dest: /usr/local/bin/gnome-run
+    mode: "0755"
+  tags:
+    - config
+
+- name: Session launcher
+  template:
+    src: gnome.desktop.j2
+    dest: /usr/share/wayland-sessions/gnome.desktop
+  tags:
+    - config
