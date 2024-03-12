@@ -1,16 +1,15 @@
 - name: Install generic UI components
   package:
     name:
-      - ly
+      - greetd-regreet
     state: present
   when: ansible_os_family == "Archlinux"
   tags:
     - install
 
-
 - name: enable desktop manager
   systemd:
-    name: ly
+    name: greetd
     enabled: yes
     state: started
   tags:
@@ -43,21 +42,25 @@
   tags:
     - install
 
-- name: Create ly PAM config
+- name: Create greetd PAM config
   copy:
-    src: pam/ly
-    dest: /etc/pam.d/ly
+    src: pam/greetd
+    dest: /etc/pam.d/greetd
     mode: '0644'
   when: ansible_os_family == "Archlinux"
   tags:
     - config
 
-- name: Create ly config
+- name: Create greetd config
   copy:
-    src: ly/config.ini
-    dest: /etc/ly/config.ini
+    src: "greetd/{{ item }}"
+    dest: "/etc/greetd/{{ item }}"
     mode: '0644'
   when: ansible_os_family == "Archlinux"
+  loop:
+    - config.toml
+    - regreet.toml
+    - sway.conf
   tags:
     - config
 
