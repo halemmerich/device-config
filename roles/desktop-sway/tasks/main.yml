@@ -42,6 +42,7 @@
     - otf-font-awesome
     - polkit-gnome
     - fnott
+    - wl-mirror
     state: present
   tags:
     - install
@@ -118,9 +119,9 @@
 
 - name: Session launcher
   template:
-    src: sway.sh.j2
-    dest: /usr/local/bin/sway-session
-    mode: "0644"
+    src: sway.j2
+    dest: /usr/local/bin/sway-run
+    mode: "0755"
   tags:
     - config
 

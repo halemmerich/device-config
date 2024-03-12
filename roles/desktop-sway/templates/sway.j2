@@ -12,3 +12,5 @@ export PATH=$PATH:/var/lib/flatpak/exports/bin:~/.local/share/flatpak/exports/bi
 
 # Dnoscanout works around VRR not working in full screen
 systemd-cat --identifier=sway sway -Dnoscanout $@
+
+loginctl terminate-session self
