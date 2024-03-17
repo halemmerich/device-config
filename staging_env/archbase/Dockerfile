@@ -11,7 +11,7 @@ RUN pacman -Syy --noconfirm
 RUN pacman -S --noconfirm archlinux-keyring
 RUN pacman-key --init
 RUN pacman-key --populate
-RUN pacman -Su --noconfirm openssh python sudo
+RUN pacman -Su --noconfirm linux-lts openssh python sudo
 RUN mkdir /etc/systemd/system/multi-user.target.wants
 RUN ln -s /usr/lib/systemd/system/sshd.service /etc/systemd/system/multi-user.target.wants/sshd.service
 RUN ln -s /usr/share/zoneinfo/$TIMEZONE /etc/localtime

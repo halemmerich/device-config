@@ -5,8 +5,6 @@ then
 	. /etc/pacmanrepo.conf
 fi
 
-[ "$MULTICORE_BUILD" = YES ] && export MAKEFLAGS="-j$(expr $(nproc))"
-
 if [ -z "$REPO_NAME" ]
 then
 	REPO_NAME=$1
@@ -19,6 +17,14 @@ then
 fi
 
 cd /var/lib/pacman-repo-builder
+
+CHROOT=/var/lib/pacman-repo-builder/chroot
+mkdir -p "$CHROOT"
+
+[ ! -d "$CHROOT/root" ] && mkarchroot -C pacman.conf "$CHROOT/root" base-devel
+cp pacman.conf "$CHROOT/root/etc/"
+arch-nspawn "$CHROOT/root" pacman -Syu
+
 su pacmanrepobuilder -c 'mkdir -p pkgs'
 
 RC=0
@@ -28,7 +34,7 @@ if [ -f keys.list ]
 then
 	for C in $(cat keys.list)
 	do
-		su pacmanrepobuilder -c "gpg {% if server_pacmanrepo_keyserver is defined %}--keyserver {{ server_pacmanrepo_keyserver }}{% endif %}  --recv-keys $C"
+		arch-nspawn "$CHROOT/root" su pacmanrepobuilder -c "gpg --recv-keys $C"
 	done
 fi
 
@@ -43,24 +49,29 @@ then
 		fi
 		cd "$C"
 		su pacmanrepobuilder -c 'git pull'
-
-		rm *.tar.zst
 		
-		su pacmanrepobuilder -c 'makepkg -sf --sign --noconfirm'
+		rm *.pkg.tar.zst
+
+		makechrootpkg -c -U pacmanrepobuilder -r "$CHROOT"
 		CRC=$?
 		
-		if [ ! \( "$ALLOW_SIGN_FAIL" = YES -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
+		if [ ! \( "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
 		then
 			(( RC++ ))
 		fi
 		
-		pacman -U --asdeps --noconfirm $(ls *.pkg.tar.zst | sort | tail -n 1)
 		cd ../..
 	done
 fi
 
 if [ -f packages.list ]
 then
+	DEPENDS=
+	for C in $(cat deps.list)
+	do
+		DEPENDS="$DEPENDS -I ../../$(ls pkgs/$C/*.pkg.tar.zst | sort | tail -n 1)"
+	done
+
 	for C in $(cat packages.list)
 	do
 		cd pkgs/
@@ -70,13 +81,13 @@ then
 		fi
 		cd "$C"
 		su pacmanrepobuilder -c 'git pull'
-		
-		rm *.tar.zst
 
-		su pacmanrepobuilder -c 'makepkg -sf --sign --noconfirm'
+		rm *.pkg.tar.zst
+		
+		makechrootpkg -c $DEPENDS -U pacmanrepobuilder -r "$CHROOT"
 		
 		CRC=$?
-		if [ ! \( "$ALLOW_SIGN_FAIL" = YES -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
+		if [ ! \( "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
 		then
 			(( RC++ ))
 		fi
@@ -86,10 +97,11 @@ fi
 
 su pacmanrepobuilder -c 'mkdir -p repo/'
 
+rm -f *.pkg.tar.zst
+
 su pacmanrepobuilder -c 'find pkgs -name "*.tar.zst*" -exec cp {} repo/ \;'  || (( RC++ ))
 
 cd repo
-
 rm -f $REPO_NAME.db
 rm -f $REPO_NAME.db.tar.zst
 rm -f $REPO_NAME.files
@@ -101,5 +113,4 @@ then
 fi
 
 echo Aggregated return code is $RC
-
-[ "$NEVER_FAIL" = YES ] || exit $RC
+exit $RC
