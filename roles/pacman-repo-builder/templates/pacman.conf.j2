@@ -1,0 +1,24 @@
+[options]
+HoldPkg = pacman glibc
+Architecture = auto
+CheckSpace
+ParallelDownloads = 5
+{% if server_pacmanrepo_buildrepos_siglevel is defined%}
+SigLevel = {{ server_pacmanrepo_buildrepos_siglevel }}
+{% else %}
+SigLevel = Required DatabaseOptional
+{% endif %}
+LocalFileSigLevel = Optional
+HookDir = /etc/pacman.d/hooks
+
+{% for current in server_pacmanrepo_buildrepos %}
+[{{ current.name }}]
+{% if current.servers is defined %}
+{% for server in current.servers %}
+Server = {{ server }}
+{% endfor %}
+{% endif %}
+{% if current.server is defined %}Server = {{ current.server }}
+{% endif %}
+
+{% endfor %}

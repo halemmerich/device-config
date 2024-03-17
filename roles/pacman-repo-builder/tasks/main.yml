@@ -1,9 +1,18 @@
 - name: Install requirements
   package:
     name:
-    - base-devel
+    - devtools
     - git
     state: present
+  tags:
+    - install
+
+- name: Install requirements
+  package:
+    name:
+    - base-devel
+    state: present
+  when: server_pacmanrepo_chroot_build is not defined
   tags:
     - install
 
@@ -61,6 +70,17 @@
     - { src: "server_pacmanrepo_deploy.j2", dest: "/usr/local/bin/server_pacmanrepo_deploy" }
   tags:
     - config
+
+- name: 'Create custom pacman config'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0755'
+  loop:
+    - { src: "pacman.conf.j2", dest: "/usr/local/bin/pacman.conf" }
+  when: server_pacmanrepo_buildrepos is defined
+  tags:
+    - config
     
 - name: Set preconfigured keys
   ansible.builtin.lineinfile:
@@ -105,6 +125,13 @@
     path: /etc/pacmanrepo.conf
     regex: '^MULTICORE_BUILD'
     line: 'MULTICORE_BUILD={{ server_pacmanrepo_multicore_build | default("") }}'
+    create: yes
+
+- name: Ensure config is set
+  ansible.builtin.lineinfile:
+    path: /etc/pacmanrepo.conf
+    regex: '^CHROOT_BUILD'
+    line: 'CHROOT_BUILD={{ server_pacmanrepo_chroot_build | default("") }}'
     create: yes
 
 - name: Ensure config is set

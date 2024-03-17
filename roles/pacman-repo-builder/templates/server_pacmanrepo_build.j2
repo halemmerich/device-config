@@ -18,12 +18,18 @@ fi
 
 cd /var/lib/pacman-repo-builder
 
-CHROOT=/var/lib/pacman-repo-builder/chroot
-mkdir -p "$CHROOT"
+if [ -n "$CHROOT_BUILD" ]
+then
+	CHROOT=/var/lib/pacman-repo-builder/chroot
+	mkdir -p "$CHROOT"
 
-[ ! -d "$CHROOT/root" ] && mkarchroot -C pacman.conf "$CHROOT/root" base-devel
-cp pacman.conf "$CHROOT/root/etc/"
-arch-nspawn "$CHROOT/root" pacman -Syu
+	PACMAN_CONFIG=pacman.conf
+	[ -f $PACMAN_CONFIG ] || PACMAN_CONFIG=/etc/pacman.conf
+
+	[ ! -d "$CHROOT/root" ] && mkarchroot -C "$PACMAN_CONFIG" "$CHROOT/root" base-devel
+	cp pacman.conf "$CHROOT/root/etc/"
+	arch-nspawn "$CHROOT/root" pacman -Syu
+fi
 
 su pacmanrepobuilder -c 'mkdir -p pkgs'
 
@@ -34,7 +40,12 @@ if [ -f keys.list ]
 then
 	for C in $(cat keys.list)
 	do
-		arch-nspawn "$CHROOT/root" su pacmanrepobuilder -c "gpg --recv-keys $C"
+		if [ -n "$CHROOT_BUILD" ]
+		then
+			arch-nspawn "$CHROOT/root" su pacmanrepobuilder -c "gpg --recv-keys $C"
+		else
+			su pacmanrepobuilder -c "gpg --recv-keys $C"
+		fi
 	done
 fi
 
@@ -52,8 +63,14 @@ then
 		
 		rm *.pkg.tar.zst
 
-		makechrootpkg -c -U pacmanrepobuilder -r "$CHROOT"
-		CRC=$?
+		if [ -n "$CHROOT_BUILD" ]
+		then
+			makechrootpkg -c -U pacmanrepobuilder -r "$CHROOT"
+			CRC=$?
+		else
+			su pacmanrepobuilder -c 'makepkg -s -C --noconfirm'
+			CRC=$?
+		fi
 		
 		if [ ! \( "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
 		then
@@ -69,7 +86,12 @@ then
 	DEPENDS=
 	for C in $(cat deps.list)
 	do
-		DEPENDS="$DEPENDS -I ../../$(ls pkgs/$C/*.pkg.tar.zst | sort | tail -n 1)"
+		if [ -n "$CHROOT_BUILD" ]
+		then
+			DEPENDS="$DEPENDS -I ../../$(ls pkgs/$C/*.pkg.tar.zst | sort | tail -n 1)"
+		else
+			pacman --noconfirm -U $(ls pkgs/$C/*.pkg.tar.zst)
+		fi
 	done
 
 	for C in $(cat packages.list)
@@ -84,7 +106,14 @@ then
 
 		rm *.pkg.tar.zst
 		
-		makechrootpkg -c $DEPENDS -U pacmanrepobuilder -r "$CHROOT"
+		if [ -n "$CHROOT_BUILD" ]
+		then
+			makechrootpkg -c $DEPENDS -U pacmanrepobuilder -r "$CHROOT"
+			CRC=$?
+		else
+			su pacmanrepobuilder -c 'makepkg -s -C --noconfirm'
+			CRC=$?
+		fi
 		
 		CRC=$?
 		if [ ! \( "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
@@ -95,17 +124,13 @@ then
 	done
 fi
 
+rm -r repo
 su pacmanrepobuilder -c 'mkdir -p repo/'
 
-rm -f *.pkg.tar.zst
 
 su pacmanrepobuilder -c 'find pkgs -name "*.tar.zst*" -exec cp {} repo/ \;'  || (( RC++ ))
 
 cd repo
-rm -f $REPO_NAME.db
-rm -f $REPO_NAME.db.tar.zst
-rm -f $REPO_NAME.files
-rm -f $REPO_NAME.files.tar.zst
 
 if [ 0 -ne $( ls | wc -l ) ]
 then
