@@ -11,5 +11,5 @@ pacman_repos:
     server: "https://repo.staging.arch"
     siglevel: Optional
 
-pacman_mirrorlist:
-  - "https://archive.archlinux.org/repos/2024/01/15/$repo/os/$arch"
+#pacman_mirrorlist:
+#  - "https://archive.archlinux.org/repos/2024/01/15/$repo/os/$arch"
