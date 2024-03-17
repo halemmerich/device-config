@@ -13,4 +13,5 @@ php_path: /etc/php-legacy
 php_fpm_path: /etc/php-legacy/php-fpm.d
 php_ini_path: "/etc/php-legacy/php-fpm.ini"
 php_fpm_service: "php-legacy-fpm"
+php_modules: "/usr/lib/php-legacy/modules"
 nextcloud_fastcgi: "unix://run/nextcloud/nextcloud.sock"

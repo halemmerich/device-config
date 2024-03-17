@@ -7,13 +7,15 @@ zlib.output_compression = Off
 implicit_flush = Off
 unserialize_callback_func =
 serialize_precision = -1
-open_basedir = {% if webshare_path.stat.exists %}/var/lib/webdav/shares{% endif %}:/var/lib/nextcloud/data:/var/lib/nextcloud/sessions:/run/redis:/var/lib/nextcloud/apps:/tmp:/usr/share/webapps/nextcloud:/etc/webapps/nextcloud:/dev/urandom:/usr/lib/php-legacy/modules:/var/log/nextcloud:/proc/meminfo
+open_basedir = {% if webshare_path.stat.exists %}/var/lib/webdav/shares{% endif %}:{{ nextcloud_data_path }}:{{ nextcloud_session_path }}:/run/redis:{{ nextcloud_apps_path }}:/tmp:{{ nextcloud_path }}:/etc/webapps/nextcloud:/dev/urandom:{{ php_modules }}:/var/log/nextcloud:/proc/meminfo
+
 disable_functions =
 disable_classes =
 zend.enable_gc = On
 zend.exception_ignore_args = On
 zend.exception_string_param_max_len = 0
-zend_extension=opcache
+{% if ansible_os_family == 'Archlinux' %}zend_extension=opcache
+{% endif %}
 expose_php = On
 max_execution_time = 30
 max_input_time = 60
@@ -33,7 +35,7 @@ auto_globals_jit = On
 post_max_size = 8M
 auto_prepend_file =
 auto_append_file =
-extension_dir = "/usr/lib/php-legacy/modules/"
+;extension_dir = "{{ php_modules }}"
 enable_dl = Off
 file_uploads = On
 upload_max_filesize = 2M
@@ -41,18 +43,20 @@ max_file_uploads = 20
 allow_url_fopen = On
 allow_url_include = Off
 default_socket_timeout = 60
-extension=bcmath
+{% if ansible_os_family == 'Archlinux' %}extension=bcmath
 extension=bz2
 extension=curl
 extension=exif
 extension=gd
 extension=iconv
 extension=intl
+extension=mysqlnd
 extension=mysqli
 extension=pdo_mysql
 extension=zip
 extension=igbinary
 extension=redis
+{% endif %}
 cli_server.color = On
 date.timezone = Europe/Berlin
 smtp_port = 25

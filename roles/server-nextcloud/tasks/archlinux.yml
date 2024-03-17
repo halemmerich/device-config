@@ -18,18 +18,6 @@
     path: "/etc/redis/redis.conf"
     line: "supervised auto"
 
-- name: 'Create php config'
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    owner: "{{ item.user }}"
-    group: "{{ item.group }}"
-    mode: '0644'
-  loop:
-    - { src: "php/php-fpm.ini.j2", dest: "{{ php_ini_path }}", user: "root", group: "root" }
-  tags:
-    - config
-
 - name: Configure directories
   file:
     path: '{{ item.path }}'

@@ -9,6 +9,18 @@
     
 - include_tasks: "{{ ansible_os_family | lower }}.yml"
 
+- name: 'Create php config'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.user }}"
+    group: "{{ item.group }}"
+    mode: '0644'
+  loop:
+    - { src: "php/php-fpm.ini.j2", dest: "{{ php_ini_path }}", user: "root", group: "root" }
+  tags:
+    - config
+
 - name: Configure memory limit
   lineinfile:
     dest: "{{ php_ini_path }}"
@@ -168,7 +180,7 @@
 - name: Configure directories
   file:
     path: "{{ nextcloud_config_dir }}"
-    mode: '0640'
+    mode: '0740'
     owner: "{{ nextcloud_user }}"
     group: "{{ nextcloud_group }}"
     state: directory

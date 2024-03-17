@@ -12,6 +12,8 @@
     - php-curl
     - php-json
     - php-redis
+    - php-bcmath
+    - php-intl
     - pwgen
     - redis-server
     state: present
@@ -29,7 +31,7 @@
   stat:
     path: '{{ nextcloud_path }}'
   register: install_path
-    
+
 - name: Install nextcloud
   block:
   - name: Create temporary file

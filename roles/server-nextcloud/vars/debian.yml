@@ -9,8 +9,10 @@ nextcloud_config_path_ro: "{{ nextcloud_config_dir }}/onfig.php"
 nextcloud_user: www-data
 nextcloud_group: www-data
 php_command: php
-php_fpm_path: /etc/php/7.4/fpm
+php_fpm_path: /etc/php/8.2/fpm
 php_path: "{{ php_fpm_path }}"
 php_ini_path: "{{ php_fpm_path }}/php.ini"
-php_fpm_service: "php7.4-fpm"
-nextcloud_fastcgi: "unix://run/php/php7.4-fpm.sock"
+nextcloud_php_config_path: "{{ php_ini_path }}"
+php_fpm_service: "php8.2-fpm"
+php_modules: "/var/lib/php/modules/8.2/fpm/enabled_by_maint"
+nextcloud_fastcgi: "unix://run/php/php8.2-fpm.sock"
