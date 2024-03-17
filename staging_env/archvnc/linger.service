@@ -1,0 +1,10 @@
+[Unit]
+Description=Enable lingering
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/loginctl enable-linger ansible
+
+[Install]
+WantedBy=multi-user.target

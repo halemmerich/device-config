@@ -1,0 +1,13 @@
+[Unit]
+Description=Start a headless sway
+After=network.target
+
+[Service]
+User=ansible
+ExecStartPre=/usr/bin/loginctl enable-linger ansible
+ExecStart=/bin/bash -c "XDG_RUNTIME_DIR=/run/user/$(id -u ansible)/ WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 sway"
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
