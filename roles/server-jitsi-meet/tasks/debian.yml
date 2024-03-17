@@ -13,6 +13,13 @@
   apt:
     update_cache: true
   when: key_result.changed or repo_result.changed
+  
+- name: "Configure jitsi-meet package"
+  debconf:
+    name: "jitsi-meet-web-config"
+    question: "jitsi-meet/cert-choice"
+    vtype: "select"
+    value: "Generate a new self-signed certificate"
 
 - name: 'Install packages'
   apt:
