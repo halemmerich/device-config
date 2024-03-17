@@ -9,6 +9,7 @@
   package:
     name:
       - build-essential
+      - apt-utils
     state: present
   tags:
     - install
