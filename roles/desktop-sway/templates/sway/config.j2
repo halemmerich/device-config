@@ -57,7 +57,8 @@ exec swayidle -w \
 	timeout 300 'swaylock --indicator-idle-visible -f -c 35383d' \
 	timeout 600 'swaymsg "output * power off"' \
 		resume 'swaymsg "output * power on"' \
-	before-sleep 'swaylock --indicator-idle-visible -f -c 35383d'
+	before-sleep 'swaylock --indicator-idle-visible -f -c 35383d'\
+	before-sleep 'playerctl pause'
 
 exec gnome-keyring-daemon --start --components=secrets
 exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
