@@ -56,6 +56,7 @@ sogo_db_user_password: "password_sogo_db_user"
 postfix_db_user_password: "password_postfix_db_user"
 postfix_ro_db_user_password: "password_postfix_ro_db_user"
 
+nextcloud_redis_container_workaround: true
 nextcloud_db_user_password: "password_nextcloud_db_user"
 nextcloud_admin_user_password: "admin"
 nextcloud_passwordsalt: "passwordsalt_nextcloud"

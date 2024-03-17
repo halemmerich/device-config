@@ -18,6 +18,13 @@
   tags:
     - install
 
+- name: Workaround for running redis in container
+  lineinfile:
+    path: "/etc/systemd/system/redis.service"
+    regexp: "^ProtectProc"
+    state: absent
+  when: nextcloud_redis_container_workaround is defined and nextcloud_redis_container_workaround
+
 - name: Check installed version
   stat:
     path: '{{ nextcloud_path }}'
@@ -107,6 +114,7 @@
   systemd:
     name: "{{ item }}"
     enabled: yes
+    daemon_reload: true
     state: started
   loop:
     - redis-server
