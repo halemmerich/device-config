@@ -12,7 +12,6 @@ php_command: php
 php_fpm_path: /etc/php/8.2/fpm
 php_path: "{{ php_fpm_path }}"
 php_ini_path: "{{ php_fpm_path }}/php.ini"
-nextcloud_php_config_path: "{{ php_ini_path }}"
 php_fpm_service: "php8.2-fpm"
 php_modules: "/var/lib/php/modules/8.2/fpm/enabled_by_maint"
 nextcloud_fastcgi: "unix://run/php/php8.2-fpm.sock"

@@ -3,5 +3,5 @@ Description=Nextcloud cron.php job
 
 [Service]
 User={{ nextcloud_user }}
-ExecStart=/usr/bin/{{ php_command }} -c {{ nextcloud_php_config_path }} -f {{ nextcloud_path }}/cron.php
+ExecStart=/usr/bin/{{ php_command }} -c {{ php_ini_path }} -f {{ nextcloud_path }}/cron.php
 KillMode=process
