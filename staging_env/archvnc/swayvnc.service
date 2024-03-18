@@ -6,7 +6,7 @@ After=network.target
 User=ansible
 ExecStart=/bin/bash -c "XDG_RUNTIME_DIR=/run/user/$(id -u ansible)/ WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 sway"
 Restart=always
-RestartSec=10
+RestartSec=1
 
 [Install]
 WantedBy=multi-user.target

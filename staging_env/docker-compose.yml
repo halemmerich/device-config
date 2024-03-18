@@ -122,6 +122,7 @@ services:
       - arch-vnc
     cap_add:
       - SYS_ADMIN
+      - SYS_NICE
     networks:
       staging_net:
         ipv4_address: 172.28.0.13
@@ -138,7 +139,7 @@ services:
     build: debianvnc/
     image: debianvnc:latest
     depends_on:
-      - arch-vnc
+      - debian-vnc
     cap_add:
       - SYS_ADMIN
     networks:
@@ -160,6 +161,7 @@ services:
       - arch-vnc
     cap_add:
       - SYS_ADMIN
+      - SYS_NICE
     networks:
       staging_net:
         ipv4_address: 172.28.0.17

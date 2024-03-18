@@ -2,9 +2,8 @@
   package:
     name: "{{ item.1 }}"
     state: present
-  loop: "{{ custom_software_packages | subelements('packages', skip_missing=true)}}"
+  loop: "{{ custom_software_packages | default([]) | subelements('packages', skip_missing=true)}}"
   when:
-    - custom_software_packages is defined
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
@@ -14,10 +13,9 @@
     name: "{{ item.1 }}"
     reason: "dependency"
     state: present
-  loop: "{{ custom_software_packages_dependencies | subelements('packages', skip_missing=true)}}"
+  loop: "{{ custom_software_packages_dependencies | default([]) | subelements('packages', skip_missing=true)}}"
   when:
     - ansible_os_family == "Archlinux"
-    - custom_software_packages_dependencies is defined
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
@@ -26,10 +24,9 @@
   package:
     name: "{{ item.1 }}"
     state: present
-  loop: "{{ custom_software_packages_arch | subelements('packages', skip_missing=true)}}"
+  loop: "{{ custom_software_packages_arch | default([]) | subelements('packages', skip_missing=true)}}"
   when:
     - ansible_os_family == "Archlinux"
-    - custom_software_packages_arch is defined
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
@@ -38,10 +35,9 @@
   package:
     name: "{{ item.1 }}"
     state: present
-  loop: "{{ custom_software_packages_debian | subelements('packages', skip_missing=true)}}"
+  loop: "{{ custom_software_packages_debian | default([]) | subelements('packages', skip_missing=true)}}"
   when:
     - ansible_os_family == "Debian"
-    - custom_software_packages_debian is defined
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
@@ -69,9 +65,8 @@
   flatpak:
     name: "{{ item.1 }}"
     state: present
-  loop: "{{ custom_software_flatpaks | subelements('packages', skip_missing=true)}}"
+  loop: "{{ custom_software_flatpaks | default([]) | subelements('packages', skip_missing=true)}}"
   when:
-    - custom_software_flatpaks is defined
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - install
@@ -80,9 +75,8 @@
   flatpak:
     name: "{{ item.1 }}"
     state: absent
-  loop: "{{ custom_software_flatpaks_absent | subelements('packages', skip_missing=true)}}"
+  loop: "{{ custom_software_flatpaks_absent | default([]) | subelements('packages', skip_missing=true)}}"
   when:
-    - custom_software_flatpaks_absent is defined
     - ( item.0.group == "all" or item.0.group in group_names )
   ignore_errors: true
   tags:
@@ -99,9 +93,8 @@
     src: "files/custom-software/{{ item.0.group }}/{{ item.1 }}"
     dest: "/usr/local/bin/"
     mode: "0755"
-  loop: "{{ custom_software_userbinaries | subelements('files')}}"
+  loop: "{{ custom_software_userbinaries | default([]) | subelements('files')}}"
   when:
-    - custom_software_userbinaries is defined
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - config
@@ -110,9 +103,8 @@
   file:
     path: "{{ item.1 }}"
     state: directory
-  loop: "{{ custom_software_folders | subelements('folders')}}"
+  loop: "{{ custom_software_folders | default([]) | subelements('folders')}}"
   when:
-    - custom_software_folders is defined
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - config
@@ -122,9 +114,8 @@
     src: "files/custom-software/{{ item.0.group }}/{{ item.1.src }}"
     dest: "{{ item.1.dest }}"
     mode: "0755"
-  loop: "{{ custom_software_files | subelements('files') }}"
+  loop: "{{ custom_software_files | default([]) | subelements('files') }}"
   when:
-    - custom_software_files is defined
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - config
@@ -134,9 +125,8 @@
     name: "{{ item.1 }}"
     daemon-reload: yes
     enabled: yes
-  loop: "{{ custom_software_services_enabled | subelements('services')}}"
+  loop: "{{ custom_software_services_enabled | default([]) | subelements('services')}}"
   when:
-    - custom_software_services_enabled is defined
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - config
