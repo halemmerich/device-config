@@ -1,0 +1,14 @@
+custom_software_packages:
+- group: all
+  packages:
+    - nano
+
+custom_software_packages_arch:
+- group: desktop
+  packages:
+    - firefox
+
+custom_software_packages_debian:
+- group: desktop
+  packages:
+    - firefox-esr

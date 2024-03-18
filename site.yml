@@ -58,6 +58,7 @@
   remote_user: admin
   roles:
     - users
+    - custom-software
 
 - hosts: staging_local
   become: yes
