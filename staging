@@ -9,6 +9,8 @@ staging-gameserver-arch
 [staging_local]
 staging-desktop-arch
 staging-desktop-debian
+staging-testclient-arch
+staging-testclient-debian
 
 [staging_fakeca]
 staging-desktop-arch
@@ -88,6 +90,7 @@ staging-server-arch
 
 [server_syncplay]
 staging-server-arch
+
 [server_games]
 staging-gameserver-arch
 staging-gameserver-debian
