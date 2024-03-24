@@ -89,6 +89,14 @@
   tags:
     - config
 
+- name: Configure foot
+  template:
+    src: foot.ini.j2
+    dest: /etc/xdg/foot/foot.ini
+    mode: "0744"
+  tags:
+    - config
+
 - name: Install fnott
   block:
   - name: Create fnott config dir
