@@ -14,7 +14,6 @@
     - xdg-desktop-portal-wlr
     - xdg-desktop-portal-gtk
     - qt5ct
-    - nemo
     - foot
     - grim
     - slurp
@@ -31,6 +30,7 @@
 - name: Install generic UI components
   package:
     name:
+    - pcmanfm-gtk3
     - gvfs-smb
     - qt5-wayland
     - libgnome-keyring
@@ -51,6 +51,7 @@
 - name: Install generic UI components
   package:
     name:
+    - pcmanfm
     - gvfs-backends
     - qtwayland5
     - ttf-bitstream-vera
