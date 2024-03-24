@@ -1,6 +1,7 @@
 * {
-    font-family: FontAwesome;
-    font-size: 12px;
+    font-family: monospace;
+    font-size: 10pt;
+    font-weight: bold;
 }
 
 window#waybar {
