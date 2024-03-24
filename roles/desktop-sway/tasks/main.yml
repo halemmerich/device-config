@@ -66,8 +66,8 @@
   when: ansible_os_family == "Debian"
 
 - name: Create screenrecorder script
-  copy:
-    src: desktop_sway_screenrecord
+  template:
+    src: desktop_sway_screenrecord.j2
     dest: /usr/local/bin/desktop_sway_screenrecord
     mode: '0666'
   tags:
@@ -77,6 +77,14 @@
   template:
     src: waybar/config.j2
     dest: /etc/xdg/waybar/config
+    mode: "0744"
+  tags:
+    - config
+
+- name: Configure waybar
+  template:
+    src: waybar/style.css.j2
+    dest: /etc/xdg/waybar/style.css
     mode: "0744"
   tags:
     - config
@@ -142,8 +150,8 @@
     - config
 
 - name: Create swaylock PAM config
-  copy:
-    src: pam/swaylock
+  template:
+    src: pam/swaylock.j2
     dest: /etc/pam.d/swaylock
     mode: '0644'
   tags:
