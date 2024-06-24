@@ -1,10 +1,21 @@
 {
     "position": "bottom",
     "height": 24,
-    "modules-left": ["sway/workspaces", "sway/mode"],
+    "modules-left": ["custom/kill", "custom/search", "sway/workspaces", "sway/mode"],
     "modules-center": ["sway/window"],
     "modules-right": ["privacy", "idle_inhibitor", "pulseaudio", "network", "cpu", "memory", "backlight", "battery", "battery#bat2", "clock", "tray"],
-    "sway/mode": {
+    "custom/kill": {
+        "format": "  ",
+        "tooltip": true,
+        "tooltip-format": "Kill current window",
+        "on-click": "swaymsg kill"
+    },
+    "custom/search": {
+        "format": "   ",
+        "tooltip": true,
+        "tooltip-format": "Start launcher",
+        "on-click": "swaymsg exec fuzzel"
+    },    "sway/mode": {
         "format": "<span style=\"italic\">{}</span>"
     },
     "idle_inhibitor": {
