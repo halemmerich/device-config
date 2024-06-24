@@ -51,6 +51,15 @@
   tags:
     - config
 
+- name: Create greetd config directories
+  file:
+    state: directory
+    dest: "/etc/greetd/sway.d"
+    mode: '0755'
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - config
+
 - name: Create greetd config
   copy:
     src: "greetd/{{ item }}"
