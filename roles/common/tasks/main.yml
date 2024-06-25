@@ -72,6 +72,11 @@
     path: /etc/environment
     line: EDITOR={{ environment_editor | default('nano') }}
 
+- name: Config less
+  lineinfile:
+    path: /etc/environment
+    line: LESS={{ environment_less | default('--mouse --wheel-lines=3') }}
+
 - name: Configure tmux
   copy:
     src: files/tmux/tmux.conf
