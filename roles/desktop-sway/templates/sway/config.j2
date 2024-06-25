@@ -1,8 +1,17 @@
-input * xkb_layout de
+input type:keyboard {
+	xkb_layout "{{ sway_inputs.keyboard_layout | default('us') }}"
+}
 
-input * drag enabled
-input * tap enabled
-input * dwt disabled
+input type:pointer {
+	accel_profile "flat"
+}
+
+input type:touchpad {
+	drag enabled
+	tap enabled
+	dwt disabled
+	accel_profile "adaptive"
+}
 
 output * scale 1
 
