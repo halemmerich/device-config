@@ -61,8 +61,8 @@
     - config
 
 - name: Create greetd config
-  copy:
-    src: "greetd/{{ item }}"
+  template:
+    src: "greetd/{{ item }}.j2"
     dest: "/etc/greetd/{{ item }}"
     mode: '0644'
   when: ansible_os_family == "Archlinux"
