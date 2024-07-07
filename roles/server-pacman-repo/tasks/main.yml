@@ -39,14 +39,6 @@
     state: directory
   tags:
     - config
-
-- name: Install pacman hook to keep cached files updated
-  template:
-    src: "pacman-repo-cache-update.hook.j2"
-    dest: "/etc/pacman.d/hooks/pacman-repo-cache-update.hook"
-    mode: '0700'
-  tags:
-    - config
     
 - name: 'Create initial cache'
   command: '/usr/local/bin/server_pacmanrepo_update_cache'
