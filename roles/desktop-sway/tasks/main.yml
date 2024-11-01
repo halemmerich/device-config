@@ -30,9 +30,14 @@
 - name: Install generic UI components
   package:
     name:
-    - pcmanfm-gtk3
+    - thunar
     - gvfs-smb
+    - gvfs-mtp
+    - gvfs-dnssd
+    - gvfs-gphoto2
+    - gvfs-afc
     - qt5-wayland
+    - qt6-wayland
     - libgnome-keyring
     - ttf-dejavu
     - swaylock
@@ -51,7 +56,7 @@
 - name: Install generic UI components
   package:
     name:
-    - pcmanfm
+    - thunar
     - gvfs-backends
     - qtwayland5
     - ttf-bitstream-vera
