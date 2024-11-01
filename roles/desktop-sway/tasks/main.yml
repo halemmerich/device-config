@@ -69,7 +69,7 @@
   template:
     src: desktop_sway_screenrecord.j2
     dest: /usr/local/bin/desktop_sway_screenrecord
-    mode: '0666'
+    mode: '0755'
   tags:
     - config
 
