@@ -10,7 +10,7 @@
     name: syncthing@{{item}}
     state: started
     enabled: yes
-  loop: "{{ desktop_users }}"
-  when: desktop_users is defined
+  loop: "{{ syncthing_users }}"
+  when: syncthing_users is defined
   tags:
     - config
