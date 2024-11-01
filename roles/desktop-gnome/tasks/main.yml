@@ -27,6 +27,7 @@
     name:
     - gvfs-smb
     - gvfs-mtp
+    - gvfs-dnssd
     - gvfs-gphoto2
     - gvfs-afc
     state: present
