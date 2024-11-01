@@ -109,12 +109,23 @@
   tags:
     - config
 
-- name: Add custom files
-  template:
+- name: Copy custom files
+  copy:
     src: "files/custom-software/{{ item.0.group }}/{{ item.1.src }}"
     dest: "{{ item.1.dest }}"
     mode: "0644"
   loop: "{{ custom_software_files | default([]) | subelements('files') }}"
+  when:
+    - ( item.0.group == "all" or item.0.group in group_names )
+  tags:
+    - config
+
+- name: Add custom templates
+  template:
+    src: "files/custom-software/{{ item.0.group }}/{{ item.1.src }}"
+    dest: "{{ item.1.dest }}"
+    mode: "0644"
+  loop: "{{ custom_software_templates | default([]) | subelements('files') }}"
   when:
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
