@@ -32,6 +32,12 @@ output {{ current.output }} scale_filter {{ current.scale_filter }}
 {% if current.adaptive is defined %}
 output {{ current.output }} adaptive_sync {{ current.adaptive }}
 {% endif %}
+{% if current.subpixel is defined %}
+output {{ current.output }} subpixel {{ current.subpixel }}
+{% endif %}
+{% if current.profile is defined %}
+output {{ current.output }} color_profile icc /usr/local/share/color/icc/{{ current.profile }}
+{% endif %}
 
 {% endfor %}
 {% endif %}
