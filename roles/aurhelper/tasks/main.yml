@@ -25,16 +25,29 @@
     - install
 
 - name: Install yay
-  kewlfft.aur.aur:
-    name: yay
-  become: yes
+  block:
+    - name: Create directory for build
+      tempfile:
+        state: directory
+      register: builddir
+    - name: Download package from the AUR
+      unarchive:
+        remote_src: yes
+        src: "https://aur.archlinux.org/cgit/aur.git/snapshot/yay.tar.gz"
+        dest: "{{ builddir.path }}"
+    - name: Run makepkg
+      shell: cd '{{ builddir.path | quote }}/yay' && makepkg -rsi --noconfirm
+  always:
+    - name: Remove build directory
+      file:
+        state: absent
+        path: "{{ builddir.path }}"
   become_user: aur_builder
   tags:
     - install
 
 - name: Upgrade aur packages
-  kewlfft.aur.aur:
-    upgrade: yes
+  command: yay -Syu --noconfirm
   become: yes
   become_user: aur_builder
   tags:

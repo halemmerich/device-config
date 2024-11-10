@@ -21,12 +21,6 @@ These expect a secrets.yml file created with `ansible-vault create secrets.yml` 
 - `upgrade`
   Upgrade installed software, but do not change any configuration. Restoration of config is allowed, if the software rewrites its config on install.
 
-## External ansible roles/collections
-
-Install with ansible-galaxy collection install
-
-- `kewlfft.aur`
-
 ## Staging environment:
 
 The playbook can be run against the staging environment by executing `./run_staging` and `./run_staging_upgrade`.
