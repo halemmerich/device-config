@@ -1,0 +1,20 @@
+ls #!/bin/bash
+
+MOUNTDIR="$1"
+
+systemctl stop docker_{{ item.id }}
+
+{% for current in item.data %}
+
+DATA="{{ current }}/"
+DATA_TARGET="docker/{{ item.id }}/{{ current }}"
+
+mkdir -p "$MOUNTDIR"/"$DATA_TARGET"; (( RC |= $? ))
+
+rsync_backup "$DATA" "$DATA_TARGET"; (( RC |= $? ))
+
+{% endfor %}
+
+systemctl start docker_{{ item.id }}
+
+exit $RC

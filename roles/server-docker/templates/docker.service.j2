@@ -1,0 +1,13 @@
+[Unit]
+Description=Docker compose based {{ item.id }} server
+Wants=network.target
+
+[Service]
+WorkingDirectory=/opt/docker/{{ item.id }}/
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/bin/docker compose start
+ExecStop=/bin/docker compose stop
+
+[Install]
+WantedBy=multi-user.target

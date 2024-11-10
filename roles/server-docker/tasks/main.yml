@@ -1,0 +1,88 @@
+- name: 'Install dependencies'
+  package:
+    name:
+    - docker
+    state: present
+  tags:
+    - install
+
+- name: 'Create service'
+  template:
+    src: 'docker.service.j2'
+    dest: '/etc/systemd/system/docker-{{ item.id }}.service'
+    mode: '0644'
+  register: systemd
+  loop: "{{ docker_servers }}"
+  tags:
+    - config
+
+- name: 'Create backup script'
+  template:
+    src: "backup/backup.sh.j2"
+    dest: "/usr/local/lib/backupscripts/backup/{{ item.id }}.sh"
+    mode: '0700'
+  loop: "{{ docker_servers }}"
+  tags:
+    - config
+
+- name: 'Create restore script'
+  template:
+    src: "backup/restore.sh.j2"
+    dest: "/usr/local/lib/backupscripts/restore/{{ item.id }}.sh"
+    mode: '0700'
+  loop: "{{ docker_servers }}"
+  tags:
+    - config
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  when: systemd.changed
+  tags:
+    - config
+
+- name: 'Create data folders'
+  file:
+    path: "{{ item.1.path }}"
+    owner: "{{ item.1.user }}"
+    group: "{{ item.1.group }}"
+    state: "directory"
+    mode: '0700'
+  loop: "{{ docker_servers | subelements('data', skip_missing=True)  }}"
+  tags:
+    - config
+    
+- community.general.ufw:
+    rule: allow
+    port: "{{ item.1.port }}"
+    proto: "{{ item.1.proto }}"
+  loop: "{{ docker_servers | subelements('ports', skip_missing=True) }}"
+  when: ufw_enabled is defined
+  tags:
+    - config
+
+- name: 'Create compose file'
+  copy:
+    dest: "/opt/docker/{{ item.id }}/docker-compose.yml"
+    content: "{{ item.config }}"
+    mode: '0700'
+  loop: "{{ docker_servers }}"
+  tags:
+    - config
+
+- name: 'Install containers'
+  command: "docker compose create"
+  args:
+    chdir: "/opt/docker/{{ item.id }}"
+  loop: "{{ docker_servers }}"
+  tags:
+    - config
+
+- name: 'Start service'
+  systemd:
+    name: 'docker-{{ item.id }}'
+    enabled: true
+    state: started
+  loop: "{{ docker_servers }}"
+  tags:
+    - config

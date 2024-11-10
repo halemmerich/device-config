@@ -125,6 +125,12 @@
   roles:
   - server-backup
   - server-linuxgsm
+  
+- hosts: server_docker
+  become: yes
+  roles:
+  - server-backup
+  - server-docker
 
 - hosts: ufw
   become: yes
