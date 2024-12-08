@@ -14,7 +14,7 @@ function checkMetaData {
 function create {	
 	STORAGE_META_DIR="$1"
 	
-	[ ! -f "$STORAGE_META_DIR/.created" ] && storage_pool create "$@"
+	[ ! -f "$STORAGE_META_DIR/.created" ] && CALLED_FROM_SUBCOMMAND=yes storage_pool create "$@"
 	
 	[ ! -d "$STORAGE_META_DIR/keyfiles" ] && echo Keyfiles missing, invalid meta data dir && exit 1
 	[ -f "$STORAGE_META_DIR/.created" ] && [ "$(cat "$STORAGE_META_DIR/.created")" == "single" ] && echo Already initialized, exiting && exit 1
@@ -25,6 +25,8 @@ function create {
 }
 
 function add {
+	[ "$CALLED_FROM_POOL" == yes ] || { echo Only use this command from storage_pool && exit 1; }
+	
 	STORAGE_META_DIR="$1"
 	checkMetaData "$STORAGE_META_DIR"
 	

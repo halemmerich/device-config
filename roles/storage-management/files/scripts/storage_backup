@@ -7,6 +7,8 @@ OVERALL_RC=0
 
 [ -f /etc/backupcfg ] && . /etc/backupcfg
 
+[ "$DEBUG" = 1 ] && set -x
+
 function xmpp {
 	if [ -f "$1" ]
 	then
@@ -59,11 +61,8 @@ function backup {
 	
 	LOCKFILE="/var/lock/backup_$IDENTIFIER"
 
-	if [ -e "$LOCKFILE" ]
-	then
-		return 1
-	fi
-
+	[ -e "$LOCKFILE" ] && { xmpp Lockfile $LOCKFILE exists, stopping backup; return 1; }
+	
 	trap cleanup EXIT
 
 	touch "$LOCKFILE"
@@ -297,6 +296,7 @@ if [ -z "$MODE" ]
 then
 	echo "Usage:
 storage_backup auto
+  Run automatic backups as defined in /etc/storage/autobackup
 storage_backup backup <metadir>
 storage_backup check <metadir>
 storage_backup create <metadir> rsync
@@ -394,7 +394,7 @@ then
 	[ -f /etc/storage/autobackup ] || { echo No autobackup configured; exit 1; }
 	for C in $(cat /etc/storage/autobackup)
 	do
-		storage_pool mount "$C" || { echo Mounting failed for $STORAGE_META_DIR; exit 1; }
+		storage_pool mount "$C" || echo Mounting failed for $STORAGE_META_DIR || continue
 		if [ "$(date +%w)" -eq 0 ]
 		then
 			backup "$C" weekly

@@ -4,6 +4,8 @@ TYPE="$1"
 
 [ ! -f /etc/storage/maintenance/$TYPE ] && { echo Storage maintenance config for type $TYPE not found; exit 1; }
 
+[ "$DEBUG" = 1 ] && set -x
+
 for C in $(cat /etc/storage/maintenance/$TYPE)
 do
 	storage_pool maintenance "$C" $TYPE

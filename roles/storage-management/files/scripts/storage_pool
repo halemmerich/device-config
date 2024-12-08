@@ -8,6 +8,9 @@
 
 STORAGE_META_DIR="$2"
 
+#resolve storage meta data directory agains PATH_POOLS
+echo "$STORAGE_META_DIR" | grep '^/' > /dev/null && C="${PATH_POOLS}${STORAGE_META_DIR}" 
+
 function openDevices {
 	STORAGE_META_DIR="$1"
 	KEYFILES="$(ls -A "$STORAGE_META_DIR/keyfiles" | grep keyfile_)"
@@ -35,7 +38,10 @@ function closeDevices {
 
 function defer {
 	STORAGE_META_DIR="$1"
-	storage_pool_$(cat $STORAGE_META_DIR/.created) $COMMAND "$@"
+	TYPE=$(cat $STORAGE_META_DIR/.created)
+	export CALLED_FROM_POOL=yes
+	
+	[ -n "$TYPE" ] && storage_pool_${TYPE} ${COMMAND} "$@" || echo No pool type detected
 }
 
 function create {
@@ -45,6 +51,8 @@ function create {
 	mkdir -p "$STORAGE_META_DIR/keyfiles"
 	touch "$STORAGE_META_DIR/devices"
 	touch "$STORAGE_META_DIR/.created"
+
+	[ "$CALLED_FROM_SUBCOMMAND" == yes ] || echo Warning, this only created a very basic pool structure, consider using one of the storage_pool_* scripts
 }
 
 function add {
@@ -94,7 +102,22 @@ storage_pool status <metadir> <type>
 storage_pool add <metadir> <device>
 storage_pool automount <metadir>
 storage_pool openDevices <metadir>
-storage_pool closeDevices <metadir>"
+storage_pool closeDevices <metadir>
+
+Example 1:
+  Create and mount a two device encrypted btrfs raid 1 pool for backing up a directory:
+
+storage_pool_btrfs create poolDirName
+storage_block_crypto create poolDirName/keyfiles /dev/blockDev1
+storage_block_crypto create poolDirName/keyfiles /dev/blockDev2
+storage_pool add poolDirName /dev/blockDev1
+storage_pool add poolDirName /dev/blockDev2
+storage_pool changeProfile raid1 raid1
+storage_pool mount poolDirName
+storage_backup create poolDirName rsync
+storage_backup add poolDirName /path/to/backup/source
+storage_backup backup
+"
 
 echo -e "\n"
 

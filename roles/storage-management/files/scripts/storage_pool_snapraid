@@ -29,7 +29,7 @@ function create {
 	STORAGE_META_DIR="$1"
 	MERGERFS_OPTS="$2"
 	
-	[ ! -f "$STORAGE_META_DIR/.created" ] && storage_pool create "$@"
+	[ ! -f "$STORAGE_META_DIR/.created" ] && CALLED_FROM_SUBCOMMAND=yes storage_pool create "$@"
 	
 	[ -z "$MERGERFS_OPTS" ] && MERGERFS_OPTS="-ominfreespace=50G,fsname=$(basename $(pwd $STORAGE_META_DIR)),category.create=mfs,allow_other"
 	[ ! -d "$STORAGE_META_DIR/keyfiles" ] && echo Keyfiles missing, invalid meta data dir && exit 1
@@ -44,6 +44,8 @@ function create {
 }
 
 function add {
+	[ "$CALLED_FROM_POOL" == yes ] || { echo Only use this command from storage_pool && exit 1; }
+
 	STORAGE_META_DIR="$1"
 	DEVICE="$2"
 	TYPE="$3"

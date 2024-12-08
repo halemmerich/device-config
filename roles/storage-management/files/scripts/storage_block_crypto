@@ -3,6 +3,8 @@
 
 ! command -v cryptsetup 2>&1 > /dev/null && echo cryptsetup missing && exit 1
 
+[ "$DEBUG" = 1 ] && set -x
+
 function getDevicesFromKeydir {
 	KEYDIR=$1
 	[ -z "$KEYDIR" ] && echo Key directory path missing && exit 1
@@ -248,7 +250,7 @@ It will not overwrite the complete disk with random data, this should be done be
 
 	lsblk
 
-	cryptsetup luksFormat --sector-size=4096 --header "$HEADER" --key-file "$KEY" --align-payload 0 $ADDITIONAL_PARAMS "$DEVICE"
+	cryptsetup luksFormat --header "$HEADER" --key-file "$KEY" --align-payload 0 $ADDITIONAL_PARAMS "$DEVICE"
 
 	chmod 400 "$KEY" "$HEADER"
 	cryptsetup open --key-file "$KEY" --header "$HEADER" "$DEVICE" "$ID_CRYPTED"
@@ -258,7 +260,7 @@ It will not overwrite the complete disk with random data, this should be done be
 
 	if [ "$WITH_INTEGRITY" = "yes" ]
 	then
-		integritysetup format --sector-size=4096 --integrity crc32 --no-wipe "$CRYPTED_DEVICE"
+		integritysetup format --integrity crc32 --no-wipe "$CRYPTED_DEVICE"
 		integritysetup open --integrity crc32 "$CRYPTED_DEVICE" "$ID_INTEGRITY"
 		integritysetup close "$ID_INTEGRITY"
 	fi

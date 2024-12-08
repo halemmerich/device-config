@@ -6,6 +6,8 @@
 
 ! command -v smartctl 2>&1 > /dev/null && echo smartmontools missing && exit 1
 
+[ "$DEBUG" = 1 ] && set -x
+
 function echoerr {
 	echo "$@" 1>&2;
 }
@@ -73,7 +75,7 @@ function assertMounted {
 
 function assertUnmounted {
 	STORAGE_META_DIR="$1"
-	mountpoint "$(getMountpoint "$STORAGE_META_DIR")" || exit 1
+	mountpoint "$(getMountpoint "$STORAGE_META_DIR")" && exit 1
 }
 
 function getMountpoint {
