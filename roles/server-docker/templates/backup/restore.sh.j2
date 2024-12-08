@@ -2,15 +2,15 @@
 
 MOUNTDIR="$1"
 
-systemctl stop docker_{{ item.id }}
+systemctl stop {{ item.id }}
 
 {% for current in item.data %}
 
-DATA_PATH="{{ current }}"
-rsync_restore "docker/{{ item.id }}/{{ current }}" ${DATA_PATH}
+DATA_PATH="{{ current.path }}"
+rsync_restore "docker/{{ item.id }}/{{ current.path }}" ${DATA_PATH}
 
 chown {{ item.id }}:{{ item.id }} -R ${DATA_PATH}
 
 {% endfor %}
 
-systemctl start docker_{{ item.id }}
+systemctl start {{ item.id }}

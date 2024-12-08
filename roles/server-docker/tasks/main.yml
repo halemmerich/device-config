@@ -9,7 +9,7 @@
 - name: 'Create service'
   template:
     src: 'docker.service.j2'
-    dest: '/etc/systemd/system/docker-{{ item.id }}.service'
+    dest: '/etc/systemd/system/{{ item.id }}.service'
     mode: '0644'
   register: systemd
   loop: "{{ docker_servers }}"
@@ -80,7 +80,7 @@
 
 - name: 'Start service'
   systemd:
-    name: 'docker-{{ item.id }}'
+    name: '{{ item.id }}'
     enabled: true
     state: started
   loop: "{{ docker_servers }}"
