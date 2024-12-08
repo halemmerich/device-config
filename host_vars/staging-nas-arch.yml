@@ -28,7 +28,7 @@ users:
 
 server_samba_users:
   - username: user
-    password: "{{ lookup('password', 'credentials/{{ fqdn }}/samba/martin length=12') }}"
+    password: "{{ lookup('password', 'credentials/{{ fqdn }}/samba/user length=12') }}"
 
 server_samba_shares:
   - name: testshare
