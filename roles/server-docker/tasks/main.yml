@@ -78,6 +78,14 @@
   tags:
     - config
 
+- name: 'Enable and start docker'
+  systemd:
+    name: 'docker'
+    enabled: true
+    state: started
+  tags:
+    - config
+
 - name: 'Start service'
   systemd:
     name: '{{ item.id }}'
