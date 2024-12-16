@@ -44,8 +44,8 @@
 - name: 'Create data folders'
   file:
     path: "{{ item.1.path }}"
-    owner: "{{ item.1.user }}"
-    group: "{{ item.1.group }}"
+    owner: "{{ item.1.user | default('root') }}"
+    group: "{{ item.1.group | default('root') }}"
     state: "directory"
     mode: '0700'
   loop: "{{ docker_servers | subelements('data', skip_missing=True)  }}"
@@ -58,6 +58,15 @@
     proto: "{{ item.1.proto }}"
   loop: "{{ docker_servers | subelements('ports', skip_missing=True) }}"
   when: ufw_enabled is defined
+  tags:
+    - config
+
+- name: 'Create docker compose folder'
+  file:
+    path: "/opt/docker/{{ item.id }}"
+    state: "directory"
+    mode: '0700'
+  loop: "{{ docker_servers }}"
   tags:
     - config
 
