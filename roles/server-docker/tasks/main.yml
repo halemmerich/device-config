@@ -22,6 +22,7 @@
     dest: "/usr/local/lib/backupscripts/backup/{{ item.id }}.sh"
     mode: '0700'
   loop: "{{ docker_servers }}"
+  when: item.backup | default(True)
   tags:
     - config
 
@@ -31,6 +32,7 @@
     dest: "/usr/local/lib/backupscripts/restore/{{ item.id }}.sh"
     mode: '0700'
   loop: "{{ docker_servers }}"
+  when: item.backup | default(True)
   tags:
     - config
 
