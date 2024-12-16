@@ -1,14 +1,16 @@
 #!/bin/bash
 
-MOUNTDIR=$(mktemp -d)
 
 COMMAND=$1
 
 {% if backup_server_host is defined %}
+TYPE=SSHFS
+MOUNTDIR=$(mktemp -d)
 sshfs -p {{ backup_server_port }} {{ backup_server_user }}@{{ backup_server_host }}:{{ backup_server_path }} "$MOUNTDIR"
 
 SSHFS_RC=$?
 {% else %}
+TYPE=LOCAL
 MOUNTDIR={{ backup_server_path }}
 {% endif %}
 
@@ -80,5 +82,6 @@ SENDMAIL_COMMAND="sendmail admin@{{ domain }}"
 
 [ 0 -ne "$OVERALL_RC" ] && $SENDMAIL_COMMAND < $REPORT_MAIL_FILE
 
-umount "$MOUNTDIR" && rm -r "$MOUNTDIR"
+[ "$TYPE" = "SSHFS" ] && umount "$MOUNTDIR" && rm -r "$MOUNTDIR"
+
 rm -r $REPORT_MAIL_DIR
