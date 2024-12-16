@@ -39,7 +39,7 @@ function backup {
 	then
 		STORAGE_META_DIR="$1"
 	else
-		echo Storage meta dir needs to be given as first parameter
+		xmpp Storage meta dir needs to be given as first parameter
 		return 1
 	fi
 
@@ -286,6 +286,8 @@ function backup {
 		xmpp "$BACKUP_FOLDER does not contain usable backup config file! Aborting..."
 		return 1
 	fi
+
+	rm -f "$LOCKFILE"
 }
 
 MODE="$1"
