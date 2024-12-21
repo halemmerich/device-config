@@ -1,0 +1,17 @@
+Mode                    sv
+Socket                  local:/run/opendkim/opendkim.sock
+UserID                  opendkim:opendkim
+UMask                   002
+PidFile                 /var/run/opendkim/opendkim.pid
+AutoRestart             yes
+AutoRestartRate         10/1h
+Syslog                  yes
+SyslogSuccess           yes
+LogWhy                  yes
+Canonicalization        relaxed/simple
+InternalHosts           refile:/etc/opendkim/trusted
+ExternalIgnoreList      refile:/etc/opendkim/trusted
+SigningTable            refile:/etc/opendkim/signing.table
+KeyTable                refile:/etc/opendkim/key.table
+SignatureAlgorithm      rsa-sha256
+OversignHeaders         From

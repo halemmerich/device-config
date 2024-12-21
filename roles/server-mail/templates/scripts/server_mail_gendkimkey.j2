@@ -1,0 +1,27 @@
+#!/bin/bash
+[ -z "$1" ] && echo mail data needed: DOMAIN && exit 1
+
+DOMAIN="$1"
+
+KEYDIR=/etc/opendkim/keys/
+SELECTOR=$(date +%Y%m%d)
+ID=${DOMAIN}
+KEYFILE="${KEYDIR}${DOMAIN}/${SELECTOR}.private"
+
+mkdir -p "${KEYDIR}/${DOMAIN}/"
+opendkim-genkey -D "${KEYDIR}/${DOMAIN}/" -d "${DOMAIN}" -b 2048 -r -s "${SELECTOR}"
+
+chown -R opendkim:opendkim "${KEYDIR}/${DOMAIN}/"
+chmod -R 700 "${KEYDIR}/${DOMAIN}/"
+
+echo '*'"@${DOMAIN} ${ID}" >> /etc/opendkim/signing.table
+echo "${ID} ${DOMAIN}:${SELECTOR}:${KEYFILE}" >> /etc/opendkim/key.table
+
+echo Set this DNS record for SPF:
+echo @ TXT v=spf1 +mx +a -all
+
+echo Set this DNS record for DKIM:
+cat ${KEYDIR}/${DOMAIN}/${SELECTOR}.txt
+
+echo Set this TXT DNS record for DMARC:
+echo "_dmarc TXT v=DMARC1; p=none; rua=mailto:mailauth-reports@{{ domain }}; ruf=mailto:forensic@{{ domain }}; adkim=s; fo=1"

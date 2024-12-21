@@ -3,6 +3,11 @@
     - config
 - include_tasks: "{{ ansible_os_family | lower}}.yml"
 
+- name: Adding user postfix to opendkim group
+  user: name=postfix
+        groups=opendkim
+        append=yes
+
 - name: Create a new database
   community.mysql.mysql_db:
     name: postfix
@@ -104,9 +109,23 @@
     state: directory
   loop:
     - { path: "/var/vmail", mode: "770", owner: "vmail", group: "vmail" }
+    - { path: "/etc/opendkim", mode: "700", owner: "opendkim", group: "opendkim" }
+    - { path: "/etc/opendkim/keys", mode: "700", owner: "opendkim", group: "opendkim" }
     - { path: "/etc/dovecot", mode: "770", owner: "dovecot", group: "dovecot" }
     - { path: "/etc/dovecot/conf.d", mode: "770", owner: "dovecot", group: "dovecot" }
     - { path: "/usr/local/lib/sievetemplates", mode: "700", owner: "root", group: "root" }
+  notify:
+    - restart_mail
+  tags:
+    - config
+
+- name: Create empty tables for opendkim
+  ansible.builtin.file:
+    path: "/etc/opendkim/{{ item }}"
+    state: touch
+  loop:
+    - key.table
+    - signing.table
   notify:
     - restart_mail
   tags:
@@ -137,10 +156,13 @@
     - { src: "postfix/master.cf.j2", dest: "/etc/postfix/master.cf"}
     - { src: "postfix/main.cf.j2", dest: "/etc/postfix/main.cf"}
     - { src: "postfix/aliases.j2", dest: "/etc/postfix/aliases"}
+    - { src: "opendkim/trusted.j2", dest: "/etc/opendkim/trusted"}
+    - { src: "opendkim/opendkim.conf.j2", dest: "/etc/opendkim/opendkim.conf"}
     - { src: "scripts/server_mail_addalias.j2", dest: "/usr/local/bin/server_mail_addalias"}
     - { src: "scripts/server_mail_addaliasregex.j2", dest: "/usr/local/bin/server_mail_addaliasregex"}
     - { src: "scripts/server_mail_adduser.j2", dest: "/usr/local/bin/server_mail_adduser"}
     - { src: "scripts/server_mail_adddomain.j2", dest: "/usr/local/bin/server_mail_adddomain"}
+    - { src: "scripts/server_mail_gendkimkey.j2", dest: "/usr/local/bin/server_mail_gendkimkey"}
     - { src: "scripts/server_mail_resetpwd.j2", dest: "/usr/local/bin/server_mail_resetpwd"}
     - { src: "scripts/server_mail_resetquota.j2", dest: "/usr/local/bin/server_mail_resetquota"}
     - { src: "scripts/server_mail_syncsogopwds.j2", dest: "/usr/local/bin/server_mail_syncsogopwds"}
@@ -303,6 +325,7 @@
   loop:
     - postfix
     - dovecot
+    - opendkim
   notify:
     - restart_mail
   tags:

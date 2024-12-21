@@ -7,14 +7,22 @@ SPOOL=/var/spool/postfix/
 SPOOL_TARGET=mail/spool/
 AUTOCONF="/usr/local/share/webapps/default/.well-known/autoconfig/mail/config-v1.1.xml"
 AUTOCONF_TARGET=mail/autoconf/config-v1.1.xml
+DKIM_KEYS="/etc/opendkim/keys"
+DKIM_KEYS_TARGET=mail/dkim/keys
+DKIM_KEYTABLE="/etc/opendkim/key.table"
+DKIM_KEYTABLE_TARGET=mail/dkim/
+DKIM_SIGNINGTABLE="/etc/opendkim/signing.table"
+DKIM_SIGNINGTABLE_TARGET=mail/dkim/
 
 mkdir -p "$MOUNTDIR"/$MAILDIR_TARGET; (( RC |= $? ))
 mkdir -p "$MOUNTDIR"/$SPOOL_TARGET; (( RC |= $? ))
 mkdir -p "$MOUNTDIR"/$( dirname $AUTOCONF_TARGET ); (( RC |= $? ))
+mkdir -p "$MOUNTDIR"/$DKIM_KEYS_TARGET; (( RC |= $? ))
 
 rsync_backup $MAILDIR $MAILDIR_TARGET
 rsync_backup $SPOOL $SPOOL_TARGET
 rsync_backup $AUTOCONF $AUTOCONF_TARGET; (( RC |= $? ))
+rsync_backup $DKIM_KEYS $DKIM_KEYS_TARGET; (( RC |= $? ))
 
 systemctl stop dovecot; (( RC |= $? ))
 systemctl stop postfix; (( RC |= $? ))

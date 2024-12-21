@@ -25,5 +25,11 @@ chown postfix:postfix -R /var/spool/postfix
 find /var/spool/postfix -type f -print0 | xargs -0 chmod 640
 find /var/spool/postfix -type d -print0 | xargs -0 chmod 750
 
+mkdir -p /etc/opendkim/keys
+chown -R opendkim:opendkim /etc/opendkim
+chmod 700 /etc/opendkim
+rsync_restore mail/dkim/ /etc/opendkim/
+
 systemctl restart postfix
 systemctl restart dovecot
+systemctl restart opendkim

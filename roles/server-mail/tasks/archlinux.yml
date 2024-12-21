@@ -5,6 +5,7 @@
     - postfix
     - postfix-mysql
     - pigeonhole
+    - opendkim
     state: present
   tags:
     - install

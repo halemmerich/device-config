@@ -9,6 +9,8 @@
     - dovecot-imapd
     - postfix
     - postfix-mysql
+    - opendkim
+    - opendkim-tools
     state: present
   tags:
     - install

@@ -7,34 +7,48 @@ DOMAIN_ID=$(mysql -u postfix -ppassword_postfix_db_user -D postfix -e "SELECT 1 
 
 if [ -z "$DOMAIN_ID" ]
 then
+
 	QUERY="INSERT IGNORE INTO postfix.virtual_domains (name) VALUES ('$DOMAIN');"
 	mysql --defaults-file=<(echo "[client]
 user=postfix
 password=password_postfix_db_user") -u postfix -D postfix -e "$QUERY"
 
-if [ -z "$PREVENTAUTO" -o ! "false" = "$PREVENTAUTOCONF" ]
-then
-	sed -i  '/<!-- END ansible managed block -->/a\
-  <emailProvider id="'$DOMAIN'">\
-    <domain>'$DOMAIN'</domain>\
-    <displayName>'$DOMAIN' mail service</displayName>\
-    <displayShortName>'$DOMAIN' mail</displayShortName>\
-    <incomingServer type="imap">\
-      <hostname>mail.{{ domain }}</hostname>\
-      <port>993</port>\
-      <socketType>SSL</socketType>\
-      <authentication>password-cleartext</authentication>\
-      <username>%EMAILADDRESS%</username>\
-    </incomingServer>\
-    <outgoingServer type="smtp">\
-      <hostname>mail.{{ domain }}</hostname>\
-      <port>465</port>\
-      <socketType>SSL</socketType>\
-      <authentication>password-cleartext</authentication>\
-      <username>%EMAILADDRESS%</username>\
-    </outgoingServer>\
-  </emailProvider>' /usr/local/share/webapps/default/.well-known/autoconfig/mail/config-v1.1.xml
-fi
+
+  KEYDIR=/etc/opendkim/keys/
+  SELECTOR=$(date +%Y%m%d)
+  ID=${DOMAIN}
+  KEYFILE="${KEYDIR}/${SELECTOR}.private"
+
+  if [ ! -e ""${KEYDIR}/${DOMAIN}/"" ]
+  then
+    server_mail_gendkimkeys "$DOMAIN"
+  else
+    echo There are already keys generated, ignoring
+  fi
+
+  if [ -z "$PREVENTAUTOCONF" -o ! "false" = "$PREVENTAUTOCONF" ]
+  then
+    sed -i  '/<!-- END ansible managed block -->/a\
+    <emailProvider id="'$DOMAIN'">\
+      <domain>'$DOMAIN'</domain>\
+      <displayName>'$DOMAIN' mail service</displayName>\
+      <displayShortName>'$DOMAIN' mail</displayShortName>\
+      <incomingServer type="imap">\
+        <hostname>mail.{{ domain }}</hostname>\
+        <port>993</port>\
+        <socketType>SSL</socketType>\
+        <authentication>password-cleartext</authentication>\
+        <username>%EMAILADDRESS%</username>\
+      </incomingServer>\
+      <outgoingServer type="smtp">\
+        <hostname>mail.{{ domain }}</hostname>\
+        <port>465</port>\
+        <socketType>SSL</socketType>\
+        <authentication>password-cleartext</authentication>\
+        <username>%EMAILADDRESS%</username>\
+      </outgoingServer>\
+    </emailProvider>' /usr/local/share/webapps/default/.well-known/autoconfig/mail/config-v1.1.xml
+  fi
 
 else
 	echo $DOMAIN already exists

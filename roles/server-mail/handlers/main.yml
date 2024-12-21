@@ -5,6 +5,7 @@
   loop:
     - postfix
     - dovecot
+    - opendkim
 
 - name: run_newaliases
   command:
