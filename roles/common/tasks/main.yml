@@ -84,6 +84,13 @@
   tags:
     - config
 
+- name: Configure nano
+  copy:
+    src: files/nano/nanorc
+    dest: /etc/nanorc
+  tags:
+    - config
+
 - name: 'Enable services'
   systemd:
     name: "systemd-timesyncd"
