@@ -1,11 +1,11 @@
 [Unit]
 Description=Docker compose based {{ item.id }} server
 Wants=network.target
-
-[Service]
 {% for current in item.system_depends | default([]) %}
 Requires={{ current }}.service
 {% endfor %}
+
+[Service]
 WorkingDirectory=/opt/docker/{{ item.id }}/
 Type=oneshot
 RemainAfterExit=true
