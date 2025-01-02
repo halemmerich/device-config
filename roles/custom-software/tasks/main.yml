@@ -141,3 +141,11 @@
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - config
+
+- name: Run custom commands
+  command: "{{ item.1.cmd }}"
+  loop: "{{ custom_software_commands | default([]) | subelements('cmds') }}"
+  when:
+    - ( item.0.group == "all" or item.0.group in group_names )
+  tags:
+    - config
