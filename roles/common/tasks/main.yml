@@ -77,17 +77,15 @@
     path: /etc/environment
     line: LESS={{ environment_less | default('--mouse --wheel-lines=3') }}
 
-- name: Configure tmux
+- name: Configure tools
   copy:
-    src: files/tmux/tmux.conf
-    dest: /etc/tmux.conf
-  tags:
-    - config
-
-- name: Configure nano
-  copy:
-    src: files/nano/nanorc
-    dest: /etc/nanorc
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  loop:
+    - { src: "files/tmux/tmux.conf", dest: "/etc/tmux.conf" }
+    - { src: "files/nano/nanorc", dest: "/etc/nanorc" }
+    - { src: "files/htop/htoprc", dest: "/etc/htoprc" }
   tags:
     - config
 
