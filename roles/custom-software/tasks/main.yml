@@ -149,3 +149,13 @@
     - ( item.0.group == "all" or item.0.group in group_names )
   tags:
     - config
+
+- name: Add custom lines to files
+  lineinfile:
+    path: "{{ item.1.dest }}"
+    line: "{{ item.1.line }}"
+  loop: "{{ custom_software_lineinfile | default([]) | subelements('files') }}"
+  when:
+    - ( item.0.group == "all" or item.0.group in group_names )
+  tags:
+    - config
