@@ -124,6 +124,6 @@ bindsym XF86AudioPlay exec playerctl play-pause
 bindsym XF86AudioNext exec playerctl next
 bindsym XF86AudioPrev exec playerctl previous
 
-bindsym $mod+Print exec grim ~/screenshot_$$(date +"%Y-%m-%d_%H:%M:%S.png")
-bindsym $mod+Shift+Print exec slurp | grim -g - ~/screenshot_area_$$(date +"%Y-%m-%d_%H:%M:%S.png")
-bindsym $mod+Alt+Print exec desktop_sway_screenrecord -f ~/screenrecording_$$(date +"%Y-%m-%d_%H:%M:%S.mkv")
+bindsym $mod+Print exec bash -c 'mkdir -p ~/Screenshots; grim ~/Screenshots/screenshot_$$(date +"%Y-%m-%d_%H:%M:%S.png")'
+bindsym $mod+Shift+Print exec bash -c 'mkdir - p ~/Screenshots; slurp | grim -g - ~/Screenshots/screenshot_area_$$(date +"%Y-%m-%d_%H:%M:%S.png")'
+bindsym $mod+Alt+Print exec bash -c 'desktop_sway_screenrecord -f ~/Screenshots/screenrecording_$$(date +"%Y-%m-%d_%H:%M:%S.mkv")'
