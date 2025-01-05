@@ -20,7 +20,7 @@ function getDevicesFromKeydir {
 function mapAll {
 	KEYDIR=$1
 	DEVICE=$2
- 
+
 	[ -z "$KEYDIR" ] && echo Key directory path missing && return 1
 	! [ -d "$KEYDIR" ] && echo Key directory missing && return 1
 	[ $(ls "$KEYDIR/" | wc -l) -eq 0 ] && echo Keydir is empty && return 1
@@ -137,9 +137,14 @@ function backup {
 }
 
 function backupSingle {
+	! command -v qrencode 2>&1 > /dev/null && echo qrencode missing && exit 1
+	! command -v rsvg-convert 2>&1 > /dev/null && echo rsvg-convert missing && exit 1
+	! command -v hexdump 2>&1 > /dev/null && echo hexdump missing && exit 1
+	! command -v shred 2>&1 > /dev/null && echo shred missing && exit 1
+
 	KEYDIR="$1"
 	DESTINATION=`pwd`
-	NAME="_$(basename "$(dirname "$KEYDIR")")"
+	NAME="$(basename "$(dirname "$KEYDIR")")"
 
 
 	if [ -z "$KEYDIR" ]
@@ -163,13 +168,13 @@ function backupSingle {
 		if [ -f $HEADER -a -f $KEY ]
 		then
 			MASTERKEY="$WORKDIR/${COUNTER}_master_$ID"
-			QR="$WORKDIR/${COUNTER}_qr_$ID.png"
+			QR="$WORKDIR/${COUNTER}_qr_$ID.svg"
 			HEADERINFO="$WORKDIR/${COUNTER}_header_$ID.txt"
 			echo YES | cryptsetup luksDump --dump-master-key --master-key-file "$MASTERKEY" --key-file "$KEY" --header "$HEADER" DUMMYDEVICENOTUSED >> "$HEADERINFO" || exit 1
 			sed -i -e "$ d" "$HEADERINFO"
 			echo -n -e "MK:\n" >> "$HEADERINFO"
 			hexdump "$MASTERKEY" >> "$HEADERINFO"
-			qrencode -8 -l H -r "$MASTERKEY" -o "$QR"
+			qrencode -8 -l H -t svg -r "$MASTERKEY" -o "$QR"
 		fi
 	done
 
@@ -183,37 +188,54 @@ function backupSingle {
 		COMMAND="( ";
 		COUNTER=0
 		LINE=""
-		PAGE=""
+		PAGE=0
 
-		for C in *
+		BLOCK_HEIGHT=70
+		OFFSET=5
+		TITLE_HEIGHT=5
+		TITLE_OFFSET=10
+		FONT_HEIGHT=3
+		SPACING=1
+
+		SVG_HEADER='<svg width="210mm" height="297mm" xmlns="http://www.w3.org/2000/svg"><g>'
+		SVG_FOOTER='</g></svg>'
+		PAGE_TITLE='<text y="10mm" x="'$OFFSET'mm" style="font-family:monospace;font-size:'$TITLE_HEIGHT'mm;">'"KEY AND HEADER BACKUP FOR: $NAME"'</text>'
+
+		echo "$SVG_HEADER" > page_$PAGE.svg
+
+		PAGES=$(( $(ls *header* | wc -l) / 4 + 1 ))
+
+		for C in *header*
 		do
-			case "$C" in
-			*.txt)
-				LINE="$LINE ( -font NimbusMonoPS-Regular -pointsize 12 text:$C -gravity center -trim "
-			;;
-			*.png)
-				LINE="$LINE $C -gravity west +append ) "
-			;;
-			esac
+			LINESPACE=0
+			cat "$C" | while read C; do echo '<text y="'$(( TITLE_HEIGHT + TITLE_OFFSET + OFFSET + COUNTER * BLOCK_HEIGHT + LINESPACE++ * ( FONT_HEIGHT + SPACING ) ))'mm" x="'$OFFSET'mm" style="font-family:monospace;font-size:'$FONT_HEIGHT'mm;">'"$C"'</text>' >> page_$PAGE.svg; done
+
+			IMAGE=$(echo "$C" | sed -e "s|_header_|_qr_|" | sed -e "s|.txt|.svg|")
+ 			#Editing the XML this way is a hack and will stop working when the XML declaration is longer than one line and when qrencode changes the svg generation
+ 			cat $IMAGE | grep -v "<?" | sed -e 's|svg width|svg y="'$(( TITLE_HEIGHT + TITLE_OFFSET + COUNTER * BLOCK_HEIGHT ))'mm" x="140mm" width|' >> page_$PAGE.svg
 
 			COUNTER=$(( COUNTER + 1 ))
 
-			if [ $(( COUNTER % 8 )) -eq 0 ]
+			if [ $(( COUNTER % 4 )) -eq 0 ]
 			then
-				COMMAND="$COMMAND ( $LINE -append ) "
-				PAGE=""
-				LINE=""
+				echo "$PAGE_TITLE" >> page_$PAGE.svg
+				echo '<text y="290mm" x="180mm" style="font-family:monospace;font-size:'$FONT_HEIGHT'mm;">'"$PAGE/$PAGES"'</text>' >> page_$PAGE.svg
+				echo "$SVG_FOOTER" >> page_$PAGE.svg
+				PAGE=$(( PAGE + 1 ))
+				COUNTER=0
+				echo "$SVG_HEADER" > page_$PAGE.svg
 			fi
 		done
 
-		if [ $(( COUNTER % 8)) -ne 0 ]
+		if [ $(( COUNTER % 4)) -ne 0 ]
 		then
-			COMMAND="$COMMAND ( $LINE -append ) "
+			echo "$PAGE_TITLE" >> page_$PAGE.svg
+			echo '<text y="290mm" x="180mm" style="font-family:monospace;font-size:'$FONT_HEIGHT'mm;">'"$PAGE/$PAGES"'</text>' >> page_$PAGE.svg
+			echo "$SVG_FOOTER" >> page_$PAGE.svg
 		fi
 
-		COMMAND="$COMMAND )"
-		magick -page a4 $COMMAND -gravity north backup.pdf
-		mv backup.pdf "$DESTINATION/backup$NAME.pdf"
+		rsvg-convert page_*.svg -f pdf -o backup.pdf
+		mv backup.pdf "$DESTINATION/backup_$NAME.pdf"
 	fi
 
 	shred "$WORKDIR/"*
@@ -243,7 +265,7 @@ function create {
 
 It will not overwrite the complete disk with random data, this should be done before if needed."
 	read -p "Continue (y/n)?" CHOICE
-	case "$CHOICE" in 
+	case "$CHOICE" in
 		y|Y ) ;;
 		n|N ) exit 1;;
 		* ) echo "invalid input"; exit 1;;
