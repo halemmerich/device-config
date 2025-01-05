@@ -119,18 +119,22 @@ function unmapSingle {
 
 function backup {
 	KEYDIR="$1"
-	DESTINATION=`pwd`
+	WORKING_DIR=`pwd`
 
 	if [ -z "$KEYDIR" ]
 	then
 		BACKUP_DEST="$(mktemp -d)"
 		POOLS=/etc/storage/pools
-		for C in $(ls "$POOLS")
+		for CURRENT_POOL in $(ls "$POOLS")
 		do
 			cd "$BACKUP_DEST"
-			backupSingle "$POOLS/$C/keyfiles"
+			backupSingle "$POOLS/$CURRENT_POOL/keyfiles"
+			cd "$BACKUP_DEST"
+
+			mkdir "${CURRENT_POOL}_keyfiles"
+			cp "$POOLS/$CURRENT_POOL/keyfiles/"* "${CURRENT_POOL}_keyfiles"
 		done
-		7za a -tzip -p -mem=AES256 "$DESTINATION/KEYBACKUP.zip" "$BACKUP_DEST/*"
+		7za a -tzip -p -mem=AES256 "$WORKING_DIR/KEYBACKUP.zip" "$BACKUP_DEST/*"
 	else
 		backupSingle "$KEYDIR"
 	fi
