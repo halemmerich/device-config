@@ -47,22 +47,20 @@ function backup {
 	then
 		INTERVAL=hourly
 	fi
-	
-	
+
 	MOUNTPOINT="$(getMountpoint "$STORAGE_META_DIR")"
 	RSYNC_PARAMS="-a --delete --ignore-errors"
-	RSYNC_PARAMS="-a"
 	BACKUP_FOLDER="$MOUNTPOINT"/backup
 	MARKER_FILE="$BACKUP_FOLDER"/.backup
 	IDENTIFIER=$(echo ${HOSTNAME}_$(getPoolName $STORAGE_META_DIR) | tr / _ | tr -s '_')
 	LOG_FILE="/var/log/backup_$IDENTIFIER"
 
 	FAILED=0
-	
+
 	LOCKFILE="/var/lock/backup_$IDENTIFIER"
 
 	[ -e "$LOCKFILE" ] && { xmpp Lockfile $LOCKFILE exists, stopping backup; return 1; }
-	
+
 	trap cleanup EXIT
 
 	touch "$LOCKFILE"
@@ -80,7 +78,7 @@ function backup {
 
 	function getLatestSnapshot {
 		FOLDER="$1"
-		
+
 		if [ -d "$FOLDER" -a -d "$FOLDER/.snapshots" ]
 		then
 			SNAPSHOT=`echo "$FOLDER/.snapshots/$(ls "$FOLDER/.snapshots/" | sort -g -u | tail -n 1)/snapshot/"`
@@ -107,7 +105,7 @@ function backup {
 	if [ -e "$BACKUP_FOLDER/.rsnapshot.conf" ]
 	then
 		xmpp "Perform backup with rsnapshot"
-		
+
 		CONTINUE=0
 		NEEDED_SPACE=0
 		for C in $(cat "$BACKUP_FOLDER/.rsnapshot.conf" | grep -i ^backup | tr -s '[:space:]' | cut -f 2)
@@ -121,18 +119,18 @@ function backup {
 			fi
 			NEEDED_SPACE=$(($NEEDED_SPACE + `du -m -d 0 "$CURRENT_SOURCE" | cut -f 1`))
 		done
-		
+
 		FREE_SPACE=`df --output=avail -m "$BACKUP_FOLDER" | tail -n 1`
 
 		FREE_SPACE=$(($FREE_SPACE + `du -d 0 -m "$BACKUP_FOLDER" | cut -f 1`))
-		
+
 		if [ "$NEEDED_SPACE" -gt "$FREE_SPACE" ]
 		then
 			xmpp Not enough space for backup
 			CONTINUE=1
 		fi
-		
-		
+
+
 		if [ "$CONTINUE" -eq 0 ]
 		then
 			echo ---------------
@@ -271,14 +269,14 @@ function backup {
 			fi
 
 			xmpp "$RESULT_MESSAGE"
-		
+
 		done <<< "$SNAPSHOT_FOLDERS"
-		
+
 		if [ "$FAILURES" -gt 0 ]
 		then
 			echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
 			xmpp "$FAILURES source folders could not be used"
-			
+
 			sendLogFile
 			return 1
 		fi
@@ -322,9 +320,7 @@ function createBackupRsnapshot {
 	mkdir -p "$MOUNT_DIR/backup"
 	touch "$MOUNT_DIR/backup/.backup"
 	BACKUP_NAME="$(getPoolName "$STORAGE_META_DIR")"
-	
-	
-	
+
 	cat << EOF > "$MOUNT_DIR/backup/.rsnapshot.conf"
 config_version	1.2
 snapshot_root	$MOUNT_DIR/backup
@@ -345,14 +341,14 @@ lockfile	/var/run/rsnapshot.$BACKUP_NAME.pid
 
 EOF
 
-	echo 
+	echo
 }
 
 function createBackup {
 	echo createBackup "$@"
 	STORAGE_META_DIR="$1"
 	TYPE="$2"
-	
+
 	case $TYPE in
 		rsync) createBackupRsync "$@" ;;
 		rsnapshot) createBackupRsnapshot "$@" ;;
@@ -365,10 +361,10 @@ function add {
 	STORAGE_META_DIR="$1"
 	SOURCE_DIR="$2"
 	[ -z "$SOURCE_DIR" ] && echo Source directory is missing && return 1
-	
+
 	[ -f "$(getMountpoint "$STORAGE_META_DIR")/backup/.backup" ] && TYPE=rsync
 	[ -f "$(getMountpoint "$STORAGE_META_DIR")/backup/.rsnapshot.conf" ] && TYPE=rsnapshot
-	
+
 	case $TYPE in
 		rsync) echo "$SOURCE_DIR" >> "$(getMountpoint "$STORAGE_META_DIR")/backup/.backup" ;;
 		rsnapshot) echo "backup		$SOURCE_DIR	." >> "$(getMountpoint "$STORAGE_META_DIR")/backup/.rsnapshot.conf" ;;
