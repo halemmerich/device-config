@@ -8,9 +8,14 @@ Requires={{ current }}.service
 [Service]
 WorkingDirectory=/opt/docker/{{ item.id }}/
 Type=oneshot
-RemainAfterExit=true
+{% for current in item.directory_depends | default([]) %}
+ExecStartPre=/usr/bin/test -d "{{ current }}"
+{% endfor %}
 ExecStart=/bin/docker compose start
 ExecStop=/bin/docker compose stop
+RemainAfterExit=yes
+RestartSec=30s
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
