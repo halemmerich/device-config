@@ -207,6 +207,12 @@ function backupSingle {
 
 		for C in *header*
 		do
+
+			if [ "$COUNTER" -eq 0 ]
+			then
+				echo "$SVG_HEADER" > page_$PAGE.svg
+			fi
+
 			LINESPACE=0
 			cat "$C" | while read C; do echo '<text y="'$(( TITLE_HEIGHT + TITLE_OFFSET + OFFSET + COUNTER * BLOCK_HEIGHT + LINESPACE++ * ( FONT_HEIGHT + SPACING ) ))'mm" x="'$OFFSET'mm" style="font-family:monospace;font-size:'$FONT_HEIGHT'mm;">'"$C"'</text>' >> page_$PAGE.svg; done
 
@@ -223,7 +229,6 @@ function backupSingle {
 				echo "$SVG_FOOTER" >> page_$PAGE.svg
 				PAGE=$(( PAGE + 1 ))
 				COUNTER=0
-				echo "$SVG_HEADER" > page_$PAGE.svg
 			fi
 		done
 
