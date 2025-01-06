@@ -125,5 +125,5 @@ bindsym XF86AudioNext exec playerctl next
 bindsym XF86AudioPrev exec playerctl previous
 
 bindsym $mod+Print exec bash -c 'mkdir -p ~/Screenshots; grim ~/Screenshots/screenshot_$$(date +"%Y-%m-%d_%H:%M:%S.png")'
-bindsym $mod+Shift+Print exec bash -c 'mkdir - p ~/Screenshots; slurp | grim -g - ~/Screenshots/screenshot_area_$$(date +"%Y-%m-%d_%H:%M:%S.png")'
+bindsym $mod+Shift+Print exec bash -c 'mkdir -p ~/Screenshots; slurp | grim -g - ~/Screenshots/screenshot_area_$$(date +"%Y-%m-%d_%H:%M:%S.png")'
 bindsym $mod+Alt+Print exec bash -c 'desktop_sway_screenrecord -f ~/Screenshots/screenrecording_$$(date +"%Y-%m-%d_%H:%M:%S.mkv")'
