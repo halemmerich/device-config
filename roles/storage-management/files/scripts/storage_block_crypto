@@ -177,8 +177,8 @@ function backupSingle {
 			echo YES | cryptsetup luksDump --dump-master-key --master-key-file "$MASTERKEY" --key-file "$KEY" --header "$HEADER" DUMMYDEVICENOTUSED >> "$HEADERINFO" || exit 1
 			sed -i -e "$ d" "$HEADERINFO"
 			echo -n -e "MK:\n" >> "$HEADERINFO"
-			hexdump "$MASTERKEY" >> "$HEADERINFO"
-			qrencode -8 -l H -t svg -r "$MASTERKEY" -o "$QR"
+			hexdump -X "$MASTERKEY" >> "$HEADERINFO"
+			qrencode -8 -l H -t svg -r "$MASTERKEY" -o "$QR" --margin 0
 		fi
 	done
 
@@ -189,25 +189,29 @@ function backupSingle {
 
 	if [ `ls | wc -l` -gt 0 ]
 	then
-		COMMAND="( ";
 		COUNTER=0
 		LINE=""
-		PAGE=0
+		PAGE=1
 
-		BLOCK_HEIGHT=70
-		OFFSET=5
+		OFFSET=7
 		TITLE_HEIGHT=5
-		TITLE_OFFSET=10
+		TITLE_OFFSET=5
 		FONT_HEIGHT=3
 		SPACING=1
+		BLOCK_HEIGHT=$(( ( 297 - TITLE_HEIGHT - TITLE_OFFSET - 2 * OFFSET ) / 4))
+		BLOCK_OFFSET=$(( OFFSET + TITLE_HEIGHT + TITLE_OFFSET ))
+		QR_HEIGHT=$(( BLOCK_HEIGHT - OFFSET ))
 
 		SVG_HEADER='<svg width="210mm" height="297mm" xmlns="http://www.w3.org/2000/svg"><g>'
 		SVG_FOOTER='</g></svg>'
-		PAGE_TITLE='<text y="10mm" x="'$OFFSET'mm" style="font-family:monospace;font-size:'$TITLE_HEIGHT'mm;">'"KEY AND HEADER BACKUP FOR: $NAME"'</text>'
+		PAGE_TITLE='<text y="'$OFFSET'mm" x="'$OFFSET'mm" style="font-family:monospace;font-size:'$TITLE_HEIGHT'mm;">'"KEY AND HEADER BACKUP FOR: $NAME"'</text>'
+		PAGE_FOOTER='<text y="'$(( 297 - OFFSET + FONT_HEIGHT ))'mm" x="'$OFFSET'mm" style="font-family:monospace;font-size:'$FONT_HEIGHT'mm;">'"$(date)"'</text>'
 
 		echo "$SVG_HEADER" > page_$PAGE.svg
 
-		PAGES=$(( $(ls *header* | wc -l) / 4 + 1 ))
+		PAGES=$(( $(ls *header* | wc -l) / 4 ))
+		# bash uses integer division, so add a page if needed
+		[ $(( $(ls *header* | wc -l) % 4 )) -ne 0 ] && PAGES=$(( PAGES + 1 ))
 
 		for C in *header*
 		do
@@ -218,18 +222,19 @@ function backupSingle {
 			fi
 
 			LINESPACE=0
-			cat "$C" | while read C; do echo '<text y="'$(( TITLE_HEIGHT + TITLE_OFFSET + OFFSET + COUNTER * BLOCK_HEIGHT + LINESPACE++ * ( FONT_HEIGHT + SPACING ) ))'mm" x="'$OFFSET'mm" style="font-family:monospace;font-size:'$FONT_HEIGHT'mm;">'"$C"'</text>' >> page_$PAGE.svg; done
+			cat "$C" | while read C; do echo '<text y="'$(( BLOCK_OFFSET + FONT_HEIGHT + COUNTER * BLOCK_HEIGHT + LINESPACE++ * ( FONT_HEIGHT + SPACING ) ))'mm" x="'$OFFSET'mm" style="font-family:monospace;font-size:'$FONT_HEIGHT'mm;">'"$C"'</text>' >> page_$PAGE.svg; done
 
 			IMAGE=$(echo "$C" | sed -e "s|_header_|_qr_|" | sed -e "s|.txt|.svg|")
  			#Editing the XML this way is a hack and will stop working when the XML declaration is longer than one line and when qrencode changes the svg generation
- 			cat $IMAGE | grep -v "<?" | sed -e 's|svg width|svg y="'$(( TITLE_HEIGHT + TITLE_OFFSET + COUNTER * BLOCK_HEIGHT ))'mm" x="140mm" width|' >> page_$PAGE.svg
+ 			cat "$IMAGE" | grep -v "<?" | sed -e 's|svg width.*viewBox|svg y="'$(( BLOCK_OFFSET + COUNTER * BLOCK_HEIGHT ))'mm" x="'$(( 210 - OFFSET - QR_HEIGHT ))'mm" width="'$QR_HEIGHT'mm" height="'$QR_HEIGHT'mm" viewBox|' >> page_$PAGE.svg
 
 			COUNTER=$(( COUNTER + 1 ))
 
 			if [ $(( COUNTER % 4 )) -eq 0 ]
 			then
 				echo "$PAGE_TITLE" >> page_$PAGE.svg
-				echo '<text y="290mm" x="180mm" style="font-family:monospace;font-size:'$FONT_HEIGHT'mm;">'"$PAGE/$PAGES"'</text>' >> page_$PAGE.svg
+				echo '<text y="'$(( 297 - OFFSET + FONT_HEIGHT ))'mm" x="200mm" style="font-family:monospace;font-size:'$FONT_HEIGHT'mm;" text-anchor="end">'"$PAGE/$PAGES"'</text>' >> page_$PAGE.svg
+				echo "$PAGE_FOOTER" >> page_$PAGE.svg
 				echo "$SVG_FOOTER" >> page_$PAGE.svg
 				PAGE=$(( PAGE + 1 ))
 				COUNTER=0
@@ -239,11 +244,13 @@ function backupSingle {
 		if [ $(( COUNTER % 4)) -ne 0 ]
 		then
 			echo "$PAGE_TITLE" >> page_$PAGE.svg
-			echo '<text y="290mm" x="180mm" style="font-family:monospace;font-size:'$FONT_HEIGHT'mm;">'"$PAGE/$PAGES"'</text>' >> page_$PAGE.svg
+			echo '<text y="'$(( 297 - OFFSET + FONT_HEIGHT ))'mm" x="200mm" style="font-family:monospace;font-size:'$FONT_HEIGHT'mm;" text-anchor="end">'"$PAGE/$PAGES"'</text>' >> page_$PAGE.svg
+			echo "$PAGE_FOOTER" >> page_$PAGE.svg
 			echo "$SVG_FOOTER" >> page_$PAGE.svg
 		fi
 
 		rsvg-convert page_*.svg -f pdf -o backup.pdf
+
 		mv backup.pdf "$DESTINATION/backup_$NAME.pdf"
 	fi
 
