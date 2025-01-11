@@ -9,12 +9,6 @@
     state: present
   loop: "{{ locales }}"
 
-- name: Set locale
-  locale_gen:
-    name: "{{ item }}"
-    state: present
-  loop: "{{ locales }}"
-
 - name: create locale.conf
   file:
     path: /etc/locale.conf
@@ -23,8 +17,8 @@
 - name: locale.conf file
   lineinfile:
     path: /etc/locale.conf
-    line: "LANG={{ item }}"
-  loop: "{{ locales }}"
+    regex: "^LANG="
+    line: "LANG={{ locales[0] }}"
 
 - name: create vconsole.conf
   file:
@@ -34,8 +28,8 @@
 - name: vconsole.conf file
   lineinfile:
     path: /etc/vconsole.conf
-    line: "KEYMAP={{ item }}"
-  loop: "{{ keymaps }}"
+    regex: "^KEYMAP="
+    line: "KEYMAP={{ keymap }}"
 
 - name: Utilites
   package:

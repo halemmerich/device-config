@@ -7,8 +7,7 @@ public_ip_v6: "{{ netconf[hostname].ip_v6 }}"
 
 locales:
   - en_US.UTF-8
-keymaps:
-  - en-latin1-nodeadkeys
+keymap: en
 
 hosts_additional_aliases:
   - "auth.meet.{{ domain }}"

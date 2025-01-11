@@ -6,8 +6,7 @@ java_home: "/usr/lib/jvm/default"
 
 locales:
   - en_US.UTF-8
-keymaps:
-  - en-latin1-nodeadkeys
+keymap: en
 
 letsencrypt_fake: true
 
