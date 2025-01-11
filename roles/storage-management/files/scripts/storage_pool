@@ -15,24 +15,24 @@ function openDevices {
 	STORAGE_META_DIR="$1"
 	KEYFILES="$(ls -A "$STORAGE_META_DIR/keyfiles" | grep keyfile_)"
 	DEVICES=""
-	
+
 	if [ -n "$KEYFILES" ]
 	then
 		storage_block_crypto map "$STORAGE_META_DIR/keyfiles" || return 1
 	fi
-	
+
 	rescanDevices
 }
 function closeDevices {
 	STORAGE_META_DIR="$1"
 	KEYFILES="$(ls -A "$STORAGE_META_DIR/keyfiles" | grep keyfile_)"
 	DEVICES=""
-	
+
 	if [ -n "$KEYFILES" ]
 	then
 		storage_block_crypto umap "$STORAGE_META_DIR/keyfiles"
 	fi
-	
+
 	rescanDevices
 }
 
@@ -40,7 +40,7 @@ function defer {
 	STORAGE_META_DIR="$1"
 	TYPE=$(cat $STORAGE_META_DIR/.created)
 	export CALLED_FROM_POOL=yes
-	
+
 	[ -n "$TYPE" ] && storage_pool_${TYPE} ${COMMAND} "$@" || echo No pool type detected
 }
 
@@ -89,7 +89,7 @@ COMMAND=$1
 shift
 
 set +e
- 
+
 [ -z "$COMMAND" ] && echo "Usage:
 storage_pool <mount|umount> <metadir>
 storage_pool scrub <metadir> <type>
@@ -117,9 +117,8 @@ storage_pool mount poolDirName
 storage_backup create poolDirName rsync
 storage_backup add poolDirName /path/to/backup/source
 storage_backup backup
-"
 
-echo -e "\n"
+"
 
 case $COMMAND in
 	add) add "$@" ;;
@@ -130,4 +129,3 @@ case $COMMAND in
 	closeDevices) closeDevices "$@" ;;
 	*) defer "$@" ;;
 esac
-

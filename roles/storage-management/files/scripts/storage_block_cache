@@ -10,17 +10,17 @@ function addCache {
 	STORAGE_META_DIR="$1"
 	CACHE="$(getTopDevice "$2")"
 	VGNAME="$(getPoolName "$STORAGE_META_DIR")"
-	
+
 	storage_pool openDevices "$STORAGE_META_DIR"
-	
+
 	hdparm -W1 $CACHE
 	addToVg "$STORAGE_META_DIR" "$CACHE"
 	lvcreate -l 100%FREE -n "$(getDeviceId "$CACHE")_cache" $VGNAME $CACHE
-	
+
 	echo "$(getDeviceId "$CACHE")" > "$STORAGE_META_DIR"/cache
-	
+
 	updateCachedDrives "$STORAGE_META_DIR"
-	
+
 	storage_pool closeDevices "$STORAGE_META_DIR"
 }
 
@@ -37,18 +37,18 @@ function addData {
 	STORAGE_META_DIR="$1"
 	CACHED="$(getTopDevice "$2")"
 	VGNAME="$(getPoolName "$STORAGE_META_DIR")"
-	
+
 	storage_pool openDevices "$STORAGE_META_DIR"
-	
+
 	hdparm -W0 $CACHED
 	addToVg "$STORAGE_META_DIR" "$CACHED"
-	
+
 	echo "$(getDeviceId "$CACHED")" > "$STORAGE_META_DIR"/cached
-	
+
 	updateCachedDrives "$STORAGE_META_DIR"
-	
+
 	lvcreate -l 100%FREE -n "$(getDeviceId "$CACHED")_cached" $VGNAME $CACHED
-	
+
 	storage_pool closeDevices "$STORAGE_META_DIR"
 }
 
@@ -62,16 +62,16 @@ function addToVg {
 
 function create {
 	STORAGE_META_DIR="$1"
-	
+
 	[ ! -f "$STORAGE_META_DIR/.created" ] && storage_pool create "$@"
-	
+
 	touch "$STORAGE_META_DIR/cache"
 	touch "$STORAGE_META_DIR/cached"
 }
 
 COMMAND=$1
 shift
- 
+
 case $COMMAND in
 	create) create "$@" ;;
 	addData) addData "$@" ;;

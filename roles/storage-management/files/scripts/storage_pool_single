@@ -11,46 +11,46 @@ function checkMetaData {
 	[ ! -f "$STORAGE_META_DIR/.created" ] || [ ! "$(cat "$STORAGE_META_DIR/.created")" == "single" ] && { echo Single pool marker file missing, invalid meta data dir && exit 1; }
 }
 
-function create {	
+function create {
 	STORAGE_META_DIR="$1"
-	
+
 	[ ! -f "$STORAGE_META_DIR/.created" ] && CALLED_FROM_SUBCOMMAND=yes storage_pool create "$@"
-	
+
 	[ ! -d "$STORAGE_META_DIR/keyfiles" ] && echo Keyfiles missing, invalid meta data dir && exit 1
 	[ -f "$STORAGE_META_DIR/.created" ] && [ "$(cat "$STORAGE_META_DIR/.created")" == "single" ] && echo Already initialized, exiting && exit 1
-	
+
 	touch "$STORAGE_META_DIR/devices"
-	
+
 	echo "single" > "$STORAGE_META_DIR/.created"
 }
 
 function add {
 	[ "$CALLED_FROM_POOL" == yes ] || { echo Only use this command from storage_pool && exit 1; }
-	
+
 	STORAGE_META_DIR="$1"
 	checkMetaData "$STORAGE_META_DIR"
-	
+
 	DEVICE="$2"
 	FS="$3"
 	[ -z "$FS" ] && FS=existing
 	ID="$(getDeviceId "$DEVICE")"
 	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
-	
+
 	checkMetaData "$STORAGE_META_DIR"
-	
+
 	umountPool "$STORAGE_META_DIR"
-	
+
 	[ $(cat "$STORAGE_META_DIR/devices" | wc -l) -gt 0 ] && echo "Single pools can only have one device" && return 1
 	grep -q "$ID" "$STORAGE_META_DIR/devices" || echo "$ID" >> "$STORAGE_META_DIR/devices"
-	
+
 	storage_pool openDevices "$STORAGE_META_DIR" || return 1
-	
+
 	if [ "$FS" != existing ]
 	then
 		! command -v mkfs.$FS 2>&1 > /dev/null && echo mkfs.$FS missing && exit 1
 		mkfs.$FS "$(getTopDevice "$DEVICE")"
 	fi
-	
+
 	storage_block_crypto umap "$STORAGE_META_DIR/keyfiles"
 
 	storage_pool closeDevices "$STORAGE_META_DIR"
@@ -60,9 +60,9 @@ function mountPool {
 	STORAGE_META_DIR="$1"
 
 	checkMetaData "$STORAGE_META_DIR"
-	
+
 	storage_pool openDevices "$STORAGE_META_DIR"
-	
+
 	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
 
 	mkdir -p "$MOUNT_DIR"
@@ -72,18 +72,17 @@ function mountPool {
 }
 
 
-function umountPool {	
+function umountPool {
 	STORAGE_META_DIR="$1"
 	checkMetaData "$STORAGE_META_DIR"
 
 	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
 	umount "$MOUNT_DIR" 2>&1 > /dev/null
-	
-	
+
 	RESULT=0
-	
+
 	storage_pool closeDevices "$STORAGE_META_DIR"; RESULT=$((RESULT + $?))
-	
+
 	RESULT=$((RESULT + $?))
 	return $RESULT
 }
@@ -92,7 +91,7 @@ COMMAND=$1
 shift
 
 set +e
- 
+
 case $COMMAND in
 	mount) mountPool "$@" ;;
 	umount) umountPool "$@" ;;
@@ -107,5 +106,3 @@ storage_pool_snapraid add <metadir> <device> <fs>
   fs: fs name as used in mkfs.*, existing is used by default
 storage_pool_snapraid status <metadir>" ;;
 esac
-
-

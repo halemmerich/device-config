@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. /usr/local/bin/storage_helpers 
+. /usr/local/bin/storage_helpers
 
 ! command -v mkfs.btrfs 2>&1 > /dev/null && echo btrfs-progs missing && exit 1
 
@@ -18,9 +18,9 @@ function getMountableDevice {
 
 function create {
 	STORAGE_META_DIR="$1"
-	
+
 	[ ! -f "$STORAGE_META_DIR/.created" ] && CALLED_FROM_SUBCOMMAND=yes storage_pool create "$@"
-	
+
 	[ -f "$STORAGE_META_DIR/.created" ] && [ "$(cat "$STORAGE_META_DIR/.created")" == "btrfs" ] && echo Already initialized, exiting && exit 1
 
 	echo "btrfs" > "$STORAGE_META_DIR/.created"
@@ -32,14 +32,14 @@ function changeProfile {
 	PROFILE_META="$3"
 	[ -z "$PROFILE_DATA" ] && echo Profile for data needed
 	[ -z "$PROFILE_META" ] && PROFILE_META=$PROFILE_DATA
-	
+
 	[ ! -f "$STORAGE_META_DIR/.created" ] || [ ! "$(cat "$STORAGE_META_DIR/.created")" == "btrfs" ] && { echo BTRFS pool marker file missing, invalid meta data dir && exit 1; }
-	
+
 	umountPool "$STORAGE_META_DIR"
 	mountPool "$STORAGE_META_DIR"
-	
+
 	btrfs balance start -dconvert="$PROFILE_DATA" -mconvert="$PROFILE_META" "$(getMountpoint "$STORAGE_META_DIR")"
-	
+
 	umountPool "$STORAGE_META_DIR"
 }
 
@@ -48,15 +48,15 @@ function add {
 
 	STORAGE_META_DIR="$1"
 	DEVICE="$2"
-	
+
 	ID="$(getDeviceId "$DEVICE")"
-	
+
 	[ ! -f "$STORAGE_META_DIR/.created" ] || [ ! "$(cat "$STORAGE_META_DIR/.created")" == "btrfs" ] && { echo BTRFS pool marker file missing, invalid meta data dir && exit 1; }
-	
+
 	umountPool "$STORAGE_META_DIR"
 
 	storage_pool openDevices "$STORAGE_META_DIR"
-	
+
 	if [ -n "$(getMountableDevice "$STORAGE_META_DIR")" ]
 	then
 		mountPool "$STORAGE_META_DIR"
@@ -65,13 +65,13 @@ function add {
 	else
 		mkfs.btrfs -L data -f "$(getTopDevice $DEVICE)" || return 1
 	fi
-	
+
 	storage_pool closeDevices "$STORAGE_META_DIR"
 }
 
 function mountPool {
 	STORAGE_META_DIR="$1"
-	
+
 	storage_pool openDevices "$STORAGE_META_DIR"
 
 	MOUNT_DIR="$(getMountpoint "$STORAGE_META_DIR")"
@@ -82,15 +82,15 @@ function mountPool {
 	mount "$(getMountableDevice "$STORAGE_META_DIR")" $MOUNT_DIR || umountPool "$STORAGE_META_DIR"
 }
 
-function umountPool {	
+function umountPool {
 	STORAGE_META_DIR="$1"
 	MOUNT_DIR=$(getMountpoint "$STORAGE_META_DIR")
 	mountpoint "$MOUNT_DIR" > /dev/null && umount "$MOUNT_DIR"
-	
+
 	storage_pool closeDevices "$STORAGE_META_DIR"
 }
 
-function balance {	
+function balance {
 	STORAGE_META_DIR="$1"
 	FILTERS="$2"
 	[ -z "$FILTERS" ] && FILTERS="usage=30"
@@ -106,13 +106,13 @@ function scrub {
 	[ -z "$TYPE" ] && TYPE=mini
 	MINI_SCRUB_TIME="$3"
 	[ -z "$MINI_SCRUB_TIME" ] && MINI_SCRUB_TIME=1h
-	
+
 	assertMounted "$STORAGE_META_DIR"
 
 	STATUS=$(btrfs scrub status $(getMountpoint "$STORAGE_META_DIR") | grep Status | tr -s ' ' | cut -d ' ' -f2)
-	
+
 	[ -z "$STATUS" ] && STATUS=finished
-	
+
 	if [ "$TYPE" == mini ]
 	then
 		[ "$STATUS" == finished ] && ( btrfs scrub start -c 3 "$(getMountpoint "$STORAGE_META_DIR")" || return 1 )
@@ -142,22 +142,22 @@ function scrub {
 	fi
 }
 
-function maintenance {	
+function maintenance {
 	STORAGE_META_DIR="$1"
 	[ -e "$STORAGE_META_DIR/config" ] && . $STORAGE_META_DIR/config
 	TYPE="$2"
 	[ -z "$TYPE" ] && TYPE=mini
 	[ -z "$MAINTENANCE_MINI_SCRUB_TIME" ] && MAINTENANCE_MINI_SCRUB_TIME=1h
 	[ -z "$MAINTENANCE_MINI_BALANCE_PERCENTAGE" ] && MAINTENANCE_MINI_BALANCE_PERCENTAGE=20
-	
+
 	assertMounted "$STORAGE_META_DIR"
 
 	STATUS=$(btrfs scrub status "$(getMountpoint "$STORAGE_META_DIR")" | grep Status | tr -s ' ' | cut -d ' ' -f2)
-	
+
 	# finished running aborted
-	
+
 	scrub "$STORAGE_META_DIR" "$TYPE" "$MAINTENANCE_MINI_SCRUB_TIME" || return 1
-	
+
 	if [ "$TYPE" == mini ]
 	then
 		btrfs balance start -d"$MAINTENANCE_MINI_BALANCE_PERCENTAGE" -m"$MAINTENANCE_MINI_BALANCE_PERCENTAGE" "$(getMountpoint "$STORAGE_META_DIR")" || return 1
@@ -172,20 +172,20 @@ function status {
 	TYPE="$2"
 
 	assertMounted "$STORAGE_META_DIR"
-	
+
 	OUTPUT="$(btrfs scrub status $(getMountpoint "$STORAGE_META_DIR"))"
 	RESULT=0
-	
+
 	SUPER_ERRORS="$( echo "$OUTPUT" | grep "Error summary" | grep -Eo "super=[0-9]*" | cut -d '=' -f2)"
 	CSUM_ERRORS="$( echo "$OUTPUT" | grep "Error summary" | grep -Eo "csum=[0-9]*" | cut -d '=' -f2)"
 	ERRORS=$(( SUPER_ERRORS + CSUM_ERRORS ))
-	
+
 	[ "$ERRORS" -gt 0 ] && (( RESULT+=1 )) && echo Errors: $(echo "$ERRORS" )
 	[ -f "$STORAGE_META_DIR/state_last_full_scrub" ] && echo -n "Scrubbed: " && cat "$STORAGE_META_DIR/state_last_full_scrub"
 	[ -f "$STORAGE_META_DIR/state_last_sync" ] && echo -n "Synced: " && cat "$STORAGE_META_DIR/state_last_sync"
-	
+
 	btrfs device stats -c "$(getMountpoint "$STORAGE_META_DIR")" > /dev/null || (( RESULT++ )) && echo Device: $(( $(btrfs device stats "$(getMountpoint "$STORAGE_META_DIR")" | tr -s ' ' | grep . | cut -d ' ' -f2 | paste -sd+) ))
-	
+
 	FILES=""
 	if [ -f "$STORAGE_META_DIR/state_last_full_scrub_start" ]
 	then
@@ -197,7 +197,7 @@ function status {
 		done
 	fi
 	[ $(echo "$FILES" | wc -l ) -gt 1 ] && echo Files: $(echo "$FILES" )
-	
+
 	[ "$TYPE" == full ] && echo --------- && echo "$OUTPUT" && btrfs device stats "$(getMountpoint "$STORAGE_META_DIR")"
 	#echo $RESULT
 	exit $RESULT
@@ -210,7 +210,7 @@ function backup {
 
 COMMAND=$1
 shift
- 
+
 case $COMMAND in
 	mount) mountPool "$@" ;;
 	umount) umountPool "$@" ;;
@@ -234,5 +234,3 @@ storage_pool_btrfs status <metadir>
 storage_pool_btrfs changeProfile <metadir> <profiledata> [profilemeta]
 storage_pool_btrfs backup <metadir> <type>" ;;
 esac
-
-

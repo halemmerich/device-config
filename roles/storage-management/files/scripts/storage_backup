@@ -28,7 +28,7 @@ function xmpp {
 }
 
 function cleanup {
-	rm "$LOCKFILE"
+	rm -f "$LOCKFILE"
 	exit "$OVERALL_RC"
 }
 

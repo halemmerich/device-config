@@ -22,11 +22,11 @@ function rescanDevices {
 function getDeviceId {
 	(
 	set +x
-	
+
 	local DEVICE="$1"
-	
+
 	[ ! -b "$DEVICE" ] && echoerr WARNING: Argument already is an ID && echo "$DEVICE" && return 0
-	
+
 	local DISKID=$(smartctl -i $1 | grep WWN | cut -d ':' -f 2 | sed 's/ //g')
 	local DISKID_TYPE=wwn
 
@@ -61,7 +61,7 @@ function getBlockdevices {
 function getDeviceForId {
 	local DISKID="$1"
 	[ -b "$DISKID" ] && echo WARNING: Argument already is an device && echo "$DISKID" && return 0
-	
+
 	for C in $(getBlockdevices)
 	do
 		[ "$DISKID" == "$(getDeviceId $C)" ] && echo "$C" && break
@@ -70,12 +70,12 @@ function getDeviceForId {
 
 function assertMounted {
 	STORAGE_META_DIR="$1"
-	mountpoint "$(getMountpoint "$STORAGE_META_DIR")" || exit 1
+	mountpoint "$(getMountpoint "$STORAGE_META_DIR")" > /dev/null || exit 1
 }
 
 function assertUnmounted {
 	STORAGE_META_DIR="$1"
-	mountpoint "$(getMountpoint "$STORAGE_META_DIR")" && exit 1
+	mountpoint "$(getMountpoint "$STORAGE_META_DIR")" > /dev/null && exit 1
 }
 
 function getMountpoint {
