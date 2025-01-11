@@ -8,6 +8,9 @@ Requires={{ current }}.service
 [Service]
 WorkingDirectory=/opt/docker/{{ item.id }}/
 Type=oneshot
+{% for current in item.mount_depends | default([]) %}
+ExecStartPre=/usr/bin/mountpoint "{{ current }}"
+{% endfor %}
 {% for current in item.directory_depends | default([]) %}
 ExecStartPre=/usr/bin/test -d "{{ current }}"
 {% endfor %}
