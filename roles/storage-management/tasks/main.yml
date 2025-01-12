@@ -5,6 +5,16 @@
     mode: u=rx,g=rx,o=rx
   loop: "{{ lookup('fileglob', 'scripts/*', wantlist=True) }}"
 
+- name: Configure directories
+  file:
+    path: "{{ item }}"
+    mode: '0755'
+    state: directory
+  loop:
+    - /etc/snapper/config-templates
+  tags:
+    - config
+
 - name: Snapper template
   copy:
     src: "snapraid"
