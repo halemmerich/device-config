@@ -2,6 +2,7 @@
   package:
     name:
     - nginx-mainline
+    - nginx-mainline-mod-stream
     state: present
   when: ansible_os_family == "Archlinux"
   tags:
