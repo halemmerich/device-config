@@ -1,0 +1,17 @@
+#!/bin/bash
+
+MOUNTDIR="$1"
+
+
+mkdir -p "$MOUNTDIR"/jellyfin; (( RC |= $? ))
+
+systemctl stop jellyfin; (( RC |= $? ))
+
+for C in $SOURCES
+do
+	rsync_backup /var/lib/jellyfin/metadata jellyfin/metadata
+done
+
+systemctl start jellyfin; (( RC |= $? ))
+
+exit $RC

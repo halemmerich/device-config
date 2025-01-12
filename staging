@@ -81,6 +81,10 @@ staging-server-arch
 staging-server-arch
 staging-server-debian
 
+[server_jellyfin]
+staging-nas-arch
+#staging-nas-debian
+
 [server_teamspeak]
 staging-server-arch
 staging-server-debian

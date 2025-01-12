@@ -1,0 +1,47 @@
+- name: 'Install'
+  package:
+    name:
+    - jellyfin-server
+    - jellyfin-web
+    state: present
+  tags:
+    - install
+
+- name: 'Create config'
+  template:
+    src: "{{ item }}.j2"
+    dest: '/etc/jellyfin/{{ item }}'
+    mode: '0640'
+    owner: 'jellyfin'
+  loop:
+    - system.xml
+  notify: restart_jellyfin
+  tags:
+    - config
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
+  loop:
+    - jellyfin
+  notify: restart_jellyfin
+  tags:
+    - config
+
+- name: 'Create nginx config'
+  template:
+    src: nginx/jellyfin.conf.j2
+    dest: '/etc/nginx/servers.d/jellyfin.conf'
+    mode: '0700'
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Enable services'
+  systemd:
+    name: "jellyfin"
+    enabled: yes
+  notify: restart_jellyfin
+  tags:
+    - config

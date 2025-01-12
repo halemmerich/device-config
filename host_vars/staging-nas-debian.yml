@@ -8,6 +8,10 @@ locales:
   - en_US.UTF-8
 keymap: en
 
+letsencrypt_mail: "hostmaster@{{ domain }}"
+letsencrypt_port: "8000"
+letsencrypt_fake: true
+
 users:
   user:
     password: $6$user$.0YKoey4twE3UDoG7VwhMgDXK0hnQqYHSJWlWOSICaAGRMchCbs4eDGHJgU8HFe.xtN0sUEyfS50QPjuRmVg91
@@ -29,4 +33,15 @@ server_samba_shares:
     readonly: "yes"
     guestok: "yes"
 
-letsencrypt_fake: true
+backup_server_path: "/tmp"
+restore_server_path: "{{ backup_server_path}}"
+
+server_nginx_user: "www-data"
+server_nginx_group: "www-data"
+server_nginx_port_https_backend: "4444"
+server_nginx_port_https_backend_proxy: "4445"
+server_nginx_port_http: "80"
+server_nginx_port_tls: "443"
+server_nginx_port_tls_no_pp: "4440"
+server_nginx_default_domains:
+  - "{{ domain }}"

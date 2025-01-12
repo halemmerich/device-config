@@ -80,6 +80,15 @@
   - storage-management
   - server-samba
 
+- hosts: server_jellyfin
+  become: yes
+  remote_user: admin
+  roles:
+  - server-nginx-base
+  - server-letsencrypt
+  - server-nginx
+  - server-jellyfin
+
 - hosts: server_teamspeak
   become: yes
   roles:
@@ -92,7 +101,6 @@
   - server-backup
   - server-syncplay
 
-  
 - hosts: server_remotely
   become: yes
   roles:
@@ -100,7 +108,7 @@
 
 - hosts: server_arch
   become: yes
-  
+
 - hosts: server
   become: yes
   roles:
@@ -120,13 +128,13 @@
   - server-sogo
   - server-fail2ban
   - util-run-letsencrypt-hooks
-  
+
 - hosts: server_games
   become: yes
   roles:
   - server-backup
   - server-linuxgsm
-  
+
 - hosts: server_docker
   become: yes
   roles:

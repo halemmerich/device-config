@@ -1,0 +1,16 @@
+#!/bin/bash
+
+MOUNTDIR="$1"
+
+systemctl stop jellyfin
+
+cd "$MOUNTDIR"/jellyfin
+
+for C in metadata
+	rsync_restore jellyfin/$C/ /var/lib/jellyfin/$C/
+	chown jellyfin:jellyfin -R /var/lib/jellyfin/$C
+	find /var/lib/jellyfin/$C -type f -print0 | xargs -0 chmod 644
+	find /var/lib/jellyfin/$C -type d -print0 | xargs -0 chmod 755
+done
+
+systemctl start jellyfin
