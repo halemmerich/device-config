@@ -6,7 +6,7 @@
         state: absent
     - name: Remove fake ca
       file:
-        path: /etc/letsencrypt/fake-ca
+        path: "/etc/letsencrypt/{{ ca_name | default('fake') }}"
         state: absent
     - name: 'Install dependencies'
       package:
@@ -24,7 +24,7 @@
         name:
         - certbot
         state: absent
-        
+
     - name: Configure directories
       file:
         path: "{{ item }}"
@@ -35,13 +35,13 @@
       loop:
         - '/etc/letsencrypt/'
         - '/etc/letsencrypt/live/'
-        - '/etc/letsencrypt/fake-ca/'
+        - '/etc/letsencrypt/{{ ca_name | default("fake") }}/'
         - '/etc/letsencrypt/renewal-hooks/deploy'
         - '/etc/letsencrypt/renewal-hooks/post'
         - '/etc/letsencrypt/renewal-hooks/pre'
       tags:
         - config
-        
+
     - name: Send CA
       copy:
         src: "{{ item.src }}"
@@ -50,8 +50,8 @@
         group: 'root'
         mode: '0700'
       loop:
-        - { src: "fake-ca/ca.pem", dest: "/etc/letsencrypt/fake-ca/" }
-        - { src: "fake-ca/ca.key", dest: "/etc/letsencrypt/fake-ca/" }
+        - { src: "ca/{{ ca_name | default('fake') }}/ca.pem", dest: "/etc/letsencrypt/{{ ca_name | default('fake') }}/" }
+        - { src: "ca/{{ ca_name | default('fake') }}/ca.key", dest: "/etc/letsencrypt/{{ ca_name | default('fake') }}/" }
       tags:
         - config
 
@@ -82,6 +82,7 @@
     dest: "/etc/nginx/locations_http.d/letsencrypt.conf"
     mode: '0700'
   notify: restart_nginx
+  when: not (letsencrypt_fake | default(false))
   tags:
     - config
 

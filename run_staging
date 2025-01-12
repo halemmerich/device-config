@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ ! -e files/fake-ca/ca.key ]
+if [ ! -e files/ca/fake/ca.key ]
 then
-	bash -c "cd files/fake-ca/; ./createCA.sh"
+	bash -c "cd files/ca/fake/; ./createCA.sh"
 fi
 
 FILTER='*-*-*'

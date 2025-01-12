@@ -42,13 +42,13 @@ openssl req -new \
 openssl x509 -req \
             -days 3650 \
             -in $DEST/request.csr \
-            -CA /etc/letsencrypt/fake-ca/ca.pem\
-            -CAkey /etc/letsencrypt/fake-ca/ca.key\
-            -CAcreateserial -CAserial /etc/letsencrypt/fake-ca/serial.srl \
+            -CA /etc/letsencrypt/{{ ca_name | default("fake") }}/ca.pem\
+            -CAkey /etc/letsencrypt/{{ ca_name | default("fake") }}/ca.key\
+            -CAcreateserial -CAserial /etc/letsencrypt/{{ ca_name | default("fake") }}/serial.srl \
             -extfile <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=DNS:$CN")) \
             -extensions SAN \
             -out $DEST/cert.pem
-            
-rm /etc/letsencrypt/fake-ca/serial.srl
 
-cat $DEST/cert.pem /etc/letsencrypt/fake-ca/ca.pem > $DEST/fullchain.pem
+rm /etc/letsencrypt/{{ ca_name | default("fake") }}/serial.srl
+
+cat $DEST/cert.pem /etc/letsencrypt/{{ ca_name | default("fake") }}/ca.pem > $DEST/fullchain.pem

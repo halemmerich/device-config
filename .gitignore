@@ -5,9 +5,9 @@ staging_netconf.yml
 staging_hosts
 production
 production_hosts
-files/fake-ca/ca.key
-files/fake-ca/ca.pem
-files/fake-ca/ca.crt
+files/ca/fake/ca.key
+files/ca/fake/ca.pem
+files/ca/fake/ca.crt
 run_limited
 run_limited_upgrade
 host_vars/*
