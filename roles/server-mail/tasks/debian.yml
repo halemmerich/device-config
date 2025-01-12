@@ -9,6 +9,7 @@
     - dovecot-imapd
     - postfix
     - postfix-mysql
+    - postfix-lmdb
     - opendkim
     - opendkim-tools
     state: present
