@@ -35,6 +35,11 @@ Network configuration as defined in the staging inventory examples. Alternativel
 
 WARNING!!! Docker containers startet with compose currently are using `CAP_SYS_ADMIN` and could harm your host. They do also need cgroupns mode set to "host".
 
+Commands for an initial run of the containers:
+as root: `cd staging_env; up.sh username` # Creates the containers and authorizes the ssh public key of username in the containers
+as username: `staging_env/makeHostsKnown.sh` # Deletes all existing keys for the IPs of the containers from the authorized keys and puts the host keys of the containers there
+as username: `./run_staging_upgrade`
+
 #### Config:
 
 - cgroupns mode needs to be set to "host"
