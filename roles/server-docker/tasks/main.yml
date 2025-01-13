@@ -53,7 +53,7 @@
   loop: "{{ docker_servers | subelements('data', skip_missing=True)  }}"
   tags:
     - config
-    
+
 - community.general.ufw:
     rule: allow
     port: "{{ item.1.port }}"
@@ -78,6 +78,25 @@
     content: "{{ item.config }}"
     mode: '0700'
   loop: "{{ docker_servers }}"
+  tags:
+    - config
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item.id }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item.id }}.{{ domain }}/privkey.pem
+  loop: "{{ docker_servers }}"
+  when: item.nginx is defined
+  tags:
+    - config
+
+- name: 'Create nginx config'
+  copy:
+    dest: "/etc/nginx/servers.d/{{ item.id }}.conf"
+    content: "{{ item.nginx }}"
+    mode: '0755'
+  loop: "{{ docker_servers }}"
+  when: item.nginx is defined
   tags:
     - config
 
