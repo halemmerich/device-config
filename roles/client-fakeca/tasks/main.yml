@@ -14,7 +14,7 @@
 
     - name: Update stores
       command: "trust anchor --store /tmp/ca.crt"
-  when: letsencrypt_fake | default(false) and ansible_os_family == "Archlinux"
+  when: ansible_os_family == "Archlinux"
 
 - name: "Fake ca install debian"
   block:
@@ -130,4 +130,4 @@
         executable: /bin/bash
       loop: "{{ result_of_find.files|flatten(levels=1) | product([ '.mozilla', '.thunderbird', '.pki'])  }}"
 
-  when: letsencrypt_fake | default(false) and ansible_os_family == "Debian"
+  when: ansible_os_family == "Debian"

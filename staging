@@ -12,7 +12,7 @@ staging-desktop-debian
 staging-testclient-arch
 staging-testclient-debian
 
-[staging_fakeca]
+[client_fakeca]
 staging-desktop-arch
 staging-desktop-debian
 staging-server-arch

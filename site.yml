@@ -4,7 +4,7 @@
   - util-package-upgrade
   - server-dns
 
-- hosts: staging_fakeca
+- hosts: client_fakeca
   become: yes
   roles:
   - util-package-upgrade
