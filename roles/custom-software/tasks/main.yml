@@ -4,7 +4,7 @@
     state: present
   loop: "{{ custom_software_packages | default([]) | subelements('packages', skip_missing=true)}}"
   when:
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - install
 
@@ -16,7 +16,7 @@
   loop: "{{ custom_software_packages_dependencies | default([]) | subelements('packages', skip_missing=true)}}"
   when:
     - ansible_os_family == "Archlinux"
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - install
 
@@ -27,7 +27,7 @@
   loop: "{{ custom_software_packages_arch | default([]) | subelements('packages', skip_missing=true)}}"
   when:
     - ansible_os_family == "Archlinux"
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - install
 
@@ -38,7 +38,7 @@
   loop: "{{ custom_software_packages_debian | default([]) | subelements('packages', skip_missing=true)}}"
   when:
     - ansible_os_family == "Debian"
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - install
 
@@ -47,7 +47,7 @@
     name: "{{ item.1 }}"
     state: absent
   loop: "{{ custom_software_packages_absent | default([]) | subelements('packages', skip_missing=true)}}"
-  when: ( item.0.group == "all" or item.0.group in group_names )
+  when: item.0.group in group_names
   tags:
     - install
 
@@ -67,7 +67,7 @@
     state: present
   loop: "{{ custom_software_flatpaks | default([]) | subelements('packages', skip_missing=true)}}"
   when:
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - install
 
@@ -77,7 +77,7 @@
     state: absent
   loop: "{{ custom_software_flatpaks_absent | default([]) | subelements('packages', skip_missing=true)}}"
   when:
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   ignore_errors: true
   tags:
     - install
@@ -95,7 +95,7 @@
     mode: "0755"
   loop: "{{ custom_software_userbinaries | default([]) | subelements('files')}}"
   when:
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - config
 
@@ -105,7 +105,7 @@
     state: directory
   loop: "{{ custom_software_folders | default([]) | subelements('folders')}}"
   when:
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - config
 
@@ -116,7 +116,7 @@
     mode: "0644"
   loop: "{{ custom_software_files | default([]) | subelements('files') }}"
   when:
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - config
 
@@ -127,7 +127,7 @@
     mode: "0644"
   loop: "{{ custom_software_templates | default([]) | subelements('files') }}"
   when:
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - config
 
@@ -139,7 +139,7 @@
     state: restarted
   loop: "{{ custom_software_services_enabled | default([]) | subelements('services')}}"
   when:
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - config
 
@@ -147,7 +147,7 @@
   command: "{{ item.1.cmd }}"
   loop: "{{ custom_software_commands | default([]) | subelements('cmds') }}"
   when:
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - config
 
@@ -157,6 +157,6 @@
     line: "{{ item.1.line }}"
   loop: "{{ custom_software_lineinfile | default([]) | subelements('files') }}"
   when:
-    - ( item.0.group == "all" or item.0.group in group_names )
+    - item.0.group in group_names
   tags:
     - config
