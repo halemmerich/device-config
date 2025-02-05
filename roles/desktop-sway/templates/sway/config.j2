@@ -18,25 +18,25 @@ output * scale 1
 {% if sway_outputs is defined %}
 {% for current in sway_outputs %}
 {% if current.position is defined %}
-output {{ current.output }} position {{ current.position }}
+output '{{ current.output }}' position {{ current.position }}
 {% endif %}
 {% if current.mode is defined %}
-output {{ current.output }} mode {{ current.mode }}
+output '{{ current.output }}' mode {{ current.mode }}
 {% endif %}
 {% if current.scale is defined %}
-output {{ current.output }} scale {{ current.scale }}
+output '{{ current.output }}' scale {{ current.scale }}
 {% endif %}
 {% if current.scale_filter is defined %}
-output {{ current.output }} scale_filter {{ current.scale_filter }}
+output '{{ current.output }}' scale_filter {{ current.scale_filter }}
 {% endif %}
 {% if current.adaptive is defined %}
-output {{ current.output }} adaptive_sync {{ current.adaptive }}
+output '{{ current.output }}' adaptive_sync {{ current.adaptive }}
 {% endif %}
 {% if current.subpixel is defined %}
-output {{ current.output }} subpixel {{ current.subpixel }}
+output '{{ current.output }}' subpixel {{ current.subpixel }}
 {% endif %}
 {% if current.profile is defined %}
-output {{ current.output }} color_profile icc /usr/local/share/color/icc/{{ current.profile }}
+output '{{ current.output }}' color_profile icc /usr/local/share/color/icc/{{ current.profile }}
 {% endif %}
 
 {% endfor %}

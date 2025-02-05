@@ -117,7 +117,7 @@
       path: "/etc/xdg/fnott"
       state: directory
     tags:
-      - config  
+      - config
 
   - name: Configure fnott
     template:
