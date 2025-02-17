@@ -6,7 +6,7 @@
     - config
 
 - include_vars: "vars/{{ ansible_os_family | lower }}.yml"
-    
+
 - include_tasks: "{{ ansible_os_family | lower }}.yml"
 
 - name: 'Create php config'
@@ -204,10 +204,10 @@
     path: "{{ nextcloud_config_path }}"
     mode: '640'
 
-- name: Check ocdata path
+- name: Check ncdata path
   stat:
-    path: "{{ nextcloud_data_path }}/.ocdata"
-  register: ocdata_path
+    path: "{{ nextcloud_data_path }}/.ncdata"
+  register: ncdata_path
 
 - name: Run install command
   block:
@@ -219,7 +219,7 @@
   - name: Install
     command:
       cmd: 'su -s /bin/bash {{ nextcloud_user }} -c "{{ php_command }} -c {{ php_ini_path }} {{ nextcloud_path }}/occ maintenance:install --database mysql --database-name nextcloud --database-host localhost --database-user nextcloud --database-pass={{ nextcloud_db_user_password }} --admin-pass={{ nextcloud_admin_user_password }} --data-dir /var/lib/nextcloud/data/ --no-interaction"'
-  when: not ocdata_path.stat.exists
+  when: not ncdata_path.stat.exists
   notify: restart_nginx
   tags:
     - config
