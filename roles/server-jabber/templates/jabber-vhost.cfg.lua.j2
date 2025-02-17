@@ -77,6 +77,8 @@ Component "proxy.{{ domain }}" "proxy65"
 
 Component "pubsub.{{ domain }}" "pubsub"
 
-Component "upload.{{ domain }}" "http_upload"
-	http_max_content_size = 1024*1024*1024*{{ jabber_http_upload_size }}
-	http_upload_file_size_limit = 1024*1024*1024*{{ jabber_http_upload_size }}
+Component "upload.{{ domain }}" "http_file_share"
+	http_file_share_size_limit = 1024*1024*1024*{{ jabber_http_upload_size }}
+	http_paths = {
+		file_share = "/upload"
+	}
