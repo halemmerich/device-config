@@ -24,15 +24,16 @@ then
 	mkdir -p "$CHROOT"
 
 	PACMAN_CONFIG=pacman.conf
-	[ -f $PACMAN_CONFIG ] || PACMAN_CONFIG=/etc/pacman.conf
+	[ -f "$PACMAN_CONFIG" ] || PACMAN_CONFIG=/etc/pacman.conf
 
 	[ ! -d "$CHROOT/root" ] && mkarchroot -C "$PACMAN_CONFIG" "$CHROOT/root" base-devel
 	cp pacman.conf "$CHROOT/root/etc/"
+	echo "ALL ALL=NOPASSWD: /usr/bin/pacman" > "$CHROOT/root/etc/sudoers.d/pacman"
 	arch-nspawn "$CHROOT/root" pacman -Syu
 fi
 
 su pacmanrepobuilder -c 'mkdir -p pkgs'
-su pacmanrepobuilder -c 'rm **/*.pkg.tar.zst'
+su pacmanrepobuilder -c 'rm -f **/*.pkg.tar.zst'
 
 RC=0
 
@@ -41,12 +42,7 @@ if [ -f keys.list ]
 then
 	for C in $(cat keys.list)
 	do
-		if [ -n "$CHROOT_BUILD" ]
-		then
-			arch-nspawn "$CHROOT/root" su pacmanrepobuilder -c "gpg --recv-keys $C"
-		else
-			su pacmanrepobuilder -c "gpg --recv-keys $C"
-		fi
+		su pacmanrepobuilder -c "gpg --recv-keys $C"
 	done
 fi
 
@@ -70,12 +66,12 @@ then
 			su pacmanrepobuilder -c 'makepkg -s -C --noconfirm'
 			CRC=$?
 		fi
-		
+
 		if [ ! \( "$ALLOW_SIGN_FAIL" = true -a $CRC -eq 16 \) ] && [ $CRC -ne 0 ]
 		then
 			(( RC++ ))
 		fi
-		
+
 		cd ../..
 	done
 fi
@@ -87,7 +83,10 @@ then
 	do
 		if [ -n "$CHROOT_BUILD" ]
 		then
-			DEPENDS="$DEPENDS -I ../../$(ls pkgs/$C/*.pkg.tar.zst | sort | tail -n 1)"
+			for D in $(ls pkgs/$C/*.pkg.tar.zst)
+			do
+				DEPENDS="$DEPENDS -I ../../$D"
+			done
 		else
 			pacman --noconfirm -U $(ls pkgs/$C/*.pkg.tar.zst)
 		fi
