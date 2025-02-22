@@ -29,7 +29,6 @@ function xmpp {
 
 function cleanup {
 	rm -f "$LOCKFILE"
-	exit "$OVERALL_RC"
 }
 
 function backup {
@@ -99,6 +98,7 @@ function backup {
 	if [ ! -d "$BACKUP_FOLDER" ]
 	then
 		xmpp "$BACKUP_FOLDER is missing! Aborting..."
+		cleanup
 		return 1
 	fi
 
@@ -149,12 +149,14 @@ function backup {
 				RESULT_MESSAGE="$RESULT_MESSAGE failed with status code $RESULT_RSYNC"
 				echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
 				sendLogFile
+				cleanup
 				return 1
 			fi
 		else
 			RESULT_MESSAGE="$RESULT_MESSAGE failed, at least one source empty"
 			echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
 			sendLogFile
+			cleanup
 			return 1
 		fi
 
@@ -216,6 +218,7 @@ function backup {
 		if [ "$NEEDED_SPACE" -gt "$FREE_SPACE" ]
 		then
 			xmpp Not enough space for backup
+			cleanup
 			return 1
 		fi
 
@@ -278,14 +281,15 @@ function backup {
 			xmpp "$FAILURES source folders could not be used"
 
 			sendLogFile
+			cleanup
 			return 1
 		fi
 	else
 		xmpp "$BACKUP_FOLDER does not contain usable backup config file! Aborting..."
+		cleanup
 		return 1
 	fi
-
-	rm -f "$LOCKFILE"
+	cleanup
 }
 
 MODE="$1"
