@@ -91,9 +91,19 @@ function getDeviceForId {
 	done
 }
 
+function checkMounted {
+	STORAGE_META_DIR="$1"
+	mountpoint "$(getMountpoint "$STORAGE_META_DIR")" > /dev/null || return 1
+}
+
 function assertMounted {
 	STORAGE_META_DIR="$1"
 	mountpoint "$(getMountpoint "$STORAGE_META_DIR")" > /dev/null || exit 1
+}
+
+function checkUnmounted {
+	STORAGE_META_DIR="$1"
+	mountpoint "$(getMountpoint "$STORAGE_META_DIR")" > /dev/null && return 1
 }
 
 function assertUnmounted {

@@ -9,7 +9,7 @@
 STORAGE_META_DIR="$2"
 
 #resolve storage meta data directory agains PATH_POOLS
-echo "$STORAGE_META_DIR" | grep '^/' > /dev/null && C="${PATH_POOLS}${STORAGE_META_DIR}" 
+echo "$STORAGE_META_DIR" | grep '^/' > /dev/null && C="${PATH_POOLS}${STORAGE_META_DIR}"
 
 function openDevices {
 	STORAGE_META_DIR="$1"
@@ -41,7 +41,8 @@ function defer {
 	TYPE=$(cat $STORAGE_META_DIR/.created)
 	export CALLED_FROM_POOL=yes
 
-	[ -n "$TYPE" ] && storage_pool_${TYPE} ${COMMAND} "$@" || echo No pool type detected
+	[ -z "$TYPE" ] && echo No pool type detected && exit 1
+	[ -n "$TYPE" ] && storage_pool_${TYPE} ${COMMAND} "$@"
 }
 
 function create {
@@ -85,6 +86,64 @@ function autoumount {
 	done
 }
 
+function monitor {
+	MONITOR_LOG=$(mktemp)
+	find /etc/storage/pools/ -mindepth 1 -maxdepth 1 -type d | while read C
+	do
+		if checkMounted "$C"
+		then
+			COMMAND=status
+			STATUS="$(defer "$C")"
+			RESULT=$?
+
+			IS_RO=$(cat /proc/mounts | grep $(getMountpoint "$C") | grep -q "[[:space:]]ro[[:space:],]" && echo "Filesystem is read only" && (( RESULT++ )) )
+
+			SMART=
+			for DEV in $(cat "$C/devices")
+			do
+				SMART_COMMAND=smartctl
+				#echo $DEV | grep -q lun && SMART_COMMAND="$SMART_COMMAND -t scsi"
+				SMART_REPORT=$(smartctl -a "$(getDeviceForId "$DEV")")
+				SMART_RESULT=$?
+				SMART_OK=$(( SMART_RESULT & 1 ))
+				SMART_OPEN_FAILED=$(( SMART_RESULT & 2 ))
+				SMART_COMMAND_FAILED=$(( SMART_RESULT & 4 ))
+				SMART_DISK_FAILING=$(( SMART_RESULT & 8 ))
+				SMART_DISK_PREFAIL=$(( SMART_RESULT & 16 ))
+				SMART_DISK_PREFAIL_PAST=$(( SMART_RESULT & 32 ))
+				SMART_DISK_HAS_ERRORS_IN_LOG=$(( SMART_RESULT & 64 ))
+				SMART_DISK_HAS_SELFTEST_ERRORS_IN_LOG=$(( SMART_RESULT & 128 ))
+
+				if [ "$SMART_RESULT" -ne 0 ]
+				then
+					(( RESULT++ ))
+					SMART="$SMART\n\nSMART Status for $DEV at $(getDeviceForId "$DEV"):"
+					[ "$SMART_OPEN_FAILED" -ne 0 ] && SMART="$SMART\nFailed to open device"
+					[ "$SMART_COMMAND_FAILED" -ne 0 ] && SMART="$SMART\nCommand to disk failed"
+					[ "$SMART_DISK_FAILING" -ne 0 ] && SMART="$SMART\nDisk is failing"
+					[ "$SMART_DISK_PREFAIL" -ne 0 ] && SMART="$SMART\nDisk is pre fail"
+					[ "$SMART_DISK_PREFAIL_PAST" -ne 0 ] && SMART="$SMART\nDisk was pre fail in the past"
+					[ "$SMART_DISK_HAS_ERRORS_IN_LOG" -ne 0 ] && SMART="$SMART\nDisk has errors in log"
+					[ "$SMART_DISK_HAS_SELFTEST_ERRORS_IN_LOG" -ne 0 ] && "$SMART\nDisk has selftest errors in log"
+				fi
+			done
+
+			if [ "$RESULT" -ne 0 ]
+			then
+				echo Pool $C is mounted but has problems >> "$MONITOR_LOG"
+				echo "$IS_RO" | sed 's|^|    |' >> "$MONITOR_LOG"
+				echo "$STATUS" | sed 's|^|    |' >> "$MONITOR_LOG"
+				echo "$SMART" | sed 's|^|    |' >> "$MONITOR_LOG"
+			fi
+		else
+			echo Pool "$C" not mounted
+		fi
+	done
+
+	[ -s "$MONITOR_LOG" ] && echoext "$MONITOR_LOG"
+	rm "$MONITOR_LOG"
+}
+
 COMMAND=$1
 shift
 
@@ -125,6 +184,7 @@ case $COMMAND in
 	create) create "$@" ;;
 	automount) automount "$@" ;;
 	autoumount) autoumount "$@" ;;
+	monitor) monitor "$@" ;;
 	openDevices) openDevices "$@" ;;
 	closeDevices) closeDevices "$@" ;;
 	*) defer "$@" ;;

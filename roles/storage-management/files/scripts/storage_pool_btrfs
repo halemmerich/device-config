@@ -184,7 +184,15 @@ function status {
 	[ -f "$STORAGE_META_DIR/state_last_full_scrub" ] && echo -n "Scrubbed: " && cat "$STORAGE_META_DIR/state_last_full_scrub"
 	[ -f "$STORAGE_META_DIR/state_last_sync" ] && echo -n "Synced: " && cat "$STORAGE_META_DIR/state_last_sync"
 
-	btrfs device stats -c "$(getMountpoint "$STORAGE_META_DIR")" > /dev/null || (( RESULT++ )) && echo Device: $(( $(btrfs device stats "$(getMountpoint "$STORAGE_META_DIR")" | tr -s ' ' | grep . | cut -d ' ' -f2 | paste -sd+) ))
+	btrfs device stats -c "$(getMountpoint "$STORAGE_META_DIR")" > /dev/null
+	STATS_ERRORS=$?
+	if [ "$STATS_ERRORS" -ne 0 ]
+	then
+		(( RESULT++ ))
+		DEVICES_STATS=$(btrfs device stats "$(getMountpoint "$STORAGE_META_DIR")")
+		echo Device Errors: $(( $(echo "$DEVICES_STATS" | tr -s ' ' | grep . | cut -d ' ' -f2 | paste -sd+) ))
+		echo "$DEVICES_STATS"  | grep -v "0$" | sed -e "s|\\[\\(.*\\)\\]\\.\\([_a-z]*\\)_errs.*\\([0-9]\\)|\1 Type:\2 Count:\3|"
+	fi
 
 	FILES=""
 	if [ -f "$STORAGE_META_DIR/state_last_full_scrub_start" ]
