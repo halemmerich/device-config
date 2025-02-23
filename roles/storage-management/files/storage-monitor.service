@@ -2,7 +2,6 @@
 Description=Monitor storage pools
 
 [Service]
-Type=oneshot
 User=root
 WorkingDirectory=/
-ExecStart=/bin/systemd-inhibit --what sleep --who Maintenance /bin/bash /usr/local/bin/storage_pool monitor
+ExecStart=/bin/systemd-inhibit --what=sleep --who=Monitor /bin/bash -c 'PATH=$PATH:/usr/bin/site_perl /usr/local/bin/storage_pool monitor'

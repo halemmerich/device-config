@@ -2,7 +2,6 @@
 Description=Perform full storage maintenance tasks
  
 [Service]
-Type=oneshot
 User=root
 WorkingDirectory=/
-ExecStart=/bin/systemd-inhibit --what sleep --who Maintenance /bin/bash /usr/local/bin/storage_maintenance full
+ExecStart=/bin/systemd-inhibit --what=sleep --who=Maintenance /bin/bash -c 'PATH=$PATH:/usr/bin/site_perl /usr/local/bin/storage_maintenance full'

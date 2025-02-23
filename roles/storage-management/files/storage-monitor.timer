@@ -1,8 +1,8 @@
 [Unit]
-Description=Storage maintenance
+Description=Storage monitoring of mounted pools
 
 [Timer]
-OnCalendar=*-*-* 01:00:00
+OnCalendar=hourly
 Persistent=true
 
 [Install]

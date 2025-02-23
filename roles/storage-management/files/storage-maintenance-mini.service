@@ -1,8 +1,7 @@
 [Unit]
-Description=Snapraid sync
+Description=Perform mini storage maintenance tasks
  
 [Service]
-Type=oneshot
 User=root
 WorkingDirectory=/
-ExecStart=/bin/systemd-inhibit --what sleep --who Maintenance /bin/bash /usr/local/bin/storage_maintenance mini
+ExecStart=/bin/systemd-inhibit --what=sleep --who=Maintenance /bin/bash -c 'PATH=$PATH:/usr/bin/site_perl /usr/local/bin/storage_maintenance mini'
