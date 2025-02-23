@@ -1,31 +1,9 @@
 #!/bin/bash
 . /usr/local/bin/storage_helpers
 
-XMPP_DESTINATION=( )
-SEND_XMPP_EXECUTABLE="sendxmpp"
 OVERALL_RC=0
 
-[ -f /etc/backupcfg ] && . /etc/backupcfg
-
 [ "$DEBUG" = 1 ] && set -x
-
-function xmpp {
-	if [ -f "$1" ]
-	then
-		for current in "${XMPP_DESTINATION[@]}"
-		do
-			echo "$IDENTIFIER Sending file: $1" | "$SEND_XMPP_EXECUTABLE" -f /root/.sendxmpprc -t -n "$current" 2>> "$LOG_FILE"
-			"$SEND_XMPP_EXECUTABLE" -m "$1" -f /root/.sendxmpprc -t -n "$current" 2 >> "$LOG_FILE"
-		done
-		echo "$1" >> "$LOG_FILE"
-	else
-		for current in "${XMPP_DESTINATION[@]}"
-		do
-			echo "$IDENTIFIER $@" | "$SEND_XMPP_EXECUTABLE" -f /root/.sendxmpprc -t -n "$current" 2>> "$LOG_FILE"
-		done
-		echo "$@" >> "$LOG_FILE"
-	fi
-}
 
 function cleanup {
 	rm -f "$LOCKFILE"
@@ -38,7 +16,7 @@ function backup {
 	then
 		STORAGE_META_DIR="$1"
 	else
-		xmpp Storage meta dir needs to be given as first parameter
+		echoext Storage meta dir needs to be given as first parameter
 		return 1
 	fi
 
@@ -52,28 +30,15 @@ function backup {
 	BACKUP_FOLDER="$MOUNTPOINT"/backup
 	MARKER_FILE="$BACKUP_FOLDER"/.backup
 	IDENTIFIER=$(echo ${HOSTNAME}_$(getPoolName $STORAGE_META_DIR) | tr / _ | tr -s '_')
-	LOG_FILE="/var/log/backup_$IDENTIFIER"
-
 	FAILED=0
 
 	LOCKFILE="/var/lock/backup_$IDENTIFIER"
 
-	[ -e "$LOCKFILE" ] && { xmpp Lockfile $LOCKFILE exists, stopping backup; return 1; }
+	[ -e "$LOCKFILE" ] && { echoext Lockfile $LOCKFILE exists, stopping backup; return 1; }
 
 	trap cleanup EXIT
 
 	touch "$LOCKFILE"
-
-	echo Start `date` > "$LOG_FILE"
-
-
-	function sendLogFile {
-		if [ -n "$LOG_FILE" ]
-		then
-			xmpp "Errors occured in subcommand, sending log file:"
-			xmpp "$LOG_FILE"
-		fi
-	}
 
 	function getLatestSnapshot {
 		FOLDER="$1"
@@ -91,30 +56,30 @@ function backup {
 
 	}
 
-	#xmpp "Running as user $(whoami)@$HOSTNAME in dir $(pwd)"
+	#echoext "Running as user $(whoami)@$HOSTNAME in dir $(pwd)"
 
-	#xmpp "Starting backup"
+	#echoext "Starting backup"
 
 	if [ ! -d "$BACKUP_FOLDER" ]
 	then
-		xmpp "$BACKUP_FOLDER is missing! Aborting..."
+		echoext "$BACKUP_FOLDER is missing! Aborting..."
 		cleanup
 		return 1
 	fi
 
 	if [ -e "$BACKUP_FOLDER/.rsnapshot.conf" ]
 	then
-		xmpp "Perform backup with rsnapshot"
+		echoext "Perform backup with rsnapshot"
 
 		CONTINUE=0
 		NEEDED_SPACE=0
 		for C in $(cat "$BACKUP_FOLDER/.rsnapshot.conf" | grep -i ^backup | tr -s '[:space:]' | cut -f 2)
 		do
-			[ "$( ls -A "$C" | wc -l )" -eq 0 ] && xmpp "No content in $C" && CONTINUE=1 && break;
+			[ "$( ls -A "$C" | wc -l )" -eq 0 ] && echoext "No content in $C" && CONTINUE=1 && break;
 			CURRENT_SOURCE=`getLatestSnapshot "$C"`
 			if [ -z "$CURRENT_SOURCE" ]
 			then
-				xmpp "Snapshot for $CURRENT does not exist, using live data for size estimation"
+				echoext "Snapshot for $CURRENT does not exist, using live data for size estimation"
 				CURRENT_SOURCE="$C"
 			fi
 			NEEDED_SPACE=$(($NEEDED_SPACE + `du -m -d 0 "$CURRENT_SOURCE" | cut -f 1`))
@@ -126,17 +91,16 @@ function backup {
 
 		if [ "$NEEDED_SPACE" -gt "$FREE_SPACE" ]
 		then
-			xmpp Not enough space for backup
+			echoext Not enough space for backup
 			CONTINUE=1
 		fi
 
 
 		if [ "$CONTINUE" -eq 0 ]
 		then
-			echo ---------------
+			LOG_FILE=$(mktemp)
 			rsnapshot -t -c "$BACKUP_FOLDER/.rsnapshot.conf" "$INTERVAL" | sed -e "N;s|\\\\\n| |p;d;" | grep rsync
-			echo ---------------
-			ionice -c 2 -n 7 rsnapshot -v -c "$BACKUP_FOLDER/.rsnapshot.conf" "$INTERVAL" 2>&1 | tee -a "$LOG_FILE" 
+			ionice -c 2 -n 7 rsnapshot -v -c "$BACKUP_FOLDER/.rsnapshot.conf" "$INTERVAL" 2>&1 | tee -a "$LOG_FILE"
 
 			RESULT_RSNAPSHOT="${PIPESTATUS[0]}"
 			RESULT_MESSAGE="Backup of $BACKUP_FOLDER"
@@ -148,23 +112,24 @@ function backup {
 			else
 				RESULT_MESSAGE="$RESULT_MESSAGE failed with status code $RESULT_RSYNC"
 				echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
-				sendLogFile
+				echoext "Error while running rsnapshot"
+				echoext "$LOG_FILE"
+				rm "$LOG_FILE"
 				cleanup
 				return 1
 			fi
 		else
 			RESULT_MESSAGE="$RESULT_MESSAGE failed, at least one source empty"
 			echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
-			sendLogFile
 			cleanup
 			return 1
 		fi
 
-		xmpp "$RESULT_MESSAGE"
+		echoext "$RESULT_MESSAGE"
 
 	elif [ -e "$BACKUP_FOLDER/.backup" ]
 	then
-		xmpp "Perform backup with rsync"
+		echoext "Perform backup with rsync"
 
 		SNAPSHOT_FOLDERS=""
 		FAILURES=0
@@ -177,12 +142,12 @@ function backup {
 
 			if [ ! -d "$CURRENT_SOURCE" ]
 			then
-				xmpp "Line $CURRENT_SOURCE from $MARKER_FILE does not contain a valid source folder"
+				echoext "Line $CURRENT_SOURCE from $MARKER_FILE does not contain a valid source folder"
 				FAILURES=$(( FAILURES + 1 ))
 				continue
 			elif [ "$( ls -A "$CURRENT_SOURCE" | wc -l )" -eq 0 ]
 			then
-				xmpp "Line $CURRENT_SOURCE from $MARKER_FILE contains empty source folder"
+				echoext "Line $CURRENT_SOURCE from $MARKER_FILE contains empty source folder"
 				FAILURES=$(( FAILURES + 1 ))
 				continue
 			else
@@ -204,7 +169,7 @@ function backup {
 
 			if [ -z "$CURRENT_SOURCE" ]
 			then
-				xmpp "Snapshot for $CURRENT does not exist, using live data for size estimation"
+				echoext "Snapshot for $CURRENT does not exist, using live data for size estimation"
 				CURRENT_SOURCE="$CURRENT"
 			fi
 
@@ -217,7 +182,7 @@ function backup {
 
 		if [ "$NEEDED_SPACE" -gt "$FREE_SPACE" ]
 		then
-			xmpp Not enough space for backup
+			echoext Not enough space for backup
 			cleanup
 			return 1
 		fi
@@ -236,19 +201,19 @@ function backup {
 			CURRENT_SOURCE=`getLatestSnapshot "$CURRENT"`
 			if [ -z "$CURRENT_SOURCE" ]
 			then
-				xmpp "Snapshot for $CURRENT does not exist, using live data for backup"
+				echoext "Snapshot for $CURRENT does not exist, using live data for backup"
 				CURRENT_SOURCE="$CURRENT"
 			fi
 
 			if [ 0 -eq $(ls $CURRENT_SOURCE | wc -l) ]
 			then
-				xmpp "Source $CURRENT_SOURCE is empty, skipping"
+				echoext "Source $CURRENT_SOURCE is empty, skipping"
 				continue
 			fi
 
 			DESTINATION="$BACKUP_FOLDER/$CURRENT_DIR_NAME/"
 
-			xmpp "Backing up $CURRENT_SOURCE to $DESTINATION"
+			echoext "Backing up $CURRENT_SOURCE to $DESTINATION"
 
 
 			if [ ! -d "$DESTINATION" ]
@@ -256,6 +221,7 @@ function backup {
 				mkdir "$BACKUP_FOLDER/$CURRENT_DIR_NAME"
 			fi
 
+			LOG_FILE=$(mktemp)
 			ionice -c 2 -n 7 rsync $RSYNC_PARAMS "$CURRENT_SOURCE" "$DESTINATION" >> "$LOG_FILE" 2>&1
 
 			RESULT_RSYNC="$?"
@@ -269,23 +235,26 @@ function backup {
 			else
 				RESULT_MESSAGE="$RESULT_MESSAGE failed with status code $RESULT_RSYNC"
 				echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
+
+				echoext "Error while running rsync"
+				echoext "$LOG_FILE"
+				rm "$LOG_FILE"
 			fi
 
-			xmpp "$RESULT_MESSAGE"
+			echoext "$RESULT_MESSAGE"
 
 		done <<< "$SNAPSHOT_FOLDERS"
 
 		if [ "$FAILURES" -gt 0 ]
 		then
 			echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
-			xmpp "$FAILURES source folders could not be used"
+			echoext "$FAILURES source folders could not be used"
 
-			sendLogFile
 			cleanup
 			return 1
 		fi
 	else
-		xmpp "$BACKUP_FOLDER does not contain usable backup config file! Aborting..."
+		echoext "$BACKUP_FOLDER does not contain usable backup config file! Aborting..."
 		cleanup
 		return 1
 	fi
@@ -416,7 +385,7 @@ then
 	do
 		MSG=$(check "$C")
 		(( OVERALL_RC |= $? ))
-		[ "$OVERALL_RC" -ne 0 ] && xmpp "$MSG"
+		[ "$OVERALL_RC" -ne 0 ] && echoext "$MSG"
 	done
 	exit $OVERALL_RC
 else
