@@ -100,8 +100,11 @@ function maintenance {
 }
 
 function status {
-	echo NOT IMPLEMENTED
-	exit 1
+	STORAGE_META_DIR="$1"
+	UUID="$(blkid $(getTopDevice "$(cat "$STORAGE_META_DIR/devices" | head -n 1)") --output export | grep UUID | head -n 1 | cut -d '=' -f 2)"
+	ERRORS_THIS_BOOT=$(journalctl -b | grep "$UUID" | grep -i error )
+	[ -n "$ERRORS_THIS_BOOT" ] && echo "Errors since boot:\n$ERRORS_THIS_BOOT"
+	exit "$(echo "$ERRORS_THIS_BOOT" | grep -v "^$" | wc -l)"
 }
 
 function backup {

@@ -131,9 +131,9 @@ function monitor {
 			if [ "$RESULT" -ne 0 ]
 			then
 				echo Pool $C is mounted but has problems >> "$MONITOR_LOG"
-				echo "$IS_RO" | sed 's|^|    |' >> "$MONITOR_LOG"
-				echo "$STATUS" | sed 's|^|    |' >> "$MONITOR_LOG"
-				echo "$SMART" | sed 's|^|    |' >> "$MONITOR_LOG"
+				[ -n "$IS_RO" ] && echo "$IS_RO" | sed 's|^|    |' >> "$MONITOR_LOG"
+				[ -n "$STATUS" ] && echo "$STATUS" | sed 's|^|    |' >> "$MONITOR_LOG"
+				[ -n "$SMART" ] && echo "$SMART" | sed 's|^|    |' >> "$MONITOR_LOG"
 			fi
 		else
 			echo Pool "$C" not mounted
