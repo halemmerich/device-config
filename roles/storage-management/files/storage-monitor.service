@@ -1,0 +1,8 @@
+[Unit]
+Description=Monitor storage pools
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/
+ExecStart=/bin/systemd-inhibit --what sleep --who Maintenance /bin/bash /usr/local/bin/storage_pool monitor

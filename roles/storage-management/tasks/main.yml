@@ -91,6 +91,8 @@
     - storage-maintenance-full.timer
     - storage-maintenance-mini.service
     - storage-maintenance-mini.timer
+    - storage-monitor.service
+    - storage-monitor.timer
     - storage-backup.service
     - storage-backup.timer
     - storage-mount.service
@@ -111,6 +113,7 @@
   loop:
     - storage-maintenance-full.timer
     - storage-maintenance-mini.timer
+    - storage-monitor.timer
     - storage-backup.timer
   tags:
     - config
