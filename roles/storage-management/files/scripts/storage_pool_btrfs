@@ -219,6 +219,7 @@ case $COMMAND in
 	remove) remove "$@" ;;
 	balance) balance "$@" ;;
 	scrub) scrub "$@" ;;
+	maintenance) maintenance "$@" ;;
 	status) status "$@" ;;
 	backup) backup "$@" ;;
 	changeProfile) changeProfile "$@" ;;
