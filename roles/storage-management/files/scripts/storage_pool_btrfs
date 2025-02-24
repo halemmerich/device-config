@@ -116,7 +116,7 @@ function scrub {
 	if [ "$TYPE" == mini ]
 	then
 		[ "$STATUS" == finished ] && ( btrfs scrub start -c 3 "$(getMountpoint "$STORAGE_META_DIR")" || return 1 )
-		[ "$STATUS" == aborted ] && ( btrfs scrub resume "$(getMountpoint "$STORAGE_META_DIR")" || return 1 )
+		[ "$STATUS" == aborted -o "$STATUS" == interrupted ] && ( btrfs scrub resume "$(getMountpoint "$STORAGE_META_DIR")" || return 1 )
 		sleep "$MINI_SCRUB_TIME" || return 1
 		if [ "$STATUS" == running ]
 		then
@@ -135,7 +135,7 @@ function scrub {
 			btrfs scrub start -B -c 3 "$(getMountpoint "$STORAGE_META_DIR")" || return 1
 			date > "$STORAGE_META_DIR/state_last_full_scrub"
 		fi
-		if [ "$STATUS" == aborted ]
+		if [ "$STATUS" == aborted -o "$STATUS" == interrupted ]
 		then
 			btrfs scrub resume -B "$(getMountpoint "$STORAGE_META_DIR")" || return 1
 		fi
