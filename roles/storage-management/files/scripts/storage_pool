@@ -68,12 +68,18 @@ function add {
 	defer "$@"
 }
 
+function mount {
+	STORAGE_META_DIR="$1"
+	COMMAND=mount
+	[ -d "$STORAGE_META_DIR" ] && defer "$STORAGE_META_DIR" || echo Storage metadata folder \""$STORAGE_META_DIR"\" not existing
+	monitor "$STORAGE_META_DIR"
+}
+
 function automount {
 	[ ! -f /etc/storage/automount ] && { echo Storage automount config not found; exit 0; }
-	COMMAND=mount
 	cat /etc/storage/automount | while read C
 	do
-		[ -d "$C" ] && defer "$C" || echo Storage metadata folder \""$C"\" not existing
+		mount "$@"
 	done
 }
 
@@ -88,7 +94,12 @@ function autoumount {
 
 function monitor {
 	MONITOR_LOG=$(mktemp)
-	find /etc/storage/pools/ -mindepth 1 -maxdepth 1 -type d | while read C
+
+	STORAGE_META_DIRS="$1"
+
+	[ -z "$STORAGE_META_DIRS" ] && STORAGE_META_DIRS="$(find /etc/storage/pools/ -mindepth 1 -maxdepth 1 -type d)"
+
+	echo "$STORAGE_META_DIRS" | while read C
 	do
 		if checkMounted "$C"
 		then
@@ -102,7 +113,6 @@ function monitor {
 			for DEV in $(cat "$C/devices")
 			do
 				SMART_COMMAND=smartctl
-				#echo $DEV | grep -q lun && SMART_COMMAND="$SMART_COMMAND -t scsi"
 				SMART_REPORT=$(smartctl -a "$(getDeviceForId "$DEV")")
 				SMART_RESULT=$?
 				SMART_OK=$(( SMART_RESULT & 1 ))
@@ -117,14 +127,34 @@ function monitor {
 				if [ "$SMART_RESULT" -ne 0 ]
 				then
 					(( RESULT++ ))
-					SMART="$SMART\n\nSMART Status for $DEV at $(getDeviceForId "$DEV"):"
-					[ "$SMART_OPEN_FAILED" -ne 0 ] && SMART="$SMART\nFailed to open device"
-					[ "$SMART_COMMAND_FAILED" -ne 0 ] && SMART="$SMART\nCommand to disk failed"
-					[ "$SMART_DISK_FAILING" -ne 0 ] && SMART="$SMART\nDisk is failing"
-					[ "$SMART_DISK_PREFAIL" -ne 0 ] && SMART="$SMART\nDisk is pre fail"
-					[ "$SMART_DISK_PREFAIL_PAST" -ne 0 ] && SMART="$SMART\nDisk was pre fail in the past"
-					[ "$SMART_DISK_HAS_ERRORS_IN_LOG" -ne 0 ] && SMART="$SMART\nDisk has errors in log"
-					[ "$SMART_DISK_HAS_SELFTEST_ERRORS_IN_LOG" -ne 0 ] && "$SMART\nDisk has selftest errors in log"
+					SMART="$SMART
+SMART Status for $DEV at $(getDeviceForId "$DEV"):"
+					[ "$SMART_OPEN_FAILED" -ne 0 ] && SMART="$SMART
+Failed to open device"
+					[ "$SMART_COMMAND_FAILED" -ne 0 ] && SMART="$SMART
+Command to disk failed"
+					[ "$SMART_DISK_FAILING" -ne 0 ] && SMART="$SMART
+Disk is failing for these attributes
+\`\`\`
+    $(echo "$SMART_REPORT" | grep 'ID#')
+    $(echo "$SMART_REPORT" | grep FAILING_NOW)
+\`\`\`"
+					[ "$SMART_DISK_PREFAIL" -ne 0 ] && SMART="$SMART
+Disk is pre fail for these attributes
+\`\`\`
+    $(echo "$SMART_REPORT" | grep 'ID#')
+    $(echo "$SMART_REPORT" | grep Pre-fail | awk '$4 <= $6')
+\`\`\`"
+					[ "$SMART_DISK_PREFAIL_PAST" -ne 0 ] && SMART="$SMART
+Disk was pre fail in the past for these attributes
+\`\`\`
+    $(echo "$SMART_REPORT" | grep 'ID#')
+    $(echo "$SMART_REPORT" | grep In_the_past)
+\`\`\`"
+					[ "$SMART_DISK_HAS_ERRORS_IN_LOG" -ne 0 ] && SMART="$SMART
+Disk has errors in log"
+					[ "$SMART_DISK_HAS_SELFTEST_ERRORS_IN_LOG" -ne 0 ] && SMART="$SMART
+Disk has selftest errors in log"
 				fi
 			done
 
@@ -133,7 +163,7 @@ function monitor {
 				echo Pool $C is mounted but has problems >> "$MONITOR_LOG"
 				[ -n "$IS_RO" ] && echo "$IS_RO" | sed 's|^|    |' >> "$MONITOR_LOG"
 				[ -n "$STATUS" ] && echo "$STATUS" | sed 's|^|    |' >> "$MONITOR_LOG"
-				[ -n "$SMART" ] && echo "$SMART" | sed 's|^|    |' >> "$MONITOR_LOG"
+				[ -n "$SMART" ] && echo "$SMART" | sed 's|^|    |' | sed 's|^    ```$|```|' >> "$MONITOR_LOG"
 			fi
 		else
 			echo Pool "$C" not mounted
@@ -157,6 +187,7 @@ storage_pool maintenance <metadir> <type>
 	Regular maintenance of the pool, performs scrubbing and fixing of found errors
 storage_pool fix <metadir>
 	Repairs easy to fix errors
+storage_pool monitor [metadir]
 storage_pool status <metadir> <type>
 storage_pool add <metadir> <device>
 storage_pool automount <metadir>
@@ -182,6 +213,7 @@ storage_backup backup
 case $COMMAND in
 	add) add "$@" ;;
 	create) create "$@" ;;
+	mount) mount "$@" ;;
 	automount) automount "$@" ;;
 	autoumount) autoumount "$@" ;;
 	monitor) monitor "$@" ;;
