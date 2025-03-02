@@ -27,4 +27,8 @@ RUN echo -e "$PASSWORD\n$PASSWORD\n" | passwd ansible
 RUN echo "$SSH_PUBKEY" > /home/ansible/.ssh/authorized_keys
 RUN echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
 
+#restore missing locale files
+RUN sed -i "/locale/d" /etc/pacman.conf
+RUN pacman -Su --noconfirm glibc
+
 CMD ["/sbin/init"]
