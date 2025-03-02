@@ -9,6 +9,14 @@
 
 - include_tasks: "{{ ansible_os_family | lower }}.yml"
 
+- name: 'Unexpire nextcloud user'
+  user:
+    name: "nextcloud"
+    expires: "-1"
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - config
+
 - name: 'Create php config'
   template:
     src: "{{ item.src }}"
