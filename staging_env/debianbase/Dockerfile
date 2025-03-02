@@ -1,4 +1,5 @@
-FROM debian:bookworm
+ARG DEBIAN_TAG=bookworm
+FROM debian:$DEBIAN_TAG
 ARG PASSWORD="ansible"
 ARG SSH_PUBKEY=""
 ARG TIMEZONE=Europe/Berlin

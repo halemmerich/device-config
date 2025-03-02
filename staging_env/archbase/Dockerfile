@@ -1,11 +1,12 @@
-#FROM archlinux:base-20220109.0.43549
-FROM archlinux
+ARG ARCH_TAG=base
+FROM archlinux/archlinux:${ARCH_TAG}
+ARG ARCH_DATE=2022/01/10
 ARG PASSWORD="ansible"
 ARG SSH_PUBKEY=""
 ARG TIMEZONE=Europe/Berlin
 
-#RUN sed -i -e "s|^SigLevel.*|SigLevel=Never|" /etc/pacman.conf
-#RUN echo 'Server=https://archive.archlinux.org/repos/2022/01/10/$repo/os/$arch' > /etc/pacman.d/mirrorlist
+RUN sed -i -e "s|^SigLevel.*|SigLevel=Never|" /etc/pacman.conf
+RUN echo Server=https://archive.archlinux.org/repos/${ARCH_DATE}/'$repo/os/$arch' > /etc/pacman.d/mirrorlist
 
 RUN pacman -Syy --noconfirm 
 RUN pacman -S --noconfirm archlinux-keyring

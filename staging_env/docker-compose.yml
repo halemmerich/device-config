@@ -1,10 +1,17 @@
 services:
   arch-base:
-    build: archbase/
+    build:
+      context: archbase/
+      args:
+        ARCH_TAG:
+        ARCH_DATE:
     image: archbase:latest
     entrypoint: "true"
   debian-base:
-    build: debianbase/
+    build:
+      context: debianbase/
+      args:
+        DEBIAN_TAG:
     image: debianbase:latest
     entrypoint: "true"
   arch-vnc:
@@ -21,7 +28,6 @@ services:
       - debian-base
 
   staging-repo-arch:
-    build: archbase/
     image: archbase:latest
     depends_on:
       - arch-base
@@ -42,7 +48,6 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   staging-dns-arch:
-    build: archbase/
     image: archbase:latest
     depends_on:
       - arch-base
@@ -60,7 +65,6 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   staging-dns-debian:
-    build: debianbase/
     image: debianbase:latest
     depends_on:
       - debian-base
@@ -78,7 +82,6 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   staging-server-arch:
-    build: archbase/
     image: archbase:latest
     depends_on:
       - arch-base
@@ -96,7 +99,6 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   staging-server-debian:
-    build: debianbase/
     image: debianbase:latest
     depends_on:
       - debian-base
@@ -114,7 +116,6 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   staging-desktop-arch:
-    build: archvnc/
     image: archvnc:latest
     depends_on:
       - arch-vnc
@@ -134,7 +135,6 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   staging-desktop-debian:
-    build: debianvnc/
     image: debianvnc:latest
     depends_on:
       - debian-vnc
@@ -153,7 +153,6 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   staging-testclient-arch:
-    build: archvnc/
     image: archvnc:latest
     depends_on:
       - arch-vnc
@@ -171,9 +170,8 @@ services:
     volumes:
       - testclientdata:/var/lib/testclient
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-    
+
   staging-testclient-debian:
-    build: debianvnc/
     image: debianvnc:latest
     depends_on:
       - debian-vnc
@@ -192,7 +190,6 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   staging-nas-arch:
-    build: archbase/
     image: archbase:latest
     depends_on:
       - arch-base
@@ -210,7 +207,6 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   staging-nas-debian:
-    build: debianbase/
     image: debianbase:latest
     depends_on:
       - debian-base
@@ -228,7 +224,6 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   staging-gameserver-arch:
-    build: archbase/
     image: archbase:latest
     depends_on:
       - arch-base
@@ -246,7 +241,6 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   staging-gameserver-debian:
-    build: debianbase/
     image: debianbase:latest
     depends_on:
       - debian-base
