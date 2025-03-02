@@ -5,9 +5,8 @@
 
 - name: Set locale
   locale_gen:
-    name: "{{ item }}"
+    name: "{{ locales }}"
     state: present
-  loop: "{{ locales }}"
 
 - name: create locale.conf
   file:
