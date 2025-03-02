@@ -22,7 +22,7 @@
   - util-package-upgrade
   - pacman-repo-builder
 
-- hosts: full
+- hosts: all
   become: yes
   roles:
   - custom-repos
@@ -42,12 +42,12 @@
   roles:
   - common-debian
 
-- hosts: full
+- hosts: all
   become: yes
   roles:
   - common
 
-- hosts: full
+- hosts: all
   become: yes
   roles:
   - hosts
