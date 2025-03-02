@@ -29,15 +29,3 @@
     state: present
   tags:
     - install
-
-- name: Install console utilities
-  package:
-    name:
-      - tmux
-      - mosh
-      - wget
-      - htop
-      - iotop
-      - rsync
-  tags:
-    - install
