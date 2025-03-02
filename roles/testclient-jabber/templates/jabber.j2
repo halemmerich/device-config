@@ -7,7 +7,7 @@ EXPECTED_FAILURES=1
 
 if [ ! -d caas ]
 then
-	git clone https://github.com/iNPUTmice/caas.git
+	git clone https://codeberg.org/iNPUTmice/caas.git
 	cd caas
 	JAVA_HOME={{ java_home }} mvn package
 	cd ..
