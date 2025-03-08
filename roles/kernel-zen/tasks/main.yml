@@ -47,7 +47,7 @@
       register: copied_preset
       tags:
         - config
-    
+
     - name: Rebuild kernel image
       shell:
         cmd: "mkinitcpio -p linux-zen"
@@ -64,7 +64,7 @@
     stat:
       path: /boot/grub/grub.cfg
     register: grub_config_file
-    
+
   - name: Reconfig grub
     shell:
       cmd: "grub-mkconfig -o /boot/grub/grub.cfg"

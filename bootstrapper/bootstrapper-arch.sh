@@ -427,7 +427,6 @@ EOF
 
 		tee /mnt/etc/mkinitcpio.d/linux-lts.preset << EOF
 ALL_kver="/boot/vmlinuz-linux-lts"
-ALL_microcode=(/boot/*-ucode.img)
 PRESETS=('default' 'fallback')
 default_uki="/boot/EFI/Linux/arch-linux-lts.efi"
 fallback_uki="/boot/EFI/Linux/arch-linux-lts-fallback.efi"
@@ -457,14 +456,13 @@ EOF
 
 		arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 	fi
-	
 
 	echo "KEYMAP=${KEYMAP}" > /mnt/etc/vconsole.conf
 
 	arch-chroot /mnt pacman --noconfirm -S mkinitcpio-utils mkinitcpio-systemd-tool busybox openssh python tinyssh cryptsetup
 
 	mkdir -p /mnt/root/.ssh
-	
+
 	[ ! -e /mnt/etc/ssh/ssh_host_ed25519_key ] && ssh-keygen -t ed25519 -N "" -f /mnt/etc/ssh/ssh_host_ed25519_key
 
 	if [ -z "$REMOTE_UNLOCK_KEYS" ]
@@ -488,7 +486,7 @@ EOF
 MODULES=()
 BINARIES=()
 FILES=()
-HOOKS=(base kms systemd autodetect modconf block keyboard sd-vconsole filesystems fsck systemd-tool)
+HOOKS=(base kms systemd autodetect microcode modconf block keyboard sd-vconsole filesystems fsck systemd-tool)
 EOF
 
 	arch-chroot /mnt systemctl enable initrd-cryptsetup.path initrd-tinysshd.service initrd-network.service initrd-sysroot-mount.service
@@ -510,7 +508,7 @@ EOF
 	set +e
 	arch-chroot /mnt pacman --noconfirm -S networkmanager
 	arch-chroot /mnt systemctl enable NetworkManager
-	
+
 	#configure everything for ansible
 	arch-chroot /mnt pacman --noconfirm -S openssh
 	arch-chroot /mnt systemctl enable sshd
@@ -519,14 +517,14 @@ EOF
 
 	arch-chroot /mnt useradd --create-home admin
 	arch-chroot /mnt usermod -aG wheel admin
-	
+
 	#reinstall sudo
 	arch-chroot /mnt pacman --noconfirm -S sudo
 
 	arch-chroot /mnt sh -c "echo admin:$ADMIN_PASSWORD | chpasswd"
 
 	arch-chroot /mnt su -c "mkdir -p .ssh; ssh-keygen -f .ssh/id_rsa -N \"\" -C \"admin@$NEW_HOSTNAME\"" --login admin 
-	
+
 	if [ -z "$ADMIN_AUTHORIZED_KEYS" ]
 	then
 		if [ -n "$( find . -maxdepth 1 -name "*.pub" -print -quit )" ]
