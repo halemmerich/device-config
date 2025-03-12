@@ -20,6 +20,7 @@
 [{{ share.name }}]
 	path = {{ share.path }}
 	browseable = {{ share.browseable | default('no') }}
+	public = {{ share.public | default('no') }}
 	read only = {{ share.readonly | default('yes') }}
 	create mask = {{ share.createmask | default('755') }}
 	guest ok = {{ share.guestok | default('no') }}
@@ -27,6 +28,9 @@
 	case sensitive = {{ share.casesensitive | default('auto') }}
 	wide links = {{ share.widelinks | default('no') }}
 	{% if share.validusers is defined %}valid users ={% for item in share.validusers %} {{item}}{% endfor %}{% endif %}
+	{% if share.forcegroup is defined %}force group = {{ share.forcegroup }}{% endif %}
+	{% if share.directorymode is defined %}directory mode =  {{ share.directorymode }}{% endif %}
+	{% if share.createmode is defined %}create mode =  {{ share.createmode }}{% endif %}
 	
 	
 {% endfor %}
