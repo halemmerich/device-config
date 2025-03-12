@@ -25,6 +25,8 @@
 - hosts: all
   become: yes
   roles:
+  - ansible-deps
+  - hosts
   - custom-repos
 
 - hosts: custom
@@ -47,24 +49,12 @@
   roles:
   - common
 
-- hosts: all
-  become: yes
-  roles:
-  - hosts
-  - ansible-deps
-
 - hosts: staging_local
   become: yes
   remote_user: admin
   roles:
     - users
     - custom-software
-
-- hosts: staging_local
-  become: yes
-  remote_user: admin
-  roles:
-    - users
 
 - hosts: local
   become: yes
@@ -84,6 +74,7 @@
   become: yes
   remote_user: admin
   roles:
+  - server-backup
   - server-nginx-base
   - server-letsencrypt
   - server-nginx
@@ -105,6 +96,15 @@
   become: yes
   roles:
   - server-remotely
+
+- hosts: server_restic
+  become: yes
+  roles:
+  - server-backup
+  - server-nginx-base
+  - server-letsencrypt
+  - server-nginx
+  - server-restic
 
 - hosts: server_arch
   become: yes

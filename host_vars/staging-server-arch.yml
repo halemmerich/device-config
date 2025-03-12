@@ -160,3 +160,13 @@ linuxgsm_servers:
     ports:
       - {port: "2456", proto: "udp"}
       - {port: "2457", proto: "udp"}
+
+server_restic_max_size: 10737418240
+server_restic_mounts:
+  - type: local
+    target: "/tmp/resticlocal"
+    name: localstorage
+    binds:
+      - path: testpath
+        name: local
+        user: test

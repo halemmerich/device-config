@@ -1,0 +1,3 @@
+{% for current in server_restic_mounts %}
+umount {{ server_restic_repo_path | default("/opt/restic-server/repo") }}/{{ current.name }}
+{% endfor %}

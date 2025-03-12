@@ -1,0 +1,19 @@
+REPO="{{ server_restic_repo_path | default("/opt/restic-server/repo") }}"
+MOUNT="{{ server_restic_mount_path | default("/opt/restic-server/mount") }}"
+{% for current in server_restic_mounts %}
+mkdir -p "$MOUNT/{{ current.name }}"
+chown restic-server:restic-server "$MOUNT/{{ current.name }}"
+{% if current.type == "ssh" %}
+sshfs "{{ current.target }}" "$MOUNT/{{ current.name }}"
+{% endif %}
+{% if current.binds is defined %}
+{% for bind in current.binds %}
+mkdir -p "$REPO/{{ bind.user }}/{{ bind.name }}"
+chown restic-server:restic-server "$REPO/{{ bind.user }}"
+chown restic-server:restic-server "$REPO/{{ bind.user }}/{{ bind.name }}"
+mkdir -p "$MOUNT/{{ current.name }}/{{ bind.path }}"
+mount -o bind "$MOUNT/{{ current.name }}/{{ bind.path }}" "$REPO/{{ bind.user }}/{{ bind.name }}"
+{% endfor %}
+{% else %}
+{% endif %}
+{% endfor %}

@@ -1,0 +1,6 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+rsync_backup /opt/restic/.htpasswd restic/; (( RC |= $? ))
+
+exit $RC

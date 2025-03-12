@@ -1,0 +1,15 @@
+#!/bin/bash
+[ -z "$1" ] && echo restic data needed: USERNAME, PASSWORD from - && exit 1
+
+IFS= read PW
+
+if [ -z "$PW" ]
+then
+	PW=$(pwgen -n 10 | cat)
+fi
+
+USERNAME="$1"
+
+echo "$PW" | htpasswd -B -i $PARAMS "/opt/restic-server/.htpasswd" $USERNAME
+
+[ "$?" = 0 ] && echo New PWD is "$PW" || echo Done

@@ -1,0 +1,150 @@
+- name: 'Create user restic-server'
+  user:
+    name: 'restic-server'
+    state: present
+    shell: /bin/false
+
+- name: Configure directories
+  file:
+    path: '/opt/restic-server'
+    owner: 'restic-server'
+    mode: '0700'
+    state: directory
+  loop:
+    - '/opt/restic-server'
+    - "{{ restic_server_repo_path | default('/opt/restic-server/repo') }}"
+
+- name: 'Create scripts'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  loop:
+    - { src: "backup/backup.sh.j2", dest: "/usr/local/lib/backupscripts/backup/restic-server.sh" }
+    - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/restic-server.sh" }
+    - { src: "server_restic_adduser.j2", dest: "/usr/local/bin/server_restic_adduser" }
+    - { src: "server_restic_resetpwd.j2", dest: "/usr/local/bin/server_restic_resetpwd" }
+    - { src: "mount.sh.j2", dest: "/opt/restic-server/mount.sh" }
+    - { src: "umount.sh.j2", dest: "/opt/restic-server/umount.sh" }
+
+- name: 'Create service restic-server'
+  template:
+    src: restic-server.service.j2
+    dest: '/etc/systemd/system/restic-server.service'
+    mode: '0644'
+  register: systemd
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  when: systemd.changed
+  tags:
+    - systemd
+
+- name: Create temporary file
+  tempfile:
+    state: file
+  register: download_repo
+
+- name: 'Get index.html'
+  get_url:
+    url: 'https://github.com/restic/rest-server/releases'
+    dest: '{{ download_repo.path }}'
+    force: yes
+  when: download_repo.path is defined
+
+- name: Determine latest available version
+  shell: 'grep -Eo "v[0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}" {{ download_repo.path }} | sed "s|^v||"  | sort -uV | tail -n1'
+  register: latest_determined
+  when: download_repo.path is defined
+
+- name: Remove temporary file
+  file:
+    path: "{{ download_repo.path }}"
+    state: absent
+  when: download_repo.path is defined
+
+- name: Check installed version
+  stat:
+    path: '/opt/restic-server/latest'
+  register: latest_stat
+
+- name: Set latest installed version
+  set_fact:
+    latest_installed: '{{ latest_stat.stat.lnk_target | basename }}'
+  when: latest_stat.stat.exists is defined and latest_stat.stat.exists == true
+
+- name: Upgrade restic server
+  block:
+    - name: 'Create destination for version {{ latest_determined.stdout }}'
+      file:
+        path: '/opt/restic-server/{{ latest_determined.stdout }}'
+        state: directory
+        owner: 'restic-server'
+        mode: '0700'
+      when: latest_determined.stdout is defined
+
+    - name: 'Deploy rest-server_{{ latest_determined.stdout }}_linux_386.tar.gz'
+      unarchive:
+        src: 'https://github.com/restic/rest-server/releases/download/v{{ latest_determined.stdout }}/rest-server_{{ latest_determined.stdout }}_linux_386.tar.gz'
+        dest: '/opt/restic-server/{{ latest_determined.stdout }}'
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+      when: latest_determined.stdout is defined
+
+    - name: 'Stop service'
+      systemd:
+        name: 'restic-server'
+        state: stopped
+
+    - name: 'Set symlink'
+      file:
+        src: '/opt/restic-server/{{ latest_determined.stdout }}'
+        dest: '/opt/restic-server/latest'
+        owner: 'restic-server'
+        state: link
+        force: yes
+      when: latest_determined.stdout is defined
+
+    - name: 'Set executable bits'
+      file:
+        path: '/opt/restic-server/latest/rest-server'
+        mode: u=rwx,g=rx,o=rx
+      when: latest_determined.stdout is defined
+
+    - name: 'Touch .htpasswd'
+      file:
+        path: '/opt/restic-server/.htpasswd'
+        mode: u=rw,g=r,o=r
+        owner: root
+        group: root
+        state: touch
+      when: latest_determined.stdout is defined
+
+  when: (latest_stat.stat.exists is defined and latest_stat.stat.exists == false) or (latest_determined.stdout is defined and latest_installed is defined and latest_determined.stdout is version(latest_installed, ">"))
+
+- name: 'Create certificates'
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  args:
+    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
+  loop:
+    - restic
+  notify: restart_nginx
+  tags:
+    - config
+
+- name: 'Create config nginx'
+  template:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    mode: '0700'
+  notify: restart_nginx
+  loop:
+    - { src: "nginx/restic.conf.j2", dest: "/etc/nginx/servers.d/restic.conf" }
+  tags:
+    - config
+
+- name: 'Start service'
+  systemd:
+    name: 'restic-server'
+    state: started

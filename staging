@@ -70,10 +70,6 @@ staging-repo-arch
 staging-nas-arch
 staging-nas-debian
 
-[nas]
-staging-nas-arch
-staging-nas-debian
-
 [server_arch]
 staging-server-arch
 
@@ -91,6 +87,10 @@ staging-server-debian
 
 [server_remotely]
 staging-server-arch
+
+[server_restic]
+staging-server-arch
+staging-server-debian
 
 [server_syncplay]
 staging-server-arch

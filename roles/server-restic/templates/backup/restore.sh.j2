@@ -1,0 +1,6 @@
+#!/bin/bash
+MOUNTDIR="$1"
+
+cp "$MOUNTDIR"/restic/.htpasswd /opt/restic/.htpasswd
+
+chown restic:restic -R /opt/restic/.htpasswd
