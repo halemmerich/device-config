@@ -15,6 +15,9 @@ fi
 [[ "$FILTER" == *"arch"* ]] && [[ "$FILTER" != *"dns-arch"* ]] && FILTER="$FILTER,staging-dns-arch"
 [[ "$FILTER" == *"arch"* ]] && [[ "$FILTER" != *"repo-arch"* ]] && FILTER="$FILTER,staging-repo-arch"
 [[ "$FILTER" == *"debian"* ]] && [[ "$FILTER" != *"dns-debian"* ]] && FILTER="$FILTER,staging-dns-debian"
+[[ "$FILTER" != *"debian"* ]] && [[ "$FILTER" != *"arch"* ]] && FILTER="$FILTER,staging-repo-arch"
+
+echo Extended filter is "$FILTER"
 
 STAGING_HOSTS="-i staging_hosts.example"
 [ -e "staging_hosts" ] && STAGING_HOSTS="-i staging_hosts"
