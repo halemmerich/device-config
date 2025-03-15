@@ -148,3 +148,4 @@
   systemd:
     name: 'restic-server'
     state: restarted
+    enabled: true
