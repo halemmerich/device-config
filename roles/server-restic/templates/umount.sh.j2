@@ -4,7 +4,7 @@ MOUNT="{{ server_restic_mount_path | default("/opt/restic-server/mount") }}"
 {% for current in server_restic_mounts %}
 {% if current.binds is defined %}
 {% for bind in current.binds %}
-umount "$REPO/{{ bind.user }}/{{ bind.name }}" || (( RC++ ))
+umount "$REPO/{{ bind.user }}" || (( RC++ ))
 {% endfor %}
 {% endif %}
 umount "$MOUNT/{{ current.name }}" || (( RC++ ))
