@@ -1,3 +1,12 @@
+RC=0
+REPO="{{ server_restic_repo_path | default("/opt/restic-server/repo") }}"
+MOUNT="{{ server_restic_mount_path | default("/opt/restic-server/mount") }}"
 {% for current in server_restic_mounts %}
-umount {{ server_restic_repo_path | default("/opt/restic-server/repo") }}/{{ current.name }}
+{% if current.binds is defined %}
+{% for bind in current.binds %}
+umount "$REPO/{{ bind.user }}/{{ bind.name }}" || (( RC++ ))
 {% endfor %}
+{% endif %}
+umount "$MOUNT/{{ current.name }}" || (( RC++ ))
+{% endfor %}
+exit $RC
