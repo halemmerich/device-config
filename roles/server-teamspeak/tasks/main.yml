@@ -121,6 +121,7 @@
   systemd:
     name: 'teamspeak'
     state: started
+    enabled: true
 
 - community.general.ufw:
     rule: allow
