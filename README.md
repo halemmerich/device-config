@@ -5,7 +5,7 @@
 - Create the `production` inventory file, similar to the `staging` environment
 - Optionally create the `production_hosts` file, similar to `staging_hosts.example`
   - `ansible_host`, `ansible_user`, `ansible_become_pass`, `ansible_python_interpreter` can useful variables to set depending on OS
-- Optionally create a secrets.yml file with `ansible-vault create secrets.yml` containing entries of the form `become_pass_<hostname>: P4ssW0rD` where `<hostname>` is to be replaced with hostnames as used in the production inventory. Set the `ansible_become_pass` variable to `{{ become_pass_hostname }}` to use the password from the vault
+- Optionally create a secret.yml file with `ansible-vault create secrets.yml` containing entries of the form `become_pass_<hostname>: P4ssW0rD` where `<hostname>` is to be replaced with hostnames as used in the production inventory. Set the `ansible_become_pass` variable to `{{ become_pass_hostname }}` to use the password from the vault
 
 ## Role naming scheme:
 
