@@ -1,12 +1,14 @@
 #!/bin/bash
 
-[ -e "production" ] && echo This expects a production inventory to exist, have a look at the README.md && exit 1
+[ -e "production" ] || { echo This expects a production inventory to exist, have a look at the README.md && exit 1; }
 
-[ -e "secrets.yml" ] && read -sp 'Enter vault password ' PASS
+[ -e "secret.yml" ] && read -sp 'Enter vault password ' PASS
 
 [ -e "production_hosts" ] && PRODUCTION_HOSTS="-i production_hosts"
 
-SECRETS=""
-[ -e "secrets.yml" ] && SECRETS="-e@secret.yml  --vault-password-file <(echo "$PASS")"
-
-echo "$PASS" | ansible-playbook "$PRODUCTION_HOSTS" -i production site.yml "$SECRETS" -l $@
+if [ -e "secret.yml" ]
+then
+        echo "$PASS" | ansible-playbook $PRODUCTION_HOSTS -i production site.yml -e@secret.yml --vault-password-file <(echo "$PASS") -l $@
+else
+        ansible-playbook $PRODUCTION_HOSTS -i production site.yml -l $@
+fi
