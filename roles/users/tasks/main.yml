@@ -4,7 +4,7 @@
     state: present
   tags:
     - config
-    
+
 - name: Allow 'wheel' group to use sudo
   lineinfile:
     dest: /etc/sudoers
@@ -34,4 +34,5 @@
     mode: "750"
     owner: '{{ item.key }}'
     group: '{{ item.key }}'
+  when: users is defined
   loop: "{{ users | dict2items }}"
