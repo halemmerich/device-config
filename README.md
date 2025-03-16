@@ -1,8 +1,11 @@
 # Experimental ansible roles for setting up Debian or Arch servers and clients
 
-## Use of run_limited* scripts
+## Setup
 
-These expect a secrets.yml file created with `ansible-vault create secrets.yml` containing entries of the form `become_pass_<hostname>: P4ssW0rD` where `<hostname>` is to be replaced with hostnames as used in the production inventory.
+- Create the `production` inventory file, similar to the `staging` environment
+- Optionally create the `production_hosts` file, similar to `staging_hosts.example`
+  - `ansible_host`, `ansible_user`, `ansible_become_pass`, `ansible_python_interpreter` can useful variables to set depending on OS
+- Optionally create a secrets.yml file with `ansible-vault create secrets.yml` containing entries of the form `become_pass_<hostname>: P4ssW0rD` where `<hostname>` is to be replaced with hostnames as used in the production inventory. Set the `ansible_become_pass` variable to `{{ become_pass_hostname }}` to use the password from the vault
 
 ## Role naming scheme:
 
@@ -24,12 +27,6 @@ These expect a secrets.yml file created with `ansible-vault create secrets.yml` 
 ## Staging environment:
 
 The playbook can be run against the staging environment by executing `./run_staging` and `./run_staging_upgrade`.
-
-### Configure virtual machines:
-
-Virtual machines with the `staging-*-*` names from the `host_vars` dir
-
-Network configuration as defined in the staging inventory examples. Alternatively `staging_hosts` and `staging_netconf.yml` can be created with custom network config.
 
 ### Docker:
 

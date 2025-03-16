@@ -8,8 +8,6 @@ production_hosts
 files/ca/fake/ca.key
 files/ca/fake/ca.pem
 files/ca/fake/ca.crt
-run_limited
-run_limited_upgrade
 host_vars/*
 !host_vars/staging*
 staging_env/.env
