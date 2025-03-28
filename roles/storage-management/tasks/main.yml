@@ -121,7 +121,10 @@
 
 - name: Create configuration directory
   file:
-    path: "/etc/storage/maintenance"
+    path: "{{ item }}"
     state: directory
+  loop:
+    - "/etc/storage/maintenance"
+    - "/etc/storage/pools"
   tags:
     - config
