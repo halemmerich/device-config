@@ -49,7 +49,7 @@
     path: '/opt/snapraid-btrfs/latest'
   register: latest_stat
 
-- name: Set latest installed version 
+- name: Set latest installed version
   set_fact:
     latest_installed: '{{ latest_stat.stat.lnk_target | basename }}'
   when: latest_stat.stat.exists is defined and latest_stat.stat.exists == true
@@ -115,6 +115,7 @@
     - storage-maintenance-mini.timer
     - storage-monitor.timer
     - storage-backup.timer
+    - storage-mount.service
   tags:
     - config
 
