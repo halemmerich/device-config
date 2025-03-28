@@ -36,7 +36,7 @@ function echoext {
 }
 
 function rescanDevices {
-	command -v pvscan > /dev/null && pvscan -q > /dev/null 
+	command -v pvscan > /dev/null && pvscan -q > /dev/null
 	command -v vgscan > /dev/null && vgscan -q
 	command -v lvscan > /dev/null && lvscan -q
 	command -v btrfs > /dev/null && btrfs -q device scan
@@ -50,17 +50,25 @@ function getDeviceId {
 
 	[ ! -b "$DEVICE" ] && echoerr WARNING: Argument already is an ID && echo "$DEVICE" && return 0
 
-	local DISKID=$(smartctl -i $1 | grep WWN | cut -d ':' -f 2 | sed 's/ //g')
-	local DISKID_TYPE=wwn
+	local BLOCKDEV=/dev/$(lsblk -ndo pkname "$DEVICE")
+	blkid "$BLOCKDEV" | grep -q PTTYPE && HAS_PARTS=true
 
-	[ -z "$DISKID" ] && DISKID="$(smartctl -i $1 | grep "Logical Unit" | cut -d ':' -f 2 | sed 's/ //g' | sed 's/^0x//')" && DISKID_TYPE="lun"
-	[ -z "$DISKID" ] && DISKID="$(smartctl -d sat -i $1 | grep WWN | cut -d ':' -f 2 | sed 's/ //g')"
-	[ "$DISKID" == "0000000000000000" ] && DISKID=""
-	[ "$DISKID" == "error" ] && DISKID=""
-	[ -z "$DISKID" ] && DISKID="$(smartctl -i $1 | grep Serial | cut -d ':' -f 2 | sed 's/ //g')" && DISKID_TYPE=serial
-	[ -z "$DISKID" ] && DISKID="$(smartctl -d sat -i $1 | grep Serial | cut -d ':' -f 2 | sed 's/ //g')" && DISKID_TYPE=serial
-	[ -z "$DISKID" ] && DISKID="$(realpath "$1" | sed -e "s|/|_|g")" && DISKID_TYPE=file
- 
+	if [ "$HAS_PARTS" = true ]
+	then
+		local DISKID=$(blkid -o export "$DEVICE" | grep ^UUID | cut -d '=' -f 2)
+		local DISKID_TYPE="UUID"
+	else
+		local DISKID=$(smartctl -i $1 | grep WWN | cut -d ':' -f 2 | sed 's/ //g')
+		local DISKID_TYPE=wwn
+
+		[ -z "$DISKID" ] && DISKID="$(smartctl -i $1 | grep "Logical Unit" | cut -d ':' -f 2 | sed 's/ //g' | sed 's/^0x//')" && DISKID_TYPE="lun"
+		[ -z "$DISKID" ] && DISKID="$(smartctl -d sat -i $1 | grep WWN | cut -d ':' -f 2 | sed 's/ //g')"
+		[ "$DISKID" == "0000000000000000" ] && DISKID=""
+		[ "$DISKID" == "error" ] && DISKID=""
+		[ -z "$DISKID" ] && DISKID="$(smartctl -i $1 | grep Serial | cut -d ':' -f 2 | sed 's/ //g')" && DISKID_TYPE=serial
+		[ -z "$DISKID" ] && DISKID="$(smartctl -d sat -i $1 | grep Serial | cut -d ':' -f 2 | sed 's/ //g')" && DISKID_TYPE=serial
+		[ -z "$DISKID" ] && DISKID="$(realpath "$1" | sed -e "s|/|_|g")" && DISKID_TYPE=file
+	fi
 	echo "${DISKID_TYPE}_$DISKID" | tr -s '_'
 	)
 }
@@ -78,7 +86,7 @@ function getTopDevice {
 }
 
 function getBlockdevices {
-	lsblk -l -o NAME,TYPE -f | grep "disk\|loop" | cut -d ' ' -f 1 | sed -e 's|^|/dev/|'
+	lsblk -l -o NAME,TYPE -f | cut -d ' ' -f 1 | sed -e 's|^|/dev/|'
 }
 
 function getDeviceForId {

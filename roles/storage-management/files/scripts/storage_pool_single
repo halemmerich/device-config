@@ -87,6 +87,10 @@ function umountPool {
 	return $RESULT
 }
 
+function status {
+	echo No specific status implemented
+}
+
 COMMAND=$1
 shift
 
@@ -99,10 +103,5 @@ case $COMMAND in
 	add) add "$@" ;;
 	remove) remove "$@" ;;
 	status) status "$@" ;;
-	*) echo "Usage:
-storage_pool_snapraid <mount|umount> <metadir>
-storage_pool_snapraid create <metadir> <mergerfsopts>
-storage_pool_snapraid add <metadir> <device> <fs>
-  fs: fs name as used in mkfs.*, existing is used by default
-storage_pool_snapraid status <metadir>" ;;
+	*) echo Usage
 esac
