@@ -34,7 +34,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.10
         ipv6_address: "fe81::172:28:0:10"
     tmpfs:
@@ -54,7 +54,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.15
         ipv6_address: "fe81::172:28:0:15"
     tmpfs:
@@ -71,7 +71,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.16
         ipv6_address: "fe81::172:28:0:16"
     tmpfs:
@@ -88,7 +88,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.11
         ipv6_address: "fe81::172:28:0:11"
     tmpfs:
@@ -105,7 +105,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.12
         ipv6_address: "fe81::172:28:0:12"
     tmpfs:
@@ -123,7 +123,7 @@ services:
       - SYS_ADMIN
       - SYS_NICE
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.13
         ipv6_address: "fe81::172:28:0:13"
     tmpfs:
@@ -141,7 +141,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.14
         ipv6_address: "fe81::172:28:0:14"
     tmpfs:
@@ -160,7 +160,7 @@ services:
       - SYS_ADMIN
       - SYS_NICE
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.17
         ipv6_address: "fe81::172:28:0:17"
     tmpfs:
@@ -178,7 +178,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.18
         ipv6_address: "fe81::172:28:0:18"
     tmpfs:
@@ -196,7 +196,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.19
         ipv6_address: "fe81::172:28:0:19"
     tmpfs:
@@ -213,7 +213,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.20
         ipv6_address: "fe81::172:28:0:20"
     tmpfs:
@@ -230,7 +230,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.21
         ipv6_address: "fe81::172:28:0:21"
     tmpfs:
@@ -247,7 +247,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      staging_net:
+      default:
         ipv4_address: 172.28.0.22
         ipv6_address: "fe81::172:28:0:22"
     tmpfs:
@@ -258,7 +258,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
 networks:
-  staging_net:
+  default:
     enable_ipv6: true
     ipam:
       driver: default

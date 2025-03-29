@@ -22,7 +22,7 @@ echo
 RC=0;
 
 
-NAMESERVERS="$(yq -r '.services | to_entries[] | select(.key | contains("dns")) | [ .value.networks.staging_net.ipv4_address ] | join(" ")' docker-compose.yml | sed 's/^/nameserver /')
+NAMESERVERS="$(yq -r '.services | to_entries[] | select(.key | contains("dns")) | [ .value.networks.default.ipv4_address ] | join(" ")' docker-compose.yml | sed 's/^/nameserver /')
 nameserver 8.8.8.8"
 
 TEMPLOG=$(mktemp)
