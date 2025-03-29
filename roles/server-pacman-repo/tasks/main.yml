@@ -18,7 +18,7 @@
     - { src: "backup/restore.sh.j2", dest: "/usr/local/lib/backupscripts/restore/webdav.sh" }
   tags:
     - config
-    
+
 - name: Configure pacmanrepo dir
   file:
     path: "{{ item }}"
@@ -39,7 +39,7 @@
     state: directory
   tags:
     - config
-    
+
 - name: 'Create initial cache'
   command: '/usr/local/bin/server_pacmanrepo_update_cache'
   tags:
@@ -63,13 +63,13 @@
   notify: restart_nginx
   tags:
     - config
-    
+
 - name: 'Create empty repo'
   command: 'repo-add /var/lib/pacman-repo/packages/{{ server_pacmanrepo_name }}.db.tar.zst'
   args:
     creates: /var/lib/pacman-repo/packages/{{ server_pacmanrepo_name }}.db.tar.zst
   when: server_pacmanrepo_name is defined
-  
+
 - name: Adds users
   vars:
     password: "{{ item.passwort | default(lookup('password', '/dev/null')) }}"
@@ -80,7 +80,7 @@
   when: server_pacmanrepo_users is defined
   tags:
     - config
-    
+
 - name: Resets passwords
   vars:
     password: "{{ item.password }}"
@@ -91,3 +91,8 @@
   loop: "{{ server_pacmanrepo_users }}"
   tags:
     - config
+
+- name: Reload nginx now
+  service:
+    name: nginx
+    state: reloaded
