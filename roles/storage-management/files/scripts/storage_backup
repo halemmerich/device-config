@@ -26,7 +26,7 @@ function backup {
 	fi
 
 	MOUNTPOINT="$(getMountpoint "$STORAGE_META_DIR")"
-	RSYNC_PARAMS="-a --delete --ignore-errors"
+	RSYNC_PARAMS="-a --delete --ignore-errors --exclude .snapshots"
 	BACKUP_FOLDER="$MOUNTPOINT"/backup
 	MARKER_FILE="$BACKUP_FOLDER"/.backup
 	IDENTIFIER=$(echo ${HOSTNAME}_$(getPoolName $STORAGE_META_DIR) | tr / _ | tr -s '_')
