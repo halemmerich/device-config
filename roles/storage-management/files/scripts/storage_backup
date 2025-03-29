@@ -73,21 +73,23 @@ function backup {
 
 		CONTINUE=0
 		NEEDED_SPACE=0
-		for C in $(cat "$BACKUP_FOLDER/.rsnapshot.conf" | grep -i ^backup | tr -s '[:space:]' | cut -f 2)
+		for CURRENT in $(cat "$BACKUP_FOLDER/.rsnapshot.conf" | grep -i ^backup | tr -s '[:space:]' | cut -f 2)
 		do
-			[ "$( ls -A "$C" | wc -l )" -eq 0 ] && echoext "No content in $C" && CONTINUE=1 && break;
-			CURRENT_SOURCE=`getLatestSnapshot "$C"`
+			[ "$( ls -A "$CURRENT" | wc -l )" -eq 0 ] && echoext "No content in $CURRENT" && CONTINUE=1 && break;
+			CURRENT_SOURCE=`getLatestSnapshot "$CURRENT"`
 			if [ -z "$CURRENT_SOURCE" ]
 			then
-				echoext "Snapshot for $C does not exist, using live data for size estimation"
-				CURRENT_SOURCE="$C"
+				echoext "Snapshot for $CURRENT does not exist, using live data for size estimation"
+				CURRENT_SOURCE="$CURRENT"
 			fi
-			NEEDED_SPACE=$(($NEEDED_SPACE + `du -m -d 0 "$CURRENT_SOURCE" | cut -f 1`))
+			NEEDED_SPACE=$(($NEEDED_SPACE + `du --exclude .snapshots -m -s "$CURRENT_SOURCE" | cut -f 1`))
 		done
 
-		FREE_SPACE=`df --output=avail -m "$BACKUP_FOLDER" | tail -n 1`
+		FREE_SPACE=$(df --output=avail -m "$BACKUP_FOLDER" | tail -n 1 | tr -d ' ')
 
-		FREE_SPACE=$(($FREE_SPACE + `du -d 0 -m "$BACKUP_FOLDER" | cut -f 1`))
+		LATEST_SNAPSHOT_NAME="$(cat "$BACKUP_FOLDER/.rsnapshot.conf" | grep retain | head -n 1 | cut -f 2).0"
+		USED_BY_SNAPSHOT_SPACE=$(du -s -m "$BACKUP_FOLDER/$LATEST_SNAPSHOT_NAME" | cut -f 1)
+		FREE_SPACE=$(( FREE_SPACE + USED_BY_SNAPSHOT_SPACE ))
 
 		if [ "$NEEDED_SPACE" -gt "$FREE_SPACE" ]
 		then
@@ -173,12 +175,12 @@ function backup {
 				CURRENT_SOURCE="$CURRENT"
 			fi
 
-			NEEDED_SPACE=$(($NEEDED_SPACE + `du -m -d 0 "$CURRENT_SOURCE" | cut -f 1`))
+			NEEDED_SPACE=$(($NEEDED_SPACE + `du -m -s --exclude .snapshots "$CURRENT_SOURCE" | cut -f 1`))
 		done <<< "$SNAPSHOT_FOLDERS"
 
-		FREE_SPACE=`df --output=avail -m "$BACKUP_FOLDER" | tail -n 1`
+		FREE_SPACE=`df --output=avail -m "$BACKUP_FOLDER" | tail -n 1 | tr -d ' '`
 
-		FREE_SPACE=$(($FREE_SPACE + `du -d 0 -m "$BACKUP_FOLDER" | cut -f 1`))
+		FREE_SPACE=$(($FREE_SPACE + `du -s -m "$BACKUP_FOLDER" | cut -f 1`))
 
 		if [ "$NEEDED_SPACE" -gt "$FREE_SPACE" ]
 		then
