@@ -4,7 +4,7 @@ MOUNT="{{ server_restic_mount_path | default("/opt/restic-server/mount") }}"
 RC=0
 {% for current in server_restic_mounts %}
 mkdir -p "$MOUNT/{{ current.name }}" || (( RC++ ))
-mountpoint || chown restic-server:restic-server "$MOUNT/{{ current.name }}" || (( RC++ ))
+mountpoint -q "$MOUNT/{{ current.name }}" || chown restic-server:restic-server "$MOUNT/{{ current.name }}" || (( RC++ ))
 {% if current.type == "ssh" %}
 sshfs -o allow_other,uid=$(id -u restic-server),gid=$(id -g restic-server) "{{ current.target }}" "$MOUNT/{{ current.name }}" || (( RC++ ))
 {% endif %}

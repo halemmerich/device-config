@@ -1,14 +1,14 @@
 server {
     listen {{ server_nginx_port_https_backend }};
     listen [::]:{{ server_nginx_port_https_backend }};
-    server_name restic.{{ domain }};
+    server_name {{ item.name }}.{{ domain }};
     
-    ssl_certificate /etc/letsencrypt/live/restic.{{ domain }}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/restic.{{ domain }}/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/{{ item.name }}.{{ domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ item.name }}.{{ domain }}/privkey.pem;
 
 	client_max_body_size 0;
     
     location / {
-        proxy_pass         http://localhost:6000;
+        proxy_pass         http://localhost:{{ item.port }};
     }
 }

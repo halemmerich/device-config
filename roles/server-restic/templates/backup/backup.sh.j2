@@ -1,6 +1,9 @@
 #!/bin/bash
 MOUNTDIR="$1"
 
-rsync_backup /opt/restic/.htpasswd restic/; (( RC |= $? ))
+for C in /opt/restic/instances/
+do
+	rsync_backup "$C" restic/$(basename "$C")/; (( RC |= $? ))
+done
 
 exit $RC

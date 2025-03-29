@@ -1,6 +1,8 @@
 #!/bin/bash
 MOUNTDIR="$1"
 
-cp "$MOUNTDIR"/restic/.htpasswd /opt/restic/.htpasswd
-
-chown restic:restic -R /opt/restic/.htpasswd
+for C in "$MOUNTDIR"/restic/instances
+do
+	cp "$C"/.htpasswd /opt/restic/instances/$(basename "$C")/.htpasswd
+	chown restic:restic -R /opt/restic/instances/$(basename "$C")/.htpasswd
+done

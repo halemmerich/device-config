@@ -1,0 +1,11 @@
+[Unit]
+Description=restic mounts
+Wants=network.target
+StopWhenUnneeded=true
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory=/opt/restic-server/latest
+ExecStart=/usr/bin/bash /opt/restic-server/mount.sh
+ExecStop=/usr/bin/bash /opt/restic-server/umount.sh

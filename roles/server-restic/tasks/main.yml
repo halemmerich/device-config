@@ -6,13 +6,29 @@
 
 - name: Configure directories
   file:
-    path: '/opt/restic-server'
+    path: '{{ item }}'
     owner: 'restic-server'
     mode: '0700'
     state: directory
   loop:
     - '/opt/restic-server'
-    - "{{ restic_server_repo_path | default('/opt/restic-server/repo') }}"
+    - '/opt/restic-server/instances'
+
+- name: Configure instance directories
+  file:
+    path: '/opt/restic-server/instances/{{ item.name }}'
+    owner: 'restic-server'
+    mode: '0700'
+    state: directory
+  loop: '{{ server_restic_instances }}'
+
+- name: Configure instance repo directories
+  file:
+    path: '/opt/restic-server/instances/{{ item.name }}/repo'
+    owner: 'restic-server'
+    mode: '0700'
+    state: directory
+  loop: '{{ server_restic_instances }}'
 
 - name: 'Create scripts'
   template:
@@ -27,11 +43,19 @@
     - { src: "mount.sh.j2", dest: "/opt/restic-server/mount.sh" }
     - { src: "umount.sh.j2", dest: "/opt/restic-server/umount.sh" }
 
-- name: 'Create service restic-server'
+- name: 'Create service for mounting'
+  template:
+    src: restic-mount.service.j2
+    dest: "/etc/systemd/system/restic-mount.service"
+    mode: '0644'
+  register: systemd
+
+- name: 'Create service for all instances'
   template:
     src: restic-server.service.j2
-    dest: '/etc/systemd/system/restic-server.service'
+    dest: "/etc/systemd/system/restic-server-{{ item.name }}.service"
     mode: '0644'
+  loop: "{{ server_restic_instances }}"
   register: systemd
 
 - name: Reload systemd
@@ -94,8 +118,9 @@
 
     - name: 'Stop service'
       systemd:
-        name: 'restic-server'
+        name: 'restic-server-{{ item.name }}'
         state: stopped
+      loop: "{{ server_restic_instances }}"
 
     - name: 'Set symlink'
       file:
@@ -114,38 +139,38 @@
 
     - name: 'Touch .htpasswd'
       file:
-        path: '/opt/restic-server/.htpasswd'
+        path: "/opt/restic-server/instances/{{ item.name }}/.htpasswd"
         mode: u=rw,g=r,o=r
         owner: root
         group: root
         state: touch
+      loop: "{{ server_restic_instances }}"
       when: latest_determined.stdout is defined
 
   when: (latest_stat.stat.exists is defined and latest_stat.stat.exists == false) or (latest_determined.stdout is defined and latest_installed is defined and latest_determined.stdout is version(latest_installed, ">"))
 
 - name: 'Create certificates'
-  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
+  command: certbot certonly --standalone --http-01-port {{ letsencrypt_port }} -d {{ item.name }}.{{ domain }} -m {{ letsencrypt_mail }} --agree-tos -n
   args:
-    creates: /etc/letsencrypt/live/{{ item }}.{{ domain }}/privkey.pem
-  loop:
-    - restic
+    creates: /etc/letsencrypt/live/{{ item.name }}.{{ domain }}/privkey.pem
+  loop: "{{ server_restic_instances }}"
   notify: restart_nginx
   tags:
     - config
 
 - name: 'Create config nginx'
   template:
-    src: '{{ item.src }}'
-    dest: '{{ item.dest }}'
+    src: 'nginx/restic.conf.j2'
+    dest: "/etc/nginx/servers.d/restic-{{ item.name }}.conf"
     mode: '0700'
   notify: restart_nginx
-  loop:
-    - { src: "nginx/restic.conf.j2", dest: "/etc/nginx/servers.d/restic.conf" }
+  loop: "{{ server_restic_instances }}"
   tags:
     - config
 
 - name: 'Start service'
   systemd:
-    name: 'restic-server'
+    name: "restic-server-{{ item.name }}"
     state: restarted
     enabled: true
+  loop: "{{ server_restic_instances }}"

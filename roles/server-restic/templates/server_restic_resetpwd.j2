@@ -1,5 +1,5 @@
 #!/bin/bash
-[ -z "$1" ] && echo restic data needed: USERNAME, PASSWORD from - && exit 1
+[ -z "$2" ] && echo restic data needed: INSTANCENAME USERNAME, PASSWORD from - && exit 1
 
 IFS= read PW
 
@@ -8,8 +8,9 @@ then
 	PW=$(pwgen -n 10 | cat)
 fi
 
-USERNAME="$1"
+USERNAME="$2"
+INSTANCENAME="$1"
 
-echo "$PW" | htpasswd -B -i "/opt/restic-server/.htpasswd" $USERNAME
+echo "$PW" | htpasswd -B -i "/opt/restic-server/instances/$INSTANCENAME/.htpasswd" $USERNAME
 
 [ "$?" = 0 ] && echo New PWD is "$PW" || echo Done
