@@ -1,6 +1,6 @@
 set -e
-REPO="{{ server_restic_repo_path | default("/opt/restic-server/repo") }}"
-MOUNT="{{ server_restic_mount_path | default("/opt/restic-server/mount") }}"
+INSTANCES="/opt/restic-server/instances"
+MOUNT="{{ er_restic_mount_path | default("/opt/restic-server/mount") }}"
 RC=0
 {% for current in server_restic_mounts %}
 mkdir -p "$MOUNT/{{ current.name }}" || (( RC++ ))
@@ -10,9 +10,7 @@ sshfs -o allow_other,uid=$(id -u restic-server),gid=$(id -g restic-server) "{{ c
 {% endif %}
 {% if current.binds is defined %}
 {% for bind in current.binds %}
-mkdir -p "$REPO/{{ bind.user }}" || (( RC++ ))
-mkdir -p "$MOUNT/{{ current.name }}/{{ bind.path }}" || (( RC++ ))
-mount -o bind "$MOUNT/{{ current.name }}/{{ bind.path }}" "$REPO/{{ bind.user }}" || (( RC++ ))
+ln -s "$MOUNT/{{ current.name }}/{{ bind.path }}" "$INSTANCES/{{ bind.instance }}/repo/{{ bind.user }}" || (( RC++ ))
 {% endfor %}
 {% else %}
 {% endif %}

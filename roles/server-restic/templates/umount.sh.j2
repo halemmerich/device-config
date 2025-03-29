@@ -1,12 +1,12 @@
 RC=0
-REPO="{{ server_restic_repo_path | default("/opt/restic-server/repo") }}"
+INSTANCES="/opt/restic-server/instances"
 MOUNT="{{ server_restic_mount_path | default("/opt/restic-server/mount") }}"
 {% for current in server_restic_mounts %}
 {% if current.binds is defined %}
 {% for bind in current.binds %}
-mountpoint -q "$REPO/{{ bind.user }}" && { umount "$REPO/{{ bind.user }}" || (( RC++ )) }
+[ -L "$INSTANCES/{{ bind.instance }}/repo/{{ bind.user }}" ] && { rm "$INSTANCES/{{ bind.instance }}/repo/{{ bind.user }}" || (( RC++ )) }
 {% endfor %}
 {% endif %}
-mountpoint -q "$REPO/{{ current.name }}" && { umount "$MOUNT/{{ current.name }}" || (( RC++ )) }
+umount "$MOUNT/{{ current.name }}" || (( RC++ ))
 {% endfor %}
 exit $RC

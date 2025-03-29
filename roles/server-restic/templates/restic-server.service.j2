@@ -2,13 +2,12 @@
 Description=restic REST Server
 Wants=network.target
 Wants=restic-mount.service
+After=restic-mount.service
 
 [Service]
 WorkingDirectory=/opt/restic-server/latest
 User=restic-server
-ExecStartPre=+/usr/bin/bash /opt/restic-server/mount.sh
 ExecStart=/opt/restic-server/latest/rest-server --path "/opt/restic-server/instances/{{ item.name }}/repo" --htpasswd-file /opt/restic-server/instances/{{ item.name }}/.htpasswd {% if item.max_size is defined %}--max-size {{ item.max_size }}{% endif %} --private-repos {% if item.append_only is defined and item.append_only %}--append-only{% endif %} --listen localhost:{{ item.port }}
-ExecStop=+/usr/bin/bash /opt/restic-server/umount.sh
 Restart=always
 RestartSec=15
 
