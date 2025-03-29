@@ -79,7 +79,7 @@ function backup {
 			CURRENT_SOURCE=`getLatestSnapshot "$C"`
 			if [ -z "$CURRENT_SOURCE" ]
 			then
-				echoext "Snapshot for $CURRENT does not exist, using live data for size estimation"
+				echoext "Snapshot for $C does not exist, using live data for size estimation"
 				CURRENT_SOURCE="$C"
 			fi
 			NEEDED_SPACE=$(($NEEDED_SPACE + `du -m -d 0 "$CURRENT_SOURCE" | cut -f 1`))
