@@ -165,6 +165,9 @@ server_restic_instances:
   - name: restic
     max_size: 1073741824
     port: 6000
+    users:
+      - name: tester
+        password: "{{ testuser_pwd }}"
 server_restic_mounts:
   - type: local
     target: "/tmp/resticlocal"

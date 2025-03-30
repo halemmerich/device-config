@@ -168,6 +168,27 @@
   tags:
     - config
 
+- name: Adds users to instances
+  vars:
+    password: "{{ item.1.password | default(lookup('password', '/dev/null')) }}"
+  shell:
+    cmd: 'server_restic_adduser "{{ item.0.name }}" "{{ item.1.name}}"'
+    stdin: "{{ password }}\n"
+  loop: "{{ server_restic_instances | subelements('users', 'skip_missing=true') }}"
+  tags:
+    - config
+
+- name: Resets passwords
+  vars:
+    password: "{{ item.1.password }}"
+  shell:
+    cmd: 'server_restic_resetpwd "{{ item.0.name }}" "{{ item.1.name }}"'
+    stdin: "{{ password }}\n"
+  when: item.1.password is defined
+  loop: "{{ server_restic_instances | subelements('users', 'skip_missing=true') }}"
+  tags:
+    - config
+
 - name: 'Start service'
   systemd:
     name: "restic-server-{{ item.name }}"
