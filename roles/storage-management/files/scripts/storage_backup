@@ -354,7 +354,7 @@ then
 	echo "Usage:
 storage_backup auto
   Run automatic backups as defined in /etc/storage/autobackup
-storage_backup backup <metadir>
+storage_backup backup <metadir> [interval=hourly]
 storage_backup check <metadir>
 storage_backup create <metadir> rsync
 storage_backup create <metadir> rsnapshot
