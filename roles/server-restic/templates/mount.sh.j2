@@ -10,6 +10,7 @@ sshfs {% if current.port is defined %}-p {{ current.port }}{% endif %} -o allow_
 {% endif %}
 {% if current.binds is defined %}
 {% for bind in current.binds %}
+mkdir -p "$MOUNT/{{ current.name }}/{{ bind.path }}"
 ln -s "$MOUNT/{{ current.name }}/{{ bind.path }}" "$INSTANCES/{{ bind.instance }}/repo/{{ bind.user }}" || (( RC++ ))
 {% endfor %}
 {% endif %}
