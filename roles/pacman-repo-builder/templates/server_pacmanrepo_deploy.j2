@@ -16,5 +16,12 @@ then
 	exit 1
 fi
 
-cd /var/lib/pacman-repo-builder
-rsync --delete -rl /var/lib/pacman-repo-builder/repo/ "$TARGET"
+if ssh $( echo "$TARGET" | cut -d ':' -f 1 ) rsync -h
+then
+	rsync --delete -rl /var/lib/pacman-repo-builder/repo/ "$TARGET"
+else
+	MOUNT=$(mktemp -d)
+	sshfs "$TARGET" "$MOUNT"
+	rsync --delete -rl /var/lib/pacman-repo-builder/repo/ "$MOUNT"
+	umount "$MOUNT" && rm -r "$MOUNT"
+fi
