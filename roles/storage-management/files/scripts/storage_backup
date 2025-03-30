@@ -263,22 +263,6 @@ function backup {
 	cleanup
 }
 
-MODE="$1"
-shift
-STORAGE_META_DIR="$1"
-
-if [ -z "$MODE" ]
-then
-	echo "Usage:
-storage_backup auto
-  Run automatic backups as defined in /etc/storage/autobackup
-storage_backup backup <metadir>
-storage_backup check <metadir>
-storage_backup create <metadir> rsync
-storage_backup create <metadir> rsnapshot
-storage_backup add <metadir> <sourcedir>"
-fi
-
 function createBackupRsync {
 	! command -v rsync 2>&1 > /dev/null && echo rsync missing && exit 1
 	STORAGE_META_DIR="$1"
@@ -361,6 +345,21 @@ function check {
 	return 0;
 }
 
+MODE="$1"
+shift
+STORAGE_META_DIR="$1"
+
+if [ -z "$MODE" ]
+then
+	echo "Usage:
+storage_backup auto
+  Run automatic backups as defined in /etc/storage/autobackup
+storage_backup backup <metadir>
+storage_backup check <metadir>
+storage_backup create <metadir> rsync
+storage_backup create <metadir> rsnapshot
+storage_backup add <metadir> <sourcedir>"
+fi
 
 if [ "$MODE" = auto ]
 then
@@ -391,17 +390,20 @@ then
 	done
 	exit $OVERALL_RC
 else
-	if checkDevicesAvailable "$STORAGE_META_DIR"
+	if [ -n "$STORAGE_META_DIR" -a -n "$MODE" ]
 	then
-		OVERALL_RC=0
-		storage_pool mount "$STORAGE_META_DIR" || { echo Mounting failed for $STORAGE_META_DIR; exit 1; }
-		[ "$MODE" = create ] && createBackup "$@"
-		[ "$MODE" = add ] && add "$@"
-		[ "$MODE" = backup ] && { backup "$@" || { echo Backup failed for $STORAGE_META_DIR; OVERALL_RC=$(( OVERALL_RC |= 1 )); } }
+		if checkDevicesAvailable "$STORAGE_META_DIR"
+		then
+			OVERALL_RC=0
+			storage_pool mount "$STORAGE_META_DIR" || { echo Mounting failed for $STORAGE_META_DIR; exit 1; }
+			[ "$MODE" = create ] && createBackup "$@"
+			[ "$MODE" = add ] && add "$@"
+			[ "$MODE" = backup ] && { backup "$@" || { echo Backup failed for $STORAGE_META_DIR; OVERALL_RC=$(( OVERALL_RC |= 1 )); } }
 
-		storage_pool umount "$STORAGE_META_DIR" || { echo Unmounting failed for $STORAGE_META_DIR; exit 1; }
-		exit $OVERALL_RC
-	else
-		echo `date` - Could not backup $STORAGE_META_DIR >> /var/log/dailybackup.log
+			storage_pool umount "$STORAGE_META_DIR" || { echo Unmounting failed for $STORAGE_META_DIR; exit 1; }
+			exit $OVERALL_RC
+		else
+			echoerr "Could not perform $MODE for meta dir $STORAGE_META_DIR"
+		fi
 	fi
 fi
