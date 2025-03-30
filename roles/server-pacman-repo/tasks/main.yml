@@ -32,14 +32,6 @@
   tags:
     - config
 
-- name: Configure pacman hook dir
-  file:
-    path: "/etc/pacman.d/hooks"
-    mode: '0755'
-    state: directory
-  tags:
-    - config
-
 - name: 'Create initial cache'
   command: '/usr/local/bin/server_pacmanrepo_update_cache'
   tags:
