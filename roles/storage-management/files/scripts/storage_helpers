@@ -48,6 +48,7 @@ function getDeviceId {
 
 	local DEVICE="$1"
 
+	[ -z "$DEVICE" ] && echoerr WARNING: Argument is empty && return 0
 	[ ! -b "$DEVICE" ] && echoerr WARNING: Argument already is an ID && echo "$DEVICE" && return 0
 
 	local BLOCKDEV=/dev/$(lsblk -ndo pkname "$DEVICE")
@@ -86,7 +87,7 @@ function getTopDevice {
 }
 
 function getBlockdevices {
-	lsblk -l -o NAME,TYPE -f | cut -d ' ' -f 1 | sed -e 's|^|/dev/|'
+	lsblk -l -o NAME,TYPE -f | tail -n +2 | cut -d ' ' -f 1 | sed -e 's|^|/dev/|'
 }
 
 function getDeviceForId {
@@ -132,8 +133,13 @@ function getPoolName {
 	echo "$(basename $(realpath "$STORAGE_META_DIR"))"
 }
 
+function checkStorageMetaDir {
+	[ -d "$1" -a -f "$1/.created" ]
+}
+
 function checkDevicesAvailable {
 	STORAGE_META_DIR="$1"
+	checkStorageMetaDir "$STORAGE_META_DIR" || return 1
 	for C in $(cat "$STORAGE_META_DIR/devices")
 	do
 		DEVICE=$(getDeviceForId "$C")
