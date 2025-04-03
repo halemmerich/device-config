@@ -38,6 +38,17 @@
   tags:
     - config
 
+- name: 'Set config custom data storage'
+  template:
+    src: jellyfin.env.j2
+    dest: '/etc/jellyfin/jellyfin.env'
+    owner: jellyfin
+    group: jellyfin
+    mode: '0640'
+  when: server_jellyfin_data_dir is defined
+  tags:
+    - config
+
 - name: 'Enable services'
   systemd:
     name: "jellyfin"

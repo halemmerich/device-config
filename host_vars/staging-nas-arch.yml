@@ -58,3 +58,5 @@ server_nginx_port_tls: "443"
 server_nginx_port_tls_no_pp: "4440"
 server_nginx_default_domains:
   - "{{ domain }}"
+
+server_jellyfin_data_dir: /tmp/Jellyfin
