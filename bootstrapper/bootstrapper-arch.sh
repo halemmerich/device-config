@@ -64,6 +64,7 @@ Environment variables:
   KEYMAP                  set a keymap for the console
   MIRRORLIST_COUNTRY      set a country for the mirrorlist download
   DONT_ENCRYPT            set any value to prevent encryption
+  SKIP_NETWORK            set any value to skip installing and enabling NetworkManager
 
 Example commands to run on installer environments for remote install
   loadkeys de             # change to whatever keyboard layout you like
@@ -131,12 +132,12 @@ if [ -z "$DONT_ENCRYPT" ]
 then
 	while [ -z "$LUKS_PASSWORD" -a \( -n "$STEP_BARE" -o -n "$STEP_MOUNT" \) ]
 	do
-		echo Enter LUKS password: 
+		echo Enter LUKS password:
 		read -s LUKS_PASSWORD1
-		echo again: 
+		echo again:
 		read -s LUKS_PASSWORD2
 		if [ "$LUKS_PASSWORD1" = "$LUKS_PASSWORD2" ]
-		then	
+		then
 			LUKS_PASSWORD="$LUKS_PASSWORD1"
 		else
 			echo Passwords did not match
@@ -146,12 +147,12 @@ fi
 
 while [ -z "$ADMIN_PASSWORD" -a -n "$STEP_CONFIG" ]
 do
-	echo Enter admin password: 
+	echo Enter admin password:
 	read -s ADMIN_PASSWORD1
-	echo again: 
+	echo again:
 	read -s ADMIN_PASSWORD2
 	if [ "$ADMIN_PASSWORD1" = "$ADMIN_PASSWORD2" ]
-	then	
+	then
 		ADMIN_PASSWORD="$ADMIN_PASSWORD1"
 	else
 		echo Passwords did not match
@@ -189,14 +190,14 @@ then
 	exit 1
 else
 	DEVICE=$(realpath "$2")
-	
+
 	PREFIX=
-	
+
 	if echo "$DEVICE" | grep nvme
 	then
 		PREFIX=p
 	fi
-	
+
 	if [ "$BOOT_TYPE" = "efi" ]
 	then
 		EFI=${DEVICE}${PREFIX}1
@@ -234,7 +235,7 @@ fi
 
 function openLuks {
 	[ -n "$DONT_ENCRYPT" ] && return
-	
+
 	if [ -e /dev/mapper/luks-$UUID_ROOT ]
 	then
 		echo /dev/mapper/luks-$UUID_ROOT already mapped
@@ -251,7 +252,7 @@ function openLuks {
 
 function closeLuks {
 	[ -n "$DONT_ENCRYPT" ] && return
-	
+
 	set +e
 	cryptsetup close luks-$UUID_ROOT
 	cryptsetup close luks-$UUID_SWAP
@@ -294,7 +295,7 @@ then
 	  --new 2::+${SWAP_SIZE}G --typecode 2:8200 --change-name 2:'SWAP' \
 	  --new 3::-0 --typecode 3:8300 --change-name 3:'ROOT' \
 	  "$DEVICE"
-		
+
 	else
 	sgdisk \
 	  --new 1::+1M --typecode 1:ef02 --change-name 1:'BIOSBOOT' \
@@ -302,9 +303,8 @@ then
 	  --new 3::+${SWAP_SIZE}G --typecode 3:8200 --change-name 3:'SWAP' \
 	  --new 4::-0 --typecode 4:8300 --change-name 4:'ROOT' \
 	  "$DEVICE"
-		
 	fi
-	
+
 	sleep 2
 
 	#Disable halt on error, sometimes the booting stick sees changes for whatever reason
@@ -317,7 +317,7 @@ then
 
 	wipefs -a "$SWAP"
 	[ -z "$DONT_ENCRYPT" ] && echo -n "$LUKS_PASSWORD" | cryptsetup luksFormat "$SWAP"
-	
+
 	openLuks
 
 	if [ "$BOOT_TYPE" = "efi" ]
@@ -340,21 +340,21 @@ then
 	mkdir /mnt/var
 	btrfs subvolume create /mnt/var/cache
 	btrfs subvolume create /mnt/home
-	
+
 	closeLuks
 fi
 
 if [ -n "$STEP_MOUNT" ]
 then
 	openLuks
-	
+
 	if mount | grep "/mnt " | grep "$ROOT_TARGET" > /dev/null
 	then
 		echo "$ROOT_TARGET" already mounted at /mnt
 	else
 		mount "$ROOT_TARGET" /mnt
 	fi
-	
+
 	if [ "$BOOT_TYPE" = "efi" ]
 	then
 		if mount | grep "/mnt/boot " | grep $(realpath $EFI) > /dev/null
@@ -371,7 +371,7 @@ then
 			mount "$BOOT" /mnt/boot
 		fi
 
-	fi	
+	fi
 
 
 	if swapon | grep $(realpath "$SWAP_TARGET") > /dev/null
@@ -506,8 +506,12 @@ EOF
 
 	echo "$NEW_HOSTNAME" > /mnt/etc/hostname
 	set +e
-	arch-chroot /mnt pacman --noconfirm -S networkmanager
-	arch-chroot /mnt systemctl enable NetworkManager
+
+	if [ -n "$SKIP_NETWORK" ]
+	then
+		arch-chroot /mnt pacman --noconfirm -S networkmanager
+		arch-chroot /mnt systemctl enable NetworkManager
+	fi
 
 	#configure everything for ansible
 	arch-chroot /mnt pacman --noconfirm -S openssh
@@ -540,7 +544,7 @@ EOF
 		fi
 	else
 		echo "$ADMIN_AUTHORIZED_KEYS" > /mnt/home/admin/.ssh/authorized_keys
-	fi	
+	fi
 
 	tee /mnt/etc/sudoers << EOF
 root ALL=(ALL) ALL
