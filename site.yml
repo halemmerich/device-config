@@ -22,7 +22,7 @@
   - util-package-upgrade
   - pacman-repo-builder
 
-- hosts: all
+- hosts: full
   become: yes
   roles:
   - ansible-deps
@@ -44,7 +44,7 @@
   roles:
   - common-debian
 
-- hosts: all
+- hosts: full
   become: yes
   roles:
   - common
