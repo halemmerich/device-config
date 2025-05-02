@@ -79,7 +79,7 @@ function automount {
 	[ ! -f /etc/storage/automount ] && { echo Storage automount config not found; exit 0; }
 	cat /etc/storage/automount | while read C
 	do
-		mount "$@"
+		mount "$C"
 	done
 }
 
