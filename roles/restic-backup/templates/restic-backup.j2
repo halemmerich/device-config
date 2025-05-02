@@ -1,0 +1,39 @@
+#!/bin/bash
+
+function doBackup {
+	CONFIG="$1"
+
+	if pgrep -f 'restic backup' > /dev/null; then
+		echo 'restic is already running...' 1>&2
+		return 1
+	fi
+
+	set -e
+	set -v
+
+	. "$CONFIG"
+
+	export RESTIC_CACHE_DIR="/var/cache/restic_cache"
+	export RESTIC_REPOSITORY="$REPO"
+	export RESTIC_PASSWORD_COMMAND="bash -c 'cat $CONFIG | grep PASSWORD | cut -d = -f 2'"
+
+	[ -z "$HOURLY" ] && HOURLY=24
+	[ -z "$DAILY" ] && DAILY=30
+	[ -z "$WEEKLY" ] && WEEKLY=4
+	[ -z "$MONTHLY" ] && MONTHLY=6
+	[ -z "$YEARLY" ] && YEARLY=3
+	[ -z "$CLEANUP" ] && CLEANUP=yes
+	[ -z "$CHECK" ] && CHECK=yes
+	[ -z "$CHECKSIZE" ] && CHECKSIZE=10%
+
+	restic unlock
+	restic backup "$SRC" $PARAMS --tag timer
+	[ "$CHECK" = yes ] && restic check --with-cache --read-data-subset="$CHECKSIZE"
+	[ "$CLEANUP" = yes ] && restic forget --prune --keep-hourly "$HOURLY" --keep-daily "$DAILY" --keep-monthly "$MONTHLY" --keep-weekly "$WEEKLY" --keep-yearly "$YEARLY"
+}
+
+[ -n "$(ls -A /etc/restic-backup 2> /dev/null )" ] && for C in /etc/restic-backup/*.conf
+do
+	echo Attempting backup for config at "$C"
+	doBackup "$C"
+done

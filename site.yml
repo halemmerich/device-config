@@ -67,6 +67,7 @@
   remote_user: admin
   roles:
   - users
+  - restic-backup
   - storage-management
   - server-samba
 

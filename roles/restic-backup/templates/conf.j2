@@ -1,0 +1,13 @@
+REPO={{ item.repo }}
+PASSWORD={{ item.password }}
+SRC={{ item.src }}
+PARAMS={% if item.excludes is defined %}'{% for e in item.excludes %}--exclude {{ e }} "{%endfor%}'{% endif %}
+HOURLY={{ item.hourly | default("") }}
+DAILY={{ item.daily | default("") }}
+WEEKLY={{ item.weekly | default("") }}
+MONTHLY={{ item.monthly | default("") }}
+YEARLY={{ item.yearly | default("") }}
+CLEANUP={{ item.cleanup | default("") }}
+CHECK={{ item.check | default("") }}
+CHECKSIZE={{ item.checksize | default("") }}
+

@@ -72,3 +72,12 @@ automount_mounts:
     sleeptime: 1
     sleepiterations: 1
     sleepafterwake: 1
+
+restic_backup_confs:
+  - id: testbackup
+    src: /home
+    repo: /tmp
+    password: secret
+    hourly: 4
+    excludes:
+      - /home/excludeme
