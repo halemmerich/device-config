@@ -28,6 +28,7 @@
   - ansible-deps
   - hosts
   - custom-repos
+  - monitoring
 
 - hosts: custom
   become: yes

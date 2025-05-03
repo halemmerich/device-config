@@ -1,0 +1,6 @@
+#!/bin/bash
+
+SELFCHECK=$(system_selfcheck)
+[ $? -ne 0 ] && system_notify "$(echo -e "Selfcheck failed: \n$SELFCHECK")"
+
+exit 0

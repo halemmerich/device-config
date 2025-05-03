@@ -1,0 +1,23 @@
+#!/bin/bash
+
+XMPP_DESTINATION=( )
+SEND_XMPP_EXECUTABLE="sendxmpp"
+
+[ -f /etc/maintenance/config ] && . /etc/maintenance/config
+
+[ -f /etc/maintenance/config ] || { echo No XMPP config at /etc/maintenance/config, Message was "$?"; exit 1; }
+
+if [ -f "$1" ]
+then
+	for current in "${XMPP_DESTINATION[@]}"
+	do
+		"$SEND_XMPP_EXECUTABLE" -m "$1" -f /etc/monitoring/sendxmpprc -t -n "$current"
+	done
+	cat "$1"
+else
+	for current in "${XMPP_DESTINATION[@]}"
+	do
+		echo "$IDENTIFIER $@" | "$SEND_XMPP_EXECUTABLE" -f /etc/monitoring/sendxmpprc -t -n "$current"
+	done
+	echo "$@"
+fi

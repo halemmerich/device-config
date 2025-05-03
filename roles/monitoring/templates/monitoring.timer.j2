@@ -1,0 +1,10 @@
+[Unit]
+Description=Monitoring
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

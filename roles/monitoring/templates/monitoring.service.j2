@@ -1,0 +1,6 @@
+[Unit]
+Description=Monitoring
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'PATH=$PATH:/usr/bin/site_perl /usr/local/bin/system_monitoring'

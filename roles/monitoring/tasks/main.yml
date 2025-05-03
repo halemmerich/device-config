@@ -1,0 +1,49 @@
+- name: 'Create scripts'
+  template:
+    src: "{{ item }}.j2"
+    dest: '/usr/local/bin/{{ item }}'
+    mode: '0700'
+  loop:
+    - system_selfcheck
+    - system_monitoring
+    - system_notify
+  tags:
+    - config
+
+- name: Configure directories
+  file:
+    path: "{{ item }}"
+    mode: '0755'
+    state: directory
+  loop:
+    - '/usr/local/lib/monitoringscripts/'
+    - '/etc/maintenance/'
+  tags:
+    - config
+
+- name: 'Create service'
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0700'
+  register: systemd
+  loop:
+    - { src: "monitoring.service.j2", dest: "/etc/systemd/system/monitoring.service" }
+    - { src: "monitoring.timer.j2", dest: "/etc/systemd/system/monitoring.timer" }
+  tags:
+    - config
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  when: systemd.changed
+  tags:
+    - config
+
+- name: 'Start service'
+  systemd:
+    name: 'monitoring.timer'
+    enabled: yes
+    state: started
+  tags:
+    - config

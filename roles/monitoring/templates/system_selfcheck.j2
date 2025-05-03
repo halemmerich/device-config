@@ -1,0 +1,59 @@
+#!/bin/bash
+LANG=C
+EXIT=0
+
+
+MAX_DISK_USE_PERCENT=95
+MAX_LOAD_AVERAGE_1MIN=$(( $(nproc) * 4 ))
+MAX_LOAD_AVERAGE_5MIN=$(( $(nproc) * 2 ))
+MAX_LOAD_AVERAGE_15MIN=$(( ( $(nproc) * 15 ) / 10 ))
+
+[ -f /etc/monitoring/selfcheck.conf ] && . /etc/monitoring/selfcheck.conf
+
+
+FAILED_UNITS=$(systemctl --plain --no-legend --failed)
+
+
+if [ "$(echo -n "$FAILED_UNITS" | wc -l)" -gt 0 ]
+then
+	echo Failed services:
+	echo "$FAILED_UNITS" | cut -d ' ' -f 1
+	echo
+	(( EXIT++ ))
+fi
+
+DISK_FREE=$(df -h --output=target,pcent,used,size -x overlay -x devtmpfs -x tmpfs -x efivarfs)
+WARNING_DISKS=$(mktemp)
+echo "$DISK_FREE" | head -n 1 > $WARNING_DISKS
+
+while IFS= read -r C; do
+	MOUNTPOINT=$(echo $C | cut -d ' ' -f 1)
+
+	[ $(echo $C | cut -d ' ' -f 2 | tr -d '%' ) -ge $MAX_DISK_USE_PERCENT ] && echo "$C" >> $WARNING_DISKS
+done <<< "$(echo "$DISK_FREE" | tail -n +2)"
+
+if [ $(cat $WARNING_DISKS | wc -l ) -gt 1 ]
+then
+	echo Full disks:
+	cat $WARNING_DISKS
+	echo
+	(( EXIT++ ))
+fi
+
+rm $WARNING_DISKS
+
+function checkload {
+	LOAD_FROM_UPTIME=$1
+	MAX=$2
+	TYPE="$3"
+	[ $(( "$(echo $LOAD_FROM_UPTIME | cut -d '.' -f 1)" * 100 + "$(echo $LOAD_FROM_UPTIME | cut -d '.' -f 2 | sed "s|^0*\([1-9]\)|\1|" )" )) -gt $(( MAX * 100 )) ] && { echo "$TYPE load to high ($LOAD_FROM_UPTIME allowed: $MAX)"; return 1; }
+	return 0
+}
+
+UPTIME=$(uptime -r)
+
+checkload "$(echo $UPTIME | cut -d ' ' -f 4)" $MAX_LOAD_AVERAGE_1MIN "1 minute" || (( EXIT++ ))
+checkload "$(echo $UPTIME | cut -d ' ' -f 5)" $MAX_LOAD_AVERAGE_5MIN "5 minute" || (( EXIT++ ))
+checkload "$(echo $UPTIME | cut -d ' ' -f 6)" $MAX_LOAD_AVERAGE_15MIN "15 minute" || (( EXIT++ ))
+
+exit $EXIT
