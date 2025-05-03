@@ -3,4 +3,4 @@ Description=Let's Encrypt renewal
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/certbot renew --agree-tos
+ExecStart={% if letsencrypt_fake is defined and letsencrypt_fake %}/usr/local/bin/certbot{% else %}/usr/bin/certbot{% endif %} renew --agree-tos

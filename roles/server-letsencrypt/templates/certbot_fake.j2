@@ -15,15 +15,15 @@ if [ -z "$CN" ]
 then
       for C in $(ls /etc/letsencrypt/renewal-hooks/pre/)
       do
-            bash "$C"
+            bash "/etc/letsencrypt/renewal-hooks/pre/$C"
       done
       for C in $(ls /etc/letsencrypt/renewal-hooks/deploy/)
       do
-            bash "$C"
+            bash "/etc/letsencrypt/renewal-hooks/deploy/$C"
       done
       for C in $(ls /etc/letsencrypt/renewal-hooks/post/)
       do
-            bash "$C"
+            bash "/etc/letsencrypt/renewal-hooks/post/$C"
       done
       exit 0
 fi
