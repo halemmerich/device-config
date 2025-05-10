@@ -290,6 +290,7 @@ cmd_rm		/usr/bin/rm
 cmd_rsync	/usr/bin/rsync
 cmd_logger	/usr/bin/logger
 
+retain	hourly	5
 retain	daily	5
 retain	weekly	5
 retain	monthly	5
