@@ -385,11 +385,23 @@ elif [ "$MODE" = check ]
 then
 	[ -f /etc/storage/autobackup ] || { echo No autobackup configured; exit 1; }
 	RC=0
-	for C in $(cat /etc/storage/autobackup)
+
+	CATEGORIES="$(for C in /etc/storage/pools/backup*; do basename "$C" | sed "s|_[0-9]*$||"; done | sort -u)"
+
+	for CAT in $CATEGORIES
 	do
-		MSG=$(check "$C")
-		(( OVERALL_RC |= $? ))
-		[ "$OVERALL_RC" -ne 0 ] && echoext "$MSG"
+		BACKUPS_FOR_CAT="$(cat /etc/storage/autobackup | grep "$CAT")"
+		CATEGORY_HAS_FRESH_BACKUPS=$(echo "$BACKUPS_FOR_CAT" | wc -l)
+		CHECK_REPORT=""
+		for C in $BACKUPS_FOR_CAT
+		do
+			MSG=$(check "$C")
+			CURRENT_RC=$?
+			(( OVERALL_RC |= CURRENT_RC ))
+			[ "$CURRENT_RC" -ne 0 ] || ((CATEGORY_HAS_FRESH_BACKUPS--)) && CHECK_REPORT="$CHECK_REPORT
+$MSG"
+		done
+		[ "$CATEGORY_HAS_FRESH_BACKUPS" -lt 1 ] && echoext "$CHECK_REPORT"
 	done
 	exit $OVERALL_RC
 else
