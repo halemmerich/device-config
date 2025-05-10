@@ -148,21 +148,16 @@ function maintenance {
 	TYPE="$2"
 	[ -z "$TYPE" ] && TYPE=mini
 	[ -z "$MAINTENANCE_MINI_SCRUB_TIME" ] && MAINTENANCE_MINI_SCRUB_TIME=1h
-	[ -z "$MAINTENANCE_MINI_BALANCE_PERCENTAGE" ] && MAINTENANCE_MINI_BALANCE_PERCENTAGE=20
 
 	assertMounted "$STORAGE_META_DIR"
 
-	STATUS=$(btrfs scrub status "$(getMountpoint "$STORAGE_META_DIR")" | grep Status | tr -s ' ' | cut -d ' ' -f2)
-
 	# finished running aborted
-
-	scrub "$STORAGE_META_DIR" "$TYPE" "$MAINTENANCE_MINI_SCRUB_TIME" || return 1
-
 	if [ "$TYPE" == mini ]
 	then
-		btrfs balance start -d"$MAINTENANCE_MINI_BALANCE_PERCENTAGE" -m"$MAINTENANCE_MINI_BALANCE_PERCENTAGE" "$(getMountpoint "$STORAGE_META_DIR")" || return 1
+		scrub "$STORAGE_META_DIR" "$TYPE" "$MAINTENANCE_MINI_SCRUB_TIME" || return 1
 	elif [ "$TYPE" == full ]
 	then
+		scrub "$STORAGE_META_DIR" "$TYPE" || return 1
 		btrfs balance start --full-balance "$(getMountpoint "$STORAGE_META_DIR")" || return 1
 	fi
 }
