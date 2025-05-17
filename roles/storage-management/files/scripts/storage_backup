@@ -62,14 +62,14 @@ function backup {
 
 	if [ ! -d "$BACKUP_FOLDER" ]
 	then
-		echoext "$BACKUP_FOLDER is missing! Aborting..."
+		echo "$BACKUP_FOLDER is missing! Skipping..."
 		cleanup
 		return 1
 	fi
 
 	if [ -e "$BACKUP_FOLDER/.rsnapshot.conf" ]
 	then
-		echoext "Perform backup with rsnapshot"
+		echo "Perform backup with rsnapshot"
 
 		CONTINUE=0
 		NEEDED_SPACE=0
@@ -79,7 +79,7 @@ function backup {
 			CURRENT_SOURCE=`getLatestSnapshot "$CURRENT"`
 			if [ -z "$CURRENT_SOURCE" ]
 			then
-				echoext "Snapshot for $CURRENT does not exist, using live data for size estimation"
+				echo "Snapshot for $CURRENT does not exist, using live data for size estimation"
 				CURRENT_SOURCE="$CURRENT"
 			fi
 			NEEDED_SPACE=$(($NEEDED_SPACE + `du --exclude .snapshots -m -s "$CURRENT_SOURCE" | cut -f 1`))
@@ -127,11 +127,11 @@ function backup {
 			return 1
 		fi
 
-		echoext "$RESULT_MESSAGE"
+		echo "$RESULT_MESSAGE"
 
 	elif [ -e "$BACKUP_FOLDER/.backup" ]
 	then
-		echoext "Perform backup with rsync"
+		echo "Perform backup with rsync"
 
 		SNAPSHOT_FOLDERS=""
 		FAILURES=0
