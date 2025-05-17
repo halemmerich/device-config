@@ -16,7 +16,7 @@ function backup {
 	then
 		STORAGE_META_DIR="$1"
 	else
-		echoext Storage meta dir needs to be given as first parameter
+		system_notify Storage meta dir needs to be given as first parameter
 		return 1
 	fi
 
@@ -34,7 +34,7 @@ function backup {
 
 	LOCKFILE="/var/lock/backup_$IDENTIFIER"
 
-	[ -e "$LOCKFILE" ] && { echoext Lockfile $LOCKFILE exists, stopping backup; return 1; }
+	[ -e "$LOCKFILE" ] && { system_notify Lockfile $LOCKFILE exists, stopping backup; return 1; }
 
 	trap cleanup EXIT
 
@@ -56,9 +56,9 @@ function backup {
 
 	}
 
-	#echoext "Running as user $(whoami)@$HOSTNAME in dir $(pwd)"
+	#system_notify "Running as user $(whoami)@$HOSTNAME in dir $(pwd)"
 
-	#echoext "Starting backup"
+	#system_notify "Starting backup"
 
 	if [ ! -d "$BACKUP_FOLDER" ]
 	then
@@ -75,7 +75,7 @@ function backup {
 		NEEDED_SPACE=0
 		for CURRENT in $(cat "$BACKUP_FOLDER/.rsnapshot.conf" | grep -i ^backup | tr -s '[:space:]' | cut -f 2)
 		do
-			[ "$( ls -A "$CURRENT" | wc -l )" -eq 0 ] && echoext "No content in $CURRENT" && CONTINUE=1 && break;
+			[ "$( ls -A "$CURRENT" | wc -l )" -eq 0 ] && system_notify "No content in $CURRENT" && CONTINUE=1 && break;
 			CURRENT_SOURCE=`getLatestSnapshot "$CURRENT"`
 			if [ -z "$CURRENT_SOURCE" ]
 			then
@@ -93,7 +93,7 @@ function backup {
 
 		if [ "$NEEDED_SPACE" -gt "$FREE_SPACE" ]
 		then
-			echoext Not enough space for backup
+			system_notify Not enough space for backup
 			CONTINUE=1
 		fi
 
@@ -114,8 +114,8 @@ function backup {
 			else
 				RESULT_MESSAGE="$RESULT_MESSAGE failed with status code $RESULT_RSYNC"
 				echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
-				echoext "Error while running rsnapshot"
-				echoext "$LOG_FILE"
+				system_notify "Error while running rsnapshot"
+				system_notify "$LOG_FILE"
 				rm "$LOG_FILE"
 				cleanup
 				return 1
@@ -144,12 +144,12 @@ function backup {
 
 			if [ ! -d "$CURRENT_SOURCE" ]
 			then
-				echoext "Line $CURRENT_SOURCE from $MARKER_FILE does not contain a valid source folder"
+				system_notify "Line $CURRENT_SOURCE from $MARKER_FILE does not contain a valid source folder"
 				FAILURES=$(( FAILURES + 1 ))
 				continue
 			elif [ "$( ls -A "$CURRENT_SOURCE" | wc -l )" -eq 0 ]
 			then
-				echoext "Line $CURRENT_SOURCE from $MARKER_FILE contains empty source folder"
+				system_notify "Line $CURRENT_SOURCE from $MARKER_FILE contains empty source folder"
 				FAILURES=$(( FAILURES + 1 ))
 				continue
 			else
@@ -171,7 +171,7 @@ function backup {
 
 			if [ -z "$CURRENT_SOURCE" ]
 			then
-				echoext "Snapshot for $CURRENT does not exist, using live data for size estimation"
+				system_notify "Snapshot for $CURRENT does not exist, using live data for size estimation"
 				CURRENT_SOURCE="$CURRENT"
 			fi
 
@@ -184,7 +184,7 @@ function backup {
 
 		if [ "$NEEDED_SPACE" -gt "$FREE_SPACE" ]
 		then
-			echoext Not enough space for backup
+			system_notify Not enough space for backup
 			cleanup
 			return 1
 		fi
@@ -203,19 +203,19 @@ function backup {
 			CURRENT_SOURCE=`getLatestSnapshot "$CURRENT"`
 			if [ -z "$CURRENT_SOURCE" ]
 			then
-				echoext "Snapshot for $CURRENT does not exist, using live data for backup"
+				system_notify "Snapshot for $CURRENT does not exist, using live data for backup"
 				CURRENT_SOURCE="$CURRENT"
 			fi
 
 			if [ 0 -eq $(ls $CURRENT_SOURCE | wc -l) ]
 			then
-				echoext "Source $CURRENT_SOURCE is empty, skipping"
+				system_notify "Source $CURRENT_SOURCE is empty, skipping"
 				continue
 			fi
 
 			DESTINATION="$BACKUP_FOLDER/$CURRENT_DIR_NAME/"
 
-			echoext "Backing up $CURRENT_SOURCE to $DESTINATION"
+			system_notify "Backing up $CURRENT_SOURCE to $DESTINATION"
 
 
 			if [ ! -d "$DESTINATION" ]
@@ -238,25 +238,25 @@ function backup {
 				RESULT_MESSAGE="$RESULT_MESSAGE failed with status code $RESULT_RSYNC"
 				echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
 
-				echoext "Error while running rsync"
-				echoext "$LOG_FILE"
+				system_notify "Error while running rsync"
+				system_notify "$LOG_FILE"
 				rm "$LOG_FILE"
 			fi
 
-			echoext "$RESULT_MESSAGE"
+			system_notify "$RESULT_MESSAGE"
 
 		done <<< "$SNAPSHOT_FOLDERS"
 
 		if [ "$FAILURES" -gt 0 ]
 		then
 			echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
-			echoext "$FAILURES source folders could not be used"
+			system_notify "$FAILURES source folders could not be used"
 
 			cleanup
 			return 1
 		fi
 	else
-		echoext "$BACKUP_FOLDER does not contain usable backup config file! Aborting..."
+		system_notify "$BACKUP_FOLDER does not contain usable backup config file! Aborting..."
 		cleanup
 		return 1
 	fi
@@ -334,20 +334,6 @@ function add {
 	esac
 }
 
-function check {
-	STORAGE_META_DIR="$1"
-	LAST_SUCCESS=
-	LAST_FAIL=
-	[ -f "$STORAGE_META_DIR"/backup_period ] && PERIOD=$(cat "$STORAGE_META_DIR"/backup_period)
-	[ -z "$PERIOD" ] && PERIOD=24
-	[ -f "$STORAGE_META_DIR"/backup_last_success ] && LAST_SUCCESS=$(cat "$STORAGE_META_DIR"/backup_last_success)
-	[ -f "$STORAGE_META_DIR"/backup_last_fail ] && LAST_FAIL=$(cat "$STORAGE_META_DIR"/backup_last_fail)
-	[ -n "$LAST_FAIL" ] && LAST_FAIL_MESSAGE=", last fail on $(parseTimestamp $LAST_FAIL)"
-	[ -z "$LAST_SUCCESS" ] && { echo "Backup of $(getPoolName "$STORAGE_META_DIR") never succeeded" ; return 1; }
-	[ $(( $(getTimestamp) - ( PERIOD*60*60 ) )) -gt "$LAST_SUCCESS" ] && { echo "Last success for backup of $(getPoolName "$STORAGE_META_DIR") older than ${PERIOD}h ($(parseTimestamp "$LAST_SUCCESS")) ${LAST_FAIL_MESSAGE}" ; return 1; }
-	return 0;
-}
-
 MODE="$1"
 shift
 STORAGE_META_DIR="$1"
@@ -391,19 +377,36 @@ then
 	for CAT in $CATEGORIES
 	do
 		BACKUPS_FOR_CAT="$(cat /etc/storage/autobackup | grep "$CAT")"
-		CATEGORY_HAS_FRESH_BACKUPS=$(echo "$BACKUPS_FOR_CAT" | wc -l)
-		CHECK_REPORT=""
+		NUMBER_OF_BACKUPS_FOR_CAT=$(echo "$BACKUPS_FOR_CAT" | wc -l)
+		CATEGORY_HAS_FRESH_BACKUPS="$NUMBER_OF_BACKUPS_FOR_CAT"
+		CATEGORY_HAS_OLD_BACKUPS=0
+		OLD_BACKUPS=""
 		for C in $BACKUPS_FOR_CAT
 		do
-			MSG=$(check "$C")
-			CURRENT_RC=$?
-			(( OVERALL_RC |= CURRENT_RC ))
-			[ "$CURRENT_RC" -ne 0 ] || ((CATEGORY_HAS_FRESH_BACKUPS--)) && CHECK_REPORT="$CHECK_REPORT
-$MSG"
+			STORAGE_META_DIR="$C"
+			LAST_SUCCESS=
+			LAST_FAIL=
+			[ -f "$STORAGE_META_DIR"/backup_period ] && PERIOD=$(cat "$STORAGE_META_DIR"/backup_period)
+			[ -z "$PERIOD" ] && PERIOD=24
+			[ -f "$STORAGE_META_DIR"/backup_last_success ] && LAST_SUCCESS=$(cat "$STORAGE_META_DIR"/backup_last_success)
+			[ -f "$STORAGE_META_DIR"/backup_last_fail ] && LAST_FAIL=$(cat "$STORAGE_META_DIR"/backup_last_fail)
+			[ -n "$LAST_FAIL" ] && LAST_FAIL_MESSAGE=", last fail on $(parseTimestamp $LAST_FAIL)"
+			[ -z "$LAST_SUCCESS" ] && { echo "Backup of $(getPoolName "$STORAGE_META_DIR") never succeeded"; }
+			if [ $(( $(getTimestamp) - ( 7*PERIOD*60*60 ) )) -gt "$LAST_SUCCESS" ]
+			then
+				echo "Last success for backup of $(getPoolName "$STORAGE_META_DIR") older than $(( 7*PERIOD/24 )) days ($(parseTimestamp "$LAST_SUCCESS"))${LAST_FAIL_MESSAGE}"
+				OLD_BACKUPS="$OLD_BACKUPS $(basename $C):$(( ($(getTimestamp) - LAST_SUCCESS) / 3600 / 24 ))days"
+				(( CATEGORY_HAS_OLD_BACKUPS++ ))
+			elif [ $(( $(getTimestamp) - ( PERIOD*60*60 ) )) -gt "$LAST_SUCCESS" ]
+			then
+				echo "Last success for backup of $(getPoolName "$STORAGE_META_DIR") older than ${PERIOD}h ($(parseTimestamp "$LAST_SUCCESS"))${LAST_FAIL_MESSAGE}"
+				(( CATEGORY_HAS_FRESH_BACKUPS-- ))
+			fi
 		done
-		[ "$CATEGORY_HAS_FRESH_BACKUPS" -lt 1 ] && echoext "$CHECK_REPORT"
+		[ "$CATEGORY_HAS_FRESH_BACKUPS" -eq 0 ] && system_notify "$CAT has no fresh backups!"
+		[ "$CATEGORY_HAS_OLD_BACKUPS" -gt 0 ] && system_notify "$CAT has at least one very old backup!$OLD_BACKUPS"
+		[ "$CATEGORY_HAS_OLD_BACKUPS" -eq "$NUMBER_OF_BACKUPS_FOR_CAT" ] && system_notify "$CAT has only very old backups!$OLD_BACKUPS"
 	done
-	exit $OVERALL_RC
 else
 	if [ -n "$STORAGE_META_DIR" -a -n "$MODE" ]
 	then

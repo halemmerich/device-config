@@ -170,7 +170,7 @@ Disk has selftest errors in log"
 		fi
 	done
 
-	[ -s "$MONITOR_LOG" ] && echoext "$MONITOR_LOG"
+	[ -s "$MONITOR_LOG" ] && system_notify "$MONITOR_LOG"
 	rm "$MONITOR_LOG"
 }
 

@@ -8,31 +8,8 @@
 
 [ "$DEBUG" = 1 ] && set -x
 
-XMPP_DESTINATION=( )
-SEND_XMPP_EXECUTABLE="sendxmpp"
-
-[ -f /etc/storage/config ] && . /etc/storage/config
-
-
 function echoerr {
 	echo "$@" 1>&2;
-}
-
-function echoext {
-    if [ -f "$1" ]
-    then
-        for current in "${XMPP_DESTINATION[@]}"
-        do
-            "$SEND_XMPP_EXECUTABLE" -m "$1" -f /root/.sendxmpprc -t -n "$current"
-        done
-        cat "$1"
-    else
-        for current in "${XMPP_DESTINATION[@]}"
-        do
-            echo "$IDENTIFIER $@" | "$SEND_XMPP_EXECUTABLE" -f /root/.sendxmpprc -t -n "$current"
-        done
-        echo "$@"
-    fi
 }
 
 function rescanDevices {
