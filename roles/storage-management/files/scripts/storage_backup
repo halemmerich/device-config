@@ -407,6 +407,7 @@ then
 		[ "$CATEGORY_HAS_OLD_BACKUPS" -gt 0 ] && system_notify "$CAT has at least one very old backup!$OLD_BACKUPS"
 		[ "$CATEGORY_HAS_OLD_BACKUPS" -eq "$NUMBER_OF_BACKUPS_FOR_CAT" ] && system_notify "$CAT has only very old backups!$OLD_BACKUPS"
 	done
+	exit 0
 else
 	if [ -n "$STORAGE_META_DIR" -a -n "$MODE" ]
 	then
