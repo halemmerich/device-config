@@ -2,6 +2,8 @@
 Description=Docker compose based {{ item.id }} server
 Wants=network.target
 {% for current in item.system_depends | default([]) %}
+After=docker.service
+After={{ current }}.service
 Requires={{ current }}.service
 {% endfor %}
 
