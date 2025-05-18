@@ -171,7 +171,7 @@ function backup {
 
 			if [ -z "$CURRENT_SOURCE" ]
 			then
-				system_notify "Snapshot for $CURRENT does not exist, using live data for size estimation"
+				echo "Snapshot for $CURRENT does not exist, using live data for size estimation"
 				CURRENT_SOURCE="$CURRENT"
 			fi
 
@@ -203,7 +203,7 @@ function backup {
 			CURRENT_SOURCE=`getLatestSnapshot "$CURRENT"`
 			if [ -z "$CURRENT_SOURCE" ]
 			then
-				system_notify "Snapshot for $CURRENT does not exist, using live data for backup"
+				echo "Snapshot for $CURRENT does not exist, using live data for backup"
 				CURRENT_SOURCE="$CURRENT"
 			fi
 
@@ -215,7 +215,7 @@ function backup {
 
 			DESTINATION="$BACKUP_FOLDER/$CURRENT_DIR_NAME/"
 
-			system_notify "Backing up $CURRENT_SOURCE to $DESTINATION"
+			echo "Backing up $CURRENT_SOURCE to $DESTINATION"
 
 
 			if [ ! -d "$DESTINATION" ]
@@ -234,16 +234,18 @@ function backup {
 			then
 				RESULT_MESSAGE="$RESULT_MESSAGE successful"
 				echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_success
+				echo "$RESULT_MESSAGE"
 			else
 				RESULT_MESSAGE="$RESULT_MESSAGE failed with status code $RESULT_RSYNC"
 				echo "$(getTimestamp)" > "$STORAGE_META_DIR"/backup_last_fail
 
 				system_notify "Error while running rsync"
 				system_notify "$LOG_FILE"
+				system_notify "$RESULT_MESSAGE"
+
 				rm "$LOG_FILE"
 			fi
 
-			system_notify "$RESULT_MESSAGE"
 
 		done <<< "$SNAPSHOT_FOLDERS"
 
