@@ -95,6 +95,8 @@
     - storage-monitor.timer
     - storage-backup.service
     - storage-backup.timer
+    - storage-backup-check.service
+    - storage-backup-check.timer
     - storage-mount.service
   register: systemd
 

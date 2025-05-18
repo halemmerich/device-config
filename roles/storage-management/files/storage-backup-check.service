@@ -1,0 +1,7 @@
+[Unit]
+Description=Checkup on backups
+
+[Service]
+User=root
+WorkingDirectory=/
+ExecStart=/bin/systemd-inhibit --what=sleep --who=Check /bin/bash -c 'PATH=$PATH:/usr/bin/site_perl /usr/local/bin/storage_backup check'

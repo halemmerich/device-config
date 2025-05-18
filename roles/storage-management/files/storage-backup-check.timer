@@ -1,0 +1,9 @@
+[Unit]
+Description=Check of all backups for timeliness
+
+[Timer]
+OnCalendar=*-*-* 20:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
