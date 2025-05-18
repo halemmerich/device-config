@@ -8,6 +8,8 @@
 
 [ "$DEBUG" = 1 ] && set -x
 
+! command -v system_notify 2>&1 > /dev/null && function system_notify { echo "$@"; }
+
 function echoerr {
 	echo "$@" 1>&2;
 }
